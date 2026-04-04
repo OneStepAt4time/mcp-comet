@@ -4,3 +4,7 @@ dist/
 *.d.ts.map
 asteria.config.json
 .DS_Store
+.claude/settings.local.json
+.claude/plans
+.mcp.json
+docs/superpowers
