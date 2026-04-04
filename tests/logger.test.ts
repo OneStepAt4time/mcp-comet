@@ -9,19 +9,28 @@ describe("Logger", () => {
 
   it("debug is no-op at info level", async () => {
     const { createLogger } = await import("../src/logger.js");
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     const logger = createLogger("info");
     logger.debug("hidden");
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
 
-  it("debug logs at debug level", async () => {
+  it("debug logs to stderr at debug level", async () => {
     const { createLogger } = await import("../src/logger.js");
-    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     const logger = createLogger("debug");
     logger.debug("visible");
     expect(spy).toHaveBeenCalledWith("[asteria:debug]", "visible");
+    spy.mockRestore();
+  });
+
+  it("info logs to stderr at info level", async () => {
+    const { createLogger } = await import("../src/logger.js");
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const logger = createLogger("info");
+    logger.info("info msg");
+    expect(spy).toHaveBeenCalledWith("[asteria:info]", "info msg");
     spy.mockRestore();
   });
 
@@ -34,7 +43,7 @@ describe("Logger", () => {
     spy.mockRestore();
   });
 
-  it("error always logs", async () => {
+  it("error always logs to stderr", async () => {
     const { createLogger } = await import("../src/logger.js");
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     const logger = createLogger("error");

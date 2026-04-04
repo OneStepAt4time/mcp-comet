@@ -26,12 +26,15 @@ export function buildModeSwitchScript(mode: string): string {
     }
     if (dropdownBtn) {
       dropdownBtn.click();
-      var startTime = Date.now();
-      var check = setInterval(function() {
+      var attempts = 0;
+      var maxAttempts = 20;
+      function tryClick() {
         var items = document.querySelectorAll('[role="menuitem"], [role="option"]');
-        for (var j = 0; j < items.length; j++) { if (items[j].innerText.indexOf(mode) !== -1) { clearInterval(check); items[j].click(); return; } }
-        if (Date.now() - startTime > 2000) clearInterval(check);
-      }, 100);
+        for (var j = 0; j < items.length; j++) { if (items[j].innerText.indexOf(mode) !== -1) { items[j].click(); return; } }
+        attempts++;
+        if (attempts < maxAttempts) setTimeout(tryClick, 100);
+      }
+      setTimeout(tryClick, 100);
       return 'dropdown:' + mode;
     }
     return 'not_found:' + mode;

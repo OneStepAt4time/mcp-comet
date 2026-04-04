@@ -16,11 +16,11 @@ export function createLogger(level: CometConfig["logLevel"]): Logger {
     level,
     debug:
       rank <= 0
-        ? (...a) => console.log("[asteria:debug]", ...a)
+        ? (...a) => console.error("[asteria:debug]", ...a)
         : () => {},
     info:
       rank <= 1
-        ? (...a) => console.log("[asteria:info]", ...a)
+        ? (...a) => console.error("[asteria:info]", ...a)
         : () => {},
     warn:
       rank <= 2

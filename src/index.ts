@@ -586,6 +586,11 @@ server.tool(
   openConversationShape,
   async ({ url }) => {
     try {
+      if (!url.startsWith("https://") || !url.includes("perplexity.ai")) {
+        return toMcpError(
+          new Error(`Invalid URL: must be a https://perplexity.ai/ URL, got "${url}"`),
+        );
+      }
       await client.navigate(url);
       return textResult(`Navigated to: ${url}`);
     } catch (err) {
