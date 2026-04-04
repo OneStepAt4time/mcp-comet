@@ -68,7 +68,20 @@ export class CDPClient {
       if (!id) throw new CDPConnectionError('No suitable browser target found')
 
       this.criClient = await CRI({ target: id, port: this.state.port })
+      await this.criClient.Page.enable()
       await this.criClient.Runtime.enable()
+
+      // Set fixed viewport for consistent selectors and screenshots
+      try {
+        await this.criClient.Emulation.setDeviceMetricsOverride({
+          width: this.config.windowWidth,
+          height: this.config.windowHeight,
+          deviceScaleFactor: 1,
+          mobile: false,
+        })
+      } catch {
+        this.logger.debug('Could not set viewport metrics')
+      }
 
       this.state.connected = true
       this.state.targetId = id
@@ -122,7 +135,20 @@ export class CDPClient {
     return await this.withAutoReconnect(async () => {
       if (!this.criClient) throw new CDPConnectionError('Not connected')
       await this.criClient.Page.enable()
-      const { data } = await this.criClient.Page.captureScreenshot({ format })
+      // Use explicit clip to avoid 0-width viewport issues (Chrome 145+)
+      const clip = {
+        x: 0,
+        y: 0,
+        width: this.config.windowWidth,
+        height: this.config.windowHeight,
+        scale: 1,
+      }
+      const { data } = await Promise.race([
+        this.criClient.Page.captureScreenshot({ format, clip }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Screenshot timed out after 15s')), 15000),
+        ),
+      ])
       return data
     })
   }

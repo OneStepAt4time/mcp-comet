@@ -1,14 +1,16 @@
+import type { SelectorSet } from '../selectors/types.js'
 import { SELECTORS } from './selectors.js'
 
-export function buildTypePromptScript(prompt: string): string {
+export function buildTypePromptScript(prompt: string, selectors?: SelectorSet): string {
   const escaped = prompt
     .replace(/\\/g, '\\\\')
     .replace(/'/g, "\\'")
     .replace(/\n/g, '\\n')
     .replace(/"/g, '\\"')
-  const selectors = JSON.stringify([...SELECTORS.INPUT])
+  const inputSelectors = selectors?.INPUT ?? SELECTORS.INPUT
+  const selectorList = JSON.stringify([...inputSelectors])
   return `(function() {
-    const selectors = ${selectors};
+    const selectors = ${selectorList};
     for (const sel of selectors) {
       const el = document.querySelector(sel);
       if (el) {
@@ -40,10 +42,11 @@ export function buildTypePromptScript(prompt: string): string {
   })()`
 }
 
-export function buildFindInputScript(): string {
-  const selectors = JSON.stringify([...SELECTORS.INPUT])
+export function buildFindInputScript(selectors?: SelectorSet): string {
+  const inputSelectors = selectors?.INPUT ?? SELECTORS.INPUT
+  const selectorList = JSON.stringify([...inputSelectors])
   return `(function() {
-    const selectors = ${selectors};
+    const selectors = ${selectorList};
     for (const sel of selectors) { const el = document.querySelector(sel); if (el) return sel; }
     return null;
   })()`

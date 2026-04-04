@@ -38,7 +38,8 @@
     "lint": "biome check .",
     "format": "biome write .",
     "format:check": "biome check --formatter-enabled .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
   },
   "engines": {
     "node": ">=18.0.0"

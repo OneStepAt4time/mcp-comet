@@ -1,6 +1,10 @@
+import { buildFindProseJS } from '../prose-filter.js'
+import type { SelectorSet } from '../selectors/types.js'
 import { SELECTORS } from './selectors.js'
 
-export function buildGetAgentStatusScript(): string {
+export function buildGetAgentStatusScript(selectors?: SelectorSet): string {
+  const loadingSelectors = selectors?.LOADING ?? SELECTORS.LOADING
+  const findProseBody = buildFindProseJS()
   return `(function() {
     var status = "idle";
     var steps = [];
@@ -18,7 +22,7 @@ export function buildGetAgentStatusScript(): string {
       if (svg) { hasStopButton = true; break; }
     }
 
-    var spinSelectors = ${JSON.stringify([...SELECTORS.LOADING])};
+    var spinSelectors = ${JSON.stringify([...loadingSelectors])};
     for (var s = 0; s < spinSelectors.length; s++) {
       if (document.querySelector(spinSelectors[s])) { hasLoadingSpinner = true; break; }
     }
@@ -37,26 +41,9 @@ export function buildGetAgentStatusScript(): string {
       if (matches) { for (var m = 0; m < matches.length; m++) { var step = matches[m].trim(); if (step && !seenSteps[step]) { seenSteps[step] = true; steps.push(step); currentStep = step; } } }
     }
 
-    var proseElements = document.querySelectorAll('main [class*="prose"], body > [class*="prose"]');
-    var validProse = [];
-    var excludeTags = ['NAV', 'ASIDE', 'HEADER', 'FOOTER', 'FORM'];
-    var uiTexts = ['Library', 'Discover', 'Spaces', 'Finance', 'Account', 'Upgrade', 'Home', 'Search', 'Ask a follow-up'];
-    for (var p = 0; p < proseElements.length; p++) {
-      var el = proseElements[p];
-      var parent = el.parentElement;
-      var excluded = false;
-      while (parent) { if (excludeTags.indexOf(parent.tagName) !== -1) { excluded = true; break; } parent = parent.parentElement; }
-      if (excluded) continue;
-      var text = el.innerText.trim();
-      if (!text) continue;
-      var isUI = false;
-      for (var u = 0; u < uiTexts.length; u++) { if (text.indexOf(uiTexts[u]) === 0) { isUI = true; break; } }
-      if (isUI) continue;
-      if (text.length < 100 && text.indexOf('?') === text.length - 1) continue;
-      validProse.push(text);
-    }
-    if (validProse.length > 0) {
-      response = validProse[validProse.length - 1];
+    ${findProseBody}
+    if (results.length > 0) {
+      response = results[results.length - 1];
       response = response.replace(/View All/g, '').replace(/Show more/g, '').replace(/Ask a follow-up/g, '').replace(/\\d+ sources/g, '');
       if (response.length > 8000) response = response.substring(0, 8000);
     }
@@ -65,7 +52,7 @@ export function buildGetAgentStatusScript(): string {
     else if (bodyText.indexOf('Steps completed') !== -1 || (bodyText.indexOf('Finished') !== -1 && !hasStopButton)) status = "completed";
     else if (/Reviewed\\s+\\d+\\s+sources/.test(bodyText) && !hasWorkingText) status = "completed";
     else if (hasWorkingText) status = "working";
-    else if (bodyText.indexOf('Ask a follow-up') !== -1 && validProse.length > 0 && !hasStopButton) status = "completed";
+    else if (bodyText.indexOf('Ask a follow-up') !== -1 && results.length > 0 && !hasStopButton) status = "completed";
 
     return JSON.stringify({ status: status, steps: steps, currentStep: currentStep, response: response, hasStopButton: hasStopButton, hasLoadingSpinner: hasLoadingSpinner });
   })()`
