@@ -93,7 +93,7 @@ export class ConfigurationError extends AsteriaError {
 }
 
 export function toMcpError(err: unknown): {
-  content: Array<{ type: string; text: string }>;
+  content: Array<{ type: "text"; text: string }>;
   isError: boolean;
 } {
   if (err instanceof AsteriaError) {
