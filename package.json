@@ -34,7 +34,10 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "tsc --noEmit"
+    "lint": "biome check .",
+    "format": "biome write .",
+    "format:check": "biome check --formatter-enabled .",
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": ">=18.0.0"
