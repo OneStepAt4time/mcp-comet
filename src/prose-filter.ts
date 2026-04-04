@@ -17,6 +17,8 @@ const _UI_TEXT_PREFIXES = [
   'Home',
   'Search',
   'Ask a follow-up',
+  'Follow-ups',
+  'sources',
 ] as const
 
 /**
@@ -26,7 +28,7 @@ const _UI_TEXT_PREFIXES = [
 export function buildFindProseJS(): string {
   return `var proseElements = document.querySelectorAll('main [class*="prose"], body > [class*="prose"]');
     var excludeTags = ['NAV', 'ASIDE', 'HEADER', 'FOOTER', 'FORM'];
-    var uiTexts = ['Library', 'Discover', 'Spaces', 'Finance', 'Account', 'Upgrade', 'Home', 'Search', 'Ask a follow-up'];
+    var uiTexts = ['Library', 'Discover', 'Spaces', 'Finance', 'Account', 'Upgrade', 'Home', 'Search', 'Ask a follow-up', 'Follow-ups', 'sources'];
     var results = [];
     for (var i = 0; i < proseElements.length; i++) {
       var el = proseElements[i];
@@ -34,7 +36,13 @@ export function buildFindProseJS(): string {
       var excluded = false;
       while (parent) { if (excludeTags.indexOf(parent.tagName) !== -1) { excluded = true; break; } parent = parent.parentElement; }
       if (excluded) continue;
-      var text = el.innerText ? el.innerText.trim() : '';
+
+      // Clone element and remove citation badges before extracting text
+      var clone = el.cloneNode(true);
+      var citations = clone.querySelectorAll('.citation, .citation-nbsp');
+      for (var c = 0; c < citations.length; c++) { citations[c].remove(); }
+
+      var text = clone.innerText ? clone.innerText.trim() : '';
       if (!text) continue;
       var isUI = false;
       for (var u = 0; u < uiTexts.length; u++) { if (text.indexOf(uiTexts[u]) === 0) { isUI = true; break; } }

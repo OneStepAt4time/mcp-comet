@@ -4,5 +4,6 @@ export interface SelectorSet {
   STOP: readonly string[]
   RESPONSE: readonly string[]
   LOADING: readonly string[]
-  MODE: Record<string, readonly string[]>
+  TYPEAHEAD_MENU: readonly string[]
+  MENU_ITEM: readonly string[]
 }

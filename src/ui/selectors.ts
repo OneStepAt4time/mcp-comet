@@ -14,20 +14,9 @@ export const SELECTORS = {
   ] as const,
   STOP: ['button[aria-label*="Stop"]', 'button[aria-label*="Cancel"]'] as const,
   RESPONSE: ['[class*="prose"]', 'main'] as const,
-  MODE: {
-    search: [
-      'button[aria-label="Search"][data-state="checked"]',
-      'button[aria-label="Search"]',
-    ] as const,
-    research: [
-      'button[aria-label="Research"][data-state="checked"]',
-      'button[aria-label="Research"]',
-    ] as const,
-    labs: ['button[aria-label="Labs"][data-state="checked"]', 'button[aria-label="Labs"]'] as const,
-    learn: [
-      'button[aria-label="Learn"][data-state="checked"]',
-      'button[aria-label="Learn"]',
-    ] as const,
-  },
+  // Modes are now accessed via "/" slash command → typeahead menu
+  // These selectors target the typeahead menu structure
+  TYPEAHEAD_MENU: ['[role="listbox"][aria-label="Typeahead menu"]', '[role="listbox"]'] as const,
+  MENU_ITEM: ['[role="menuitem"].group\\/item', '[role="menuitem"]'] as const,
   LOADING: ['[class*="animate-spin"]', '[class*="animate-pulse"]'] as const,
 } as const

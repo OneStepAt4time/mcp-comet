@@ -17,13 +17,6 @@ export const v145Selectors: SelectorSet = {
   STOP: ['button[aria-label*="Stop"]', 'button[aria-label*="Cancel"]'],
   RESPONSE: ['[class*="prose"]', 'main'],
   LOADING: ['[class*="animate-spin"]', '[class*="animate-pulse"]'],
-  MODE: {
-    search: ['button[aria-label="Search"][data-state="checked"]', 'button[aria-label="Search"]'],
-    research: [
-      'button[aria-label="Research"][data-state="checked"]',
-      'button[aria-label="Research"]',
-    ],
-    labs: ['button[aria-label="Labs"][data-state="checked"]', 'button[aria-label="Labs"]'],
-    learn: ['button[aria-label="Learn"][data-state="checked"]', 'button[aria-label="Learn"]'],
-  },
+  TYPEAHEAD_MENU: ['[role="listbox"][aria-label="Typeahead menu"]', '[role="listbox"]'],
+  MENU_ITEM: ['[role="menuitem"].group\\/item', '[role="menuitem"]'],
 }

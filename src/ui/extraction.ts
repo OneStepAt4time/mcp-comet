@@ -1,19 +1,53 @@
 export function buildExtractSourcesScript(): string {
   return `(function() {
-    var container = document.querySelector('main') || document.body;
-    var anchors = container.querySelectorAll('a[href]');
-    var seenUrls = {};
-    var sources = [];
-    for (var i = 0; i < anchors.length; i++) {
-      var a = anchors[i];
-      var href = a.href;
-      var text = (a.innerText || '').trim();
-      if (!href || seenUrls[href]) continue;
-      if (href.indexOf('javascript:') === 0) continue;
-      if (href.indexOf('#') === href.length - 1) continue;
-      seenUrls[href] = true;
-      sources.push({ url: href, title: text || href });
+    function isInternalLink(url) {
+      if (!url) return true;
+      try {
+        var hostname = new URL(url).hostname;
+        return hostname === 'perplexity.ai' || hostname.endsWith('.perplexity.ai');
+      } catch (e) {
+        return true;
+      }
     }
+
+    function extractDomain(url) {
+      try {
+        return new URL(url).hostname;
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function findLinksInTabpanel() {
+      var tabpanels = document.querySelectorAll('[role="tabpanel"]');
+      var sources = [];
+      var seenUrls = {};
+
+      for (var t = 0; t < tabpanels.length; t++) {
+        var tabpanel = tabpanels[t];
+        var anchors = tabpanel.querySelectorAll('a[href]');
+
+        for (var i = 0; i < anchors.length; i++) {
+          var a = anchors[i];
+          var href = a.href;
+          var text = (a.innerText || '').trim();
+
+          if (!href || seenUrls[href]) continue;
+          if (href.indexOf('javascript:') === 0) continue;
+          if (href.indexOf('#') === href.length - 1) continue;
+          if (isInternalLink(href)) continue;
+
+          seenUrls[href] = true;
+          sources.push({
+            url: href,
+            title: text || extractDomain(href) || href
+          });
+        }
+      }
+      return sources;
+    }
+
+    var sources = findLinksInTabpanel();
     return JSON.stringify(sources);
   })()`
 }

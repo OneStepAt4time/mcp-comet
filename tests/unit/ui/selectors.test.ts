@@ -16,10 +16,12 @@ describe('SELECTORS', () => {
     expect(SELECTORS.RESPONSE.length).toBeGreaterThanOrEqual(1)
     expect(SELECTORS.RESPONSE[0]).toContain('prose')
   })
-  it('MODE has all four modes', () => {
-    expect(SELECTORS.MODE.search.length).toBeGreaterThanOrEqual(1)
-    expect(SELECTORS.MODE.research.length).toBeGreaterThanOrEqual(1)
-    expect(SELECTORS.MODE.labs.length).toBeGreaterThanOrEqual(1)
-    expect(SELECTORS.MODE.learn.length).toBeGreaterThanOrEqual(1)
+  it('TYPEAHEAD_MENU targets the slash command menu', () => {
+    expect(SELECTORS.TYPEAHEAD_MENU[0]).toBe('[role="listbox"][aria-label="Typeahead menu"]')
+    expect(SELECTORS.TYPEAHEAD_MENU.length).toBeGreaterThanOrEqual(1)
+  })
+  it('MENU_ITEM targets menu items in the typeahead', () => {
+    expect(SELECTORS.MENU_ITEM[0]).toBe('[role="menuitem"].group\\/item')
+    expect(SELECTORS.MENU_ITEM.length).toBeGreaterThanOrEqual(1)
   })
 })

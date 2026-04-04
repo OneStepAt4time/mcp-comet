@@ -6,6 +6,7 @@ import { loadConfig } from './config.js'
 import { toMcpError } from './errors.js'
 import { createLogger } from './logger.js'
 import { buildPreSendStateScript } from './prose-filter.js'
+import type { SelectorSet } from './selectors/types.js'
 import type { CategorizedTabs, TabInfo } from './types.js'
 import { buildExtractPageContentScript, buildExtractSourcesScript } from './ui/extraction.js'
 import { buildTypePromptScript } from './ui/input.js'
@@ -14,7 +15,9 @@ import {
   buildModeSwitchScript,
   buildSubmitPromptScript,
 } from './ui/navigation.js'
+import { SELECTORS } from './ui/selectors.js'
 import { buildGetAgentStatusScript } from './ui/status.js'
+import { detectCometVersion } from './version.js'
 
 // ---------------------------------------------------------------------------
 // Configuration & singletons
@@ -23,6 +26,9 @@ import { buildGetAgentStatusScript } from './ui/status.js'
 const config = loadConfig()
 const logger = createLogger(config.logLevel)
 const client = CDPClient.getInstance(config)
+
+/** Active selector set — updated after each comet_connect to match Comet's Chrome version. */
+let activeSelectors: SelectorSet = SELECTORS
 
 // ---------------------------------------------------------------------------
 // Tool definitions (exported for testing)
@@ -101,10 +107,12 @@ const screenshotShape = {
 }
 const modeShape = {
   mode: z
-    .enum(['search', 'research', 'labs', 'learn'])
+    .enum(['standard', 'deep-research', 'model-council', 'create', 'learn', 'review', 'computer'])
     .nullable()
     .optional()
-    .describe('Mode to switch to. Omit or null to query current mode.'),
+    .describe(
+      'Mode to switch to via slash command. Omit or null to query current mode. Available: standard (default search), deep-research, model-council, create, learn, review, computer.',
+    ),
 }
 const switchTabShape = {
   tabId: z.string().optional().describe('Exact tab ID to switch to'),
@@ -145,7 +153,8 @@ export const toolDefinitions: ToolDef[] = [
   },
   {
     name: 'comet_mode',
-    description: 'Get or switch the current Comet mode (search, research, labs, learn).',
+    description:
+      'Get or switch the current Comet mode. Modes are accessed via "/" slash command in the input field. Available: standard (default), deep-research, model-council, create, learn, review, computer.',
     inputSchema: buildInputSchema(modeShape),
   },
   {
@@ -264,14 +273,33 @@ export async function startServer(): Promise<void> {
       try {
         await client.launchOrConnect(port)
         await client.closeExtraTabs()
-        // Only navigate if we're not already on perplexity.ai
+
+        // Detect Comet version and load matching selectors
+        const effectivePort = port ?? config.port
+        const { chromeMajor, selectors } = await detectCometVersion(effectivePort)
+        activeSelectors = selectors
+        logger.info(`Detected Comet Chrome/${chromeMajor}, loaded selector set`)
+
+        // Navigate to main perplexity.ai page if we landed on sidecar or non-perplexity page
         const targets = await client.listTargets()
         const currentTarget = targets.find((t) => t.id === client.state.targetId)
-        if (!currentTarget?.url.includes('perplexity.ai')) {
-          await client.navigate('https://www.perplexity.ai')
+        const isMainPage =
+          currentTarget?.url.includes('perplexity.ai') && !currentTarget?.url.includes('sidecar')
+        if (!isMainPage) {
+          // Try to find and connect to main page first
+          const mainPage = targets.find(
+            (t) =>
+              t.url.includes('perplexity.ai') && !t.url.includes('sidecar') && t.type === 'page',
+          )
+          if (mainPage) {
+            await client.disconnect()
+            await client.connect(mainPage.id)
+          } else {
+            await client.navigate('https://www.perplexity.ai')
+          }
         }
         return textResult(
-          `Connected to Comet on port ${client.state.port}, target ${client.state.targetId}`,
+          `Connected to Comet on port ${client.state.port} (Chrome/${chromeMajor}), target ${client.state.targetId}`,
         )
       } catch (err) {
         return toMcpError(err)
@@ -312,7 +340,9 @@ export async function startServer(): Promise<void> {
         }
 
         // Type prompt
-        const typeResult = await client.safeEvaluate(buildTypePromptScript(normalizedPrompt))
+        const typeResult = await client.safeEvaluate(
+          buildTypePromptScript(normalizedPrompt, activeSelectors),
+        )
         logger.debug('Type result:', extractValue(typeResult))
 
         // Wait for React to process
@@ -331,7 +361,7 @@ export async function startServer(): Promise<void> {
         while (Date.now() - startTime < effectiveTimeout) {
           await sleep(config.pollInterval)
 
-          const statusRaw = await client.safeEvaluate(buildGetAgentStatusScript())
+          const statusRaw = await client.safeEvaluate(buildGetAgentStatusScript(activeSelectors))
           const status = parseAgentStatus(extractValue(statusRaw))
 
           // Collect new steps
@@ -350,7 +380,7 @@ export async function startServer(): Promise<void> {
             lastResponse = status.response
           }
 
-          if (status.status === 'completed' && sawNewResponse) {
+          if ((status.status === 'completed' || status.status === 'idle') && sawNewResponse) {
             const parts: string[] = []
             if (lastResponse) parts.push(lastResponse)
             if (collectedSteps.length > 0) {
@@ -384,7 +414,7 @@ export async function startServer(): Promise<void> {
     {},
     async () => {
       try {
-        const raw = await client.safeEvaluate(buildGetAgentStatusScript())
+        const raw = await client.safeEvaluate(buildGetAgentStatusScript(activeSelectors))
         const status = parseAgentStatus(extractValue(raw))
         return textResult(JSON.stringify(status, null, 2))
       } catch (err) {
@@ -440,7 +470,7 @@ export async function startServer(): Promise<void> {
   // 6. comet_mode
   server.tool(
     'comet_mode',
-    'Get or switch the current Comet mode (search, research, labs, learn).',
+    'Get or switch the current Comet mode. Modes are accessed via "/" slash command in the input field. Available: standard (default), deep-research, model-council, create, learn, review, computer.',
     modeShape,
     async ({ mode }) => {
       try {
