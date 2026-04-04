@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/asteria"><img src="https://img.shields.io/npm/v/asteria?style=flat-square&color=6366f1" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/asteria"><img src="https://img.shields.io/npm/dm/asteria?style=flat-square&color=6366f1" alt="npm downloads"></a>
+  <a href="https://www.npmjs.com/package/@onestepat4time/asteria"><img src="https://img.shields.io/npm/v/@onestepat4time%2Fasteria?style=flat-square&color=6366f1" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@onestepat4time/asteria"><img src="https://img.shields.io/npm/dm/@onestepat4time%2Fasteria?style=flat-square&color=6366f1" alt="npm downloads"></a>
   <a href="https://github.com/OneStepAt4time/asteria/blob/master/LICENSE"><img src="https://img.shields.io/npm/l/asteria?style=flat-square" alt="license"></a>
   <a href="https://github.com/OneStepAt4time/asteria"><img src="https://img.shields.io/node/v/asteria?style=flat-square&color=6366f1" alt="node version"></a>
   <a href="https://github.com/OneStepAt4time/asteria/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/OneStepAt4time/asteria/ci.yml?branch=master&style=flat-square&label=CI" alt="CI"></a>
@@ -51,7 +51,7 @@ graph LR
 ## Install
 
 ```bash
-npm install -g asteria
+npm install -g @onestepat4time/asteria
 ```
 
 **Requirements:** Node.js >= 18, [Perplexity Comet](https://comet.perplexity.ai/) installed
