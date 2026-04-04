@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.js.map
+*.d.ts.map
+asteria.config.json
+.DS_Store
