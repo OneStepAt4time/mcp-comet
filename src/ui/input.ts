@@ -1,8 +1,12 @@
-import { SELECTORS } from "./selectors.js";
+import { SELECTORS } from './selectors.js'
 
 export function buildTypePromptScript(prompt: string): string {
-  const escaped = prompt.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n").replace(/"/g, '\\"');
-  const selectors = JSON.stringify([...SELECTORS.INPUT]);
+  const escaped = prompt
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, '\\n')
+    .replace(/"/g, '\\"')
+  const selectors = JSON.stringify([...SELECTORS.INPUT])
   return `(function() {
     const selectors = ${selectors};
     for (const sel of selectors) {
@@ -33,14 +37,14 @@ export function buildTypePromptScript(prompt: string): string {
       }
     }
     return null;
-  })()`;
+  })()`
 }
 
 export function buildFindInputScript(): string {
-  const selectors = JSON.stringify([...SELECTORS.INPUT]);
+  const selectors = JSON.stringify([...SELECTORS.INPUT])
   return `(function() {
     const selectors = ${selectors};
     for (const sel of selectors) { const el = document.querySelector(sel); if (el) return sel; }
     return null;
-  })()`;
+  })()`
 }

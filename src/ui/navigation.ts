@@ -6,11 +6,11 @@ export function buildSubmitPromptScript(): string {
       active.dispatchEvent(new KeyboardEvent('keyup', {key: 'Enter', code: 'Enter', bubbles: true}));
     }
     return 'submitted';
-  })()`;
+  })()`
 }
 
 export function buildModeSwitchScript(mode: string): string {
-  const modeLabel = mode.charAt(0).toUpperCase() + mode.slice(1);
+  const modeLabel = mode.charAt(0).toUpperCase() + mode.slice(1)
   return `(function() {
     var mode = '${modeLabel}';
     var btn = document.querySelector('button[aria-label="' + mode + '"]');
@@ -38,11 +38,11 @@ export function buildModeSwitchScript(mode: string): string {
       return 'dropdown:' + mode;
     }
     return 'not_found:' + mode;
-  })()`;
+  })()`
 }
 
 export function buildNewChatScript(): string {
-  return `(function() { location.href = 'https://www.perplexity.ai'; return 'navigating'; })()`;
+  return `(function() { location.href = 'https://www.perplexity.ai'; return 'navigating'; })()`
 }
 
 export function buildGetCurrentModeScript(): string {
@@ -53,5 +53,5 @@ export function buildGetCurrentModeScript(): string {
       if (btn) { var state = btn.getAttribute('data-state'); if (state === 'checked') return modes[i].toLowerCase(); }
     }
     return 'unknown';
-  })()`;
+  })()`
 }

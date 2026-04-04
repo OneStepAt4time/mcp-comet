@@ -15,7 +15,7 @@ export function buildExtractSourcesScript(): string {
       sources.push({ url: href, title: text || href });
     }
     return JSON.stringify(sources);
-  })()`;
+  })()`
 }
 
 export function buildExtractPageContentScript(maxLength = 10000): string {
@@ -26,5 +26,5 @@ export function buildExtractPageContentScript(maxLength = 10000): string {
     text = text.replace(/^\\s*(Sign in|Log in|Get the app|Download)/gm, '');
     if (text.length > ${maxLength}) text = text.substring(0, ${maxLength});
     return JSON.stringify({ text: text, title: document.title || '' });
-  })()`;
+  })()`
 }

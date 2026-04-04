@@ -4,20 +4,20 @@
  */
 
 /** Tags to exclude when scanning for prose content. */
-const EXCLUDE_TAGS = ["NAV", "ASIDE", "HEADER", "FOOTER", "FORM"] as const;
+const _EXCLUDE_TAGS = ['NAV', 'ASIDE', 'HEADER', 'FOOTER', 'FORM'] as const
 
 /** UI text patterns that indicate non-response prose elements. */
-const UI_TEXT_PREFIXES = [
-  "Library",
-  "Discover",
-  "Spaces",
-  "Finance",
-  "Account",
-  "Upgrade",
-  "Home",
-  "Search",
-  "Ask a follow-up",
-] as const;
+const _UI_TEXT_PREFIXES = [
+  'Library',
+  'Discover',
+  'Spaces',
+  'Finance',
+  'Account',
+  'Upgrade',
+  'Home',
+  'Search',
+  'Ask a follow-up',
+] as const
 
 /**
  * Build the JS expression body (not wrapped in IIFE) for finding valid prose elements.
@@ -42,7 +42,7 @@ export function buildFindProseJS(): string {
       if (text.length < 100 && text.indexOf('?') === text.length - 1) continue;
       results.push(text);
     }
-    results`;
+    results`
 }
 
 /**
@@ -53,5 +53,5 @@ export function buildPreSendStateScript(): string {
   return `(function() {
     ${buildFindProseJS()}
     return JSON.stringify({ proseCount: results.length, lastProseText: results.length > 0 ? results[results.length - 1] : '' });
-  })()`;
+  })()`
 }

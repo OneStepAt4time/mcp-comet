@@ -1,4 +1,4 @@
-import { SELECTORS } from "./selectors.js";
+import { SELECTORS } from './selectors.js'
 
 export function buildGetAgentStatusScript(): string {
   return `(function() {
@@ -68,5 +68,5 @@ export function buildGetAgentStatusScript(): string {
     else if (bodyText.indexOf('Ask a follow-up') !== -1 && validProse.length > 0 && !hasStopButton) status = "completed";
 
     return JSON.stringify({ status: status, steps: steps, currentStep: currentStep, response: response, hasStopButton: hasStopButton, hasLoadingSpinner: hasLoadingSpinner });
-  })()`;
+  })()`
 }
