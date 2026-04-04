@@ -1,16 +1,32 @@
 name: Release
+
 on:
   push:
-    tags: ["v*"]
+    branches: [main, master]
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
 
 jobs:
-  publish:
+  release-please:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        id: release
+        with:
+          release-type: node
+          package-name: asteria
+
+  npm-publish:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.releases_created }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
