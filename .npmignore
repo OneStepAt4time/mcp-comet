@@ -1,0 +1,11 @@
+src/
+tests/
+docs/
+scripts/
+.claude/
+.mcp.json
+.github/
+*.tsbuildinfo
+biome.json
+.editorconfig
+.gitignore
