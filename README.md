@@ -3,8 +3,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/sponsors/OneStepAt4time"><img src="https://img.shields.io/badge/GitHub%20Sponsors-%E2%99%A5-ea4aaa.svg?style=flat-square" alt="Sponsor"></a>
-  <a href="https://ko-fi.com/onestepat4time"><img src="https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-ff5e5b.svg?style=flat-square" alt="Ko-fi"></a>
   <a href="https://www.npmjs.com/package/asteria"><img src="https://img.shields.io/npm/v/asteria?style=flat-square&color=6366f1" alt="npm version"></a>
   <a href="https://www.npmjs.com/package/asteria"><img src="https://img.shields.io/npm/dm/asteria?style=flat-square&color=6366f1" alt="npm downloads"></a>
   <a href="https://github.com/OneStepAt4time/asteria/blob/master/LICENSE"><img src="https://img.shields.io/npm/l/asteria?style=flat-square" alt="license"></a>
@@ -218,6 +216,17 @@ npm test
 ```
 
 See [contributing.md](docs/contributing.md) for code style, adding Comet versions, and commit conventions.
+
+## Support the Project
+
+<p align="center">
+  <a href="https://github.com/sponsors/OneStepAt4time">
+    <img src="https://img.shields.io/badge/GitHub%20Sponsors-%E2%99%A5-ea4aaa.svg" alt="GitHub Sponsors" />
+  </a>
+  <a href="https://ko-fi.com/onestepat4time">
+    <img src="https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-ff5e5b.svg" alt="Ko-fi" />
+  </a>
+</p>
 
 ## License
 
