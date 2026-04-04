@@ -61,24 +61,24 @@ export function getCometPath(): string {
   );
 }
 
-export async function windowsFetch(
+export async function httpGet(
   url: string,
+  timeoutMs = 3000,
 ): Promise<{
   ok: boolean;
   status: number;
   json: () => Promise<unknown>;
 }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const result = execSync(
-      `powershell.exe -NoProfile -Command "Invoke-WebRequest -Uri '${url}' -UseBasicParsing | Select-Object -ExpandProperty Content"`,
-      { encoding: "utf8", timeout: 10000 },
-    );
-    return {
-      ok: true,
-      status: 200,
-      json: async () => JSON.parse(result),
-    };
+    const resp = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!resp.ok)
+      return { ok: false, status: resp.status, json: async () => null };
+    return { ok: true, status: resp.status, json: () => resp.json() };
   } catch {
+    clearTimeout(timer);
     return { ok: false, status: 0, json: async () => null };
   }
 }

@@ -6,9 +6,8 @@ import { categorizeTabs } from "./tabs.js";
 import { isConnectionError, getBackoffDelay } from "./connection.js";
 import {
   isWindows,
-  windowsFetch,
+  httpGet,
   getCometPath,
-  isCometProcessRunning,
   killComet,
   startCometProcess,
 } from "./browser.js";
@@ -55,15 +54,7 @@ export class CDPClient {
   }
 
   private async httpGet(path: string): Promise<unknown> {
-    if (isWindows()) {
-      const resp = await windowsFetch(
-        `http://127.0.0.1:${this.state.port}${path}`,
-      );
-      if (!resp.ok)
-        throw new CDPConnectionError(`HTTP ${resp.status} for ${path}`);
-      return resp.json();
-    }
-    const resp = await fetch(
+    const resp = await httpGet(
       `http://127.0.0.1:${this.state.port}${path}`,
     );
     if (!resp.ok)
@@ -89,21 +80,10 @@ export class CDPClient {
       if (!id) throw new CDPConnectionError("No suitable browser target found");
 
       this.criClient = await CRI({ target: id, port: this.state.port });
-      await this.criClient.Page.enable();
       await this.criClient.Runtime.enable();
-      await this.criClient.DOM.enable();
 
       this.state.connected = true;
       this.state.targetId = id;
-
-      try {
-        await this.criClient.Emulation.setDeviceMetricsOverride({
-          width: this.config.windowWidth,
-          height: this.config.windowHeight,
-          deviceScaleFactor: 1,
-          mobile: false,
-        });
-      } catch {}
 
       this.logger.info(`Attached to target ${id}`);
       return id;
@@ -118,10 +98,19 @@ export class CDPClient {
   }
 
   private pickBestTarget(targets: TabInfo[]): string | null {
-    const pp = targets.find(
-      (t) => t.url.includes("perplexity.ai") && t.type === "page",
+    // Prefer main perplexity.ai page (not sidecar)
+    const mainPage = targets.find(
+      (t) =>
+        t.url.includes("perplexity.ai") &&
+        !t.url.includes("sidecar") &&
+        t.type === "page",
     );
-    if (pp) return pp.id;
+    if (mainPage) return mainPage.id;
+    // Fall back to any non-chrome page
+    const nonChrome = targets.find(
+      (t) => t.type === "page" && !t.url.startsWith("chrome://"),
+    );
+    if (nonChrome) return nonChrome.id;
     const page = targets.find((t) => t.type === "page");
     return page?.id ?? null;
   }
@@ -138,15 +127,21 @@ export class CDPClient {
   }
 
   async navigate(url: string): Promise<void> {
-    if (!this.criClient) throw new CDPConnectionError("Not connected");
-    await this.criClient.Page.navigate({ url });
-    await this.criClient.Page.loadEventFired();
+    await this.withAutoReconnect(async () => {
+      if (!this.criClient) throw new CDPConnectionError("Not connected");
+      await this.criClient.Page.enable();
+      await this.criClient.Page.navigate({ url });
+      await this.criClient.Page.loadEventFired();
+    });
   }
 
   async screenshot(format: "png" | "jpeg" = "png"): Promise<string> {
-    if (!this.criClient) throw new CDPConnectionError("Not connected");
-    const { data } = await this.criClient.Page.captureScreenshot({ format });
-    return data;
+    return await this.withAutoReconnect(async () => {
+      if (!this.criClient) throw new CDPConnectionError("Not connected");
+      await this.criClient.Page.enable();
+      const { data } = await this.criClient.Page.captureScreenshot({ format });
+      return data;
+    });
   }
 
   async evaluate(expression: string): Promise<EvaluateResult> {
@@ -244,13 +239,22 @@ export class CDPClient {
     const p = port ?? this.config.port;
     this.state.port = p;
 
-    try {
-      return await this.connect();
-    } catch {}
+    // Try connecting to existing instance (with a retry)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await this.connect();
+      } catch {
+        if (attempt < 2) await new Promise((r) => setTimeout(r, 1000));
+      }
+    }
 
+    // Not running — launch a new instance
     const cometPath = getCometPath();
     killComet();
     startCometProcess(cometPath, p, this.logger);
+
+    // Give Comet time to start the debugging port
+    await new Promise((r) => setTimeout(r, 3000));
 
     const start = Date.now();
     while (Date.now() - start < this.config.timeout) {
@@ -264,25 +268,29 @@ export class CDPClient {
   }
 
   async closeExtraTabs(): Promise<void> {
-    const cat = await this.listTabsCategorized();
-    const toClose = [
-      ...cat.sidecar,
-      ...cat.agentBrowsing,
-      ...cat.overlay,
-      ...cat.others,
-    ];
+    try {
+      const cat = await this.listTabsCategorized();
+      // Only close agentBrowsing tabs (external pages opened by the agent).
+      // Never close chrome:// tabs (crashes Comet), sidecar (internal), or our own target.
+      const toClose = cat.agentBrowsing.filter(
+        (t) => t.id !== this.state.targetId,
+      );
 
-    for (const tab of toClose) {
-      try {
-        if (this.criClient)
-          await this.criClient.Target.closeTarget({ targetId: tab.id });
-      } catch {
+      for (const tab of toClose) {
         try {
-          await windowsFetch(
-            `http://127.0.0.1:${this.state.port}/json/close/${tab.id}`,
-          );
-        } catch {}
+          if (this.criClient)
+            await this.criClient.Target.closeTarget({ targetId: tab.id });
+        } catch {
+          try {
+            await httpGet(
+              `http://127.0.0.1:${this.state.port}/json/close/${tab.id}`,
+            );
+          } catch {}
+        }
       }
+    } catch {
+      // Non-critical — tab cleanup is best-effort
+      this.logger.debug("Tab cleanup skipped (connection issue)");
     }
   }
 }

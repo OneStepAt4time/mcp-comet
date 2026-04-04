@@ -275,10 +275,17 @@ server.tool(
   connectShape,
   async ({ port }) => {
     try {
-      const targetId = await client.launchOrConnect(port);
+      await client.launchOrConnect(port);
       await client.closeExtraTabs();
-      await client.navigate("https://www.perplexity.ai");
-      return textResult(`Connected to Comet on port ${client.state.port}, target ${targetId}`);
+      // Only navigate if we're not already on perplexity.ai
+      const targets = await client.listTargets();
+      const currentTarget = targets.find((t) => t.id === client.state.targetId);
+      if (!currentTarget?.url.includes("perplexity.ai")) {
+        await client.navigate("https://www.perplexity.ai");
+      }
+      return textResult(
+        `Connected to Comet on port ${client.state.port}, target ${client.state.targetId}`,
+      );
     } catch (err) {
       return toMcpError(err);
     }

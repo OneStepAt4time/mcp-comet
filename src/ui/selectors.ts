@@ -9,5 +9,5 @@ export const SELECTORS = {
     labs: ['button[aria-label="Labs"][data-state="checked"]', 'button[aria-label="Labs"]'] as const,
     learn: ['button[aria-label="Learn"][data-state="checked"]', 'button[aria-label="Learn"]'] as const,
   },
-  LOADING: ['[class*="animate-spin"]', '[class*="animate-pulse"]', '[class*="animate"]'] as const,
+  LOADING: ['[class*="animate-spin"]', '[class*="animate-pulse"]'] as const,
 } as const;
