@@ -16,6 +16,7 @@ import {
   buildModeSwitchScript,
   buildGetCurrentModeScript,
 } from "./ui/navigation.js";
+import { buildPreSendStateScript } from "./prose-filter.js";
 import type { CategorizedTabs, TabInfo } from "./types.js";
 
 // ---------------------------------------------------------------------------
@@ -225,33 +226,6 @@ function formatTabs(categorized: CategorizedTabs): string {
     }
   }
   return lines.length > 0 ? lines.join("\n") : "No tabs found.";
-}
-
-/** Pre-send state capture: count prose elements and get last prose text. */
-function buildPreSendStateScript(): string {
-  return `(function() {
-    var proseElements = document.querySelectorAll('main [class*="prose"], body > [class*="prose"]');
-    var count = proseElements.length;
-    var lastText = '';
-    var excludeTags = ['NAV', 'ASIDE', 'HEADER', 'FOOTER', 'FORM'];
-    var uiTexts = ['Library', 'Discover', 'Spaces', 'Finance', 'Account', 'Upgrade', 'Home', 'Search', 'Ask a follow-up'];
-    for (var i = proseElements.length - 1; i >= 0; i--) {
-      var el = proseElements[i];
-      var parent = el.parentElement;
-      var excluded = false;
-      while (parent) { if (excludeTags.indexOf(parent.tagName) !== -1) { excluded = true; break; } parent = parent.parentElement; }
-      if (excluded) continue;
-      var text = el.innerText.trim();
-      if (!text) continue;
-      var isUI = false;
-      for (var u = 0; u < uiTexts.length; u++) { if (text.indexOf(uiTexts[u]) === 0) { isUI = true; break; } }
-      if (isUI) continue;
-      if (text.length < 100 && text.indexOf('?') === text.length - 1) continue;
-      lastText = text;
-      break;
-    }
-    return JSON.stringify({ proseCount: count, lastProseText: lastText });
-  })()`;
 }
 
 /** Heuristic: does the status contain a substantial response? */
