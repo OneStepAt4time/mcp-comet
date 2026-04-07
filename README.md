@@ -6,6 +6,7 @@
   <a href="https://github.com/OneStepAt4time/asteria/releases"><img src="https://img.shields.io/github/v/release/OneStepAt4time/asteria?style=flat-square&color=6366f1&label=version" alt="version"></a>
   <a href="https://github.com/OneStepAt4time/asteria/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-6366f1?style=flat-square" alt="license"></a>
   <a href="https://github.com/OneStepAt4time/asteria/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/OneStepAt4time/asteria/ci.yml?branch=master&style=flat-square&label=CI" alt="CI"></a>
+  <img src="https://img.shields.io/badge/coverage-75%25%2B-brightgreen?style=flat-square" alt="coverage">
   <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square" alt="node">
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-6366f1?style=flat-square" alt="MCP"></a>
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey?style=flat-square" alt="platform">
