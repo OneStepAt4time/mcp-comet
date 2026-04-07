@@ -17,6 +17,8 @@ import {
 } from './ui/navigation.js'
 import { SELECTORS } from './ui/selectors.js'
 import { buildGetAgentStatusScript } from './ui/status.js'
+import { buildStopAgentScript } from './ui/stop.js'
+import { buildListConversationsScript } from './ui/conversations.js'
 import { detectCometVersion } from './version.js'
 
 // ---------------------------------------------------------------------------
@@ -430,15 +432,7 @@ export async function startServer(): Promise<void> {
     {},
     async () => {
       try {
-        const script = `(function() {
-        var buttons = document.querySelectorAll('button');
-        for (var i = 0; i < buttons.length; i++) {
-          var label = (buttons[i].getAttribute('aria-label') || '').toLowerCase();
-          if (label.indexOf('stop') !== -1 || label.indexOf('cancel') !== -1) { buttons[i].click(); return 'stopped'; }
-          if (buttons[i].querySelector('svg rect')) { buttons[i].click(); return 'stopped'; }
-        }
-        return 'not_found';
-      })()`
+        const script = buildStopAgentScript()
         const raw = await client.safeEvaluate(script)
         const result = extractValue(raw)
         return textResult(result === 'stopped' ? 'Agent stopped.' : 'No stop button found.')
@@ -565,21 +559,7 @@ export async function startServer(): Promise<void> {
     {},
     async () => {
       try {
-        const script = `(function() {
-        var links = document.querySelectorAll('a[href]');
-        var conversations = [];
-        var seen = {};
-        for (var i = 0; i < links.length; i++) {
-          var href = links[i].getAttribute('href') || '';
-          if (href.indexOf('/search/') !== -1 || href.indexOf('/copilot/') !== -1) {
-            if (!seen[href]) {
-              seen[href] = true;
-              conversations.push({ title: (links[i].innerText || '').trim(), url: href });
-            }
-          }
-        }
-        return JSON.stringify(conversations);
-      })()`
+        const script = buildListConversationsScript()
         const raw = await client.safeEvaluate(script)
         const conversations = JSON.parse(String(extractValue(raw))) as Array<{
           title: string
