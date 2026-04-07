@@ -51,11 +51,42 @@ describe('buildModeSwitchScript', () => {
     const s = buildModeSwitchScript('standard')
     expect(s).toContain('standard_mode_no_action')
   })
+
+  // Edge case tests
+  it('returns standard_mode_no_action for standard mode', () => {
+    const s = buildModeSwitchScript('standard')
+    expect(s).toContain('standard_mode_no_action')
+  })
+
+  it('uses raw string for unknown mode', () => {
+    const s = buildModeSwitchScript('unknown-custom-mode')
+    expect(s).toContain('unknown-custom-mode')
+  })
+
+  it('has listbox retry with maxAttempts', () => {
+    const s = buildModeSwitchScript('deep-research')
+    expect(s).toContain('maxAttempts')
+    expect(s).toContain('attempts')
+    expect(s).toContain('setTimeout')
+  })
 })
 
 describe('buildNewChatScript', () => {
   it('navigates to perplexity.ai', () => {
     const s = buildNewChatScript()
     expect(s).toContain('perplexity.ai')
+  })
+})
+
+describe('buildGetCurrentModeScript edge cases', () => {
+  it('returns standard by default', () => {
+    const s = buildGetCurrentModeScript()
+    expect(s).toContain("return 'standard'")
+  })
+
+  it('detects computer mode from /copilot/ URL', () => {
+    const s = buildGetCurrentModeScript()
+    expect(s).toContain('/copilot/')
+    expect(s).toContain("return 'computer'")
   })
 })

@@ -55,4 +55,31 @@ describe('buildPreSendStateScript', () => {
     expect(js).toContain('proseCount')
     expect(js).toContain('lastProseText')
   })
+
+  // Edge case tests
+  it('returns IIFE with proseCount and lastProseText', async () => {
+    const { buildPreSendStateScript } = await import('../../src/prose-filter.js')
+    const js = buildPreSendStateScript()
+    expect(js).toMatch(/\(function\(\)/)
+    expect(js).toContain('proseCount')
+    expect(js).toContain('lastProseText')
+  })
+
+  it('includes findProseJS body with proseElements', async () => {
+    const { buildPreSendStateScript } = await import('../../src/prose-filter.js')
+    const js = buildPreSendStateScript()
+    expect(js).toContain('proseElements')
+    expect(js).toContain("querySelectorAll('main [class*=\"prose\"]")
+  })
+
+  it('includes excludeTags array', async () => {
+    const { buildPreSendStateScript } = await import('../../src/prose-filter.js')
+    const js = buildPreSendStateScript()
+    expect(js).toContain('excludeTags')
+    expect(js).toContain('NAV')
+    expect(js).toContain('ASIDE')
+    expect(js).toContain('HEADER')
+    expect(js).toContain('FOOTER')
+    expect(js).toContain('FORM')
+  })
 })
