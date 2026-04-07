@@ -12,14 +12,13 @@ describe('getCometPath', () => {
   })
 
   it('throws CometNotFoundError when not found', async () => {
-    // Delete COMET_PATH entirely so the function falls through to platform search
+    vi.resetModules()
     delete process.env.COMET_PATH
-    // Stub all known candidate paths to be empty so the platform search fails
-    vi.stubEnv('LOCALAPPDATA', '')
-    vi.stubEnv('PROGRAMFILES', '')
-    vi.stubEnv('PROGRAMFILES(X86)', '')
+    const orig = process.platform
+    Object.defineProperty(process, 'platform', { value: 'freebsd', configurable: true })
     const { getCometPath } = await import('../../../src/cdp/browser.js')
-    expect(() => getCometPath()).toThrow()
+    expect(() => getCometPath()).toThrow('Comet browser not found')
+    Object.defineProperty(process, 'platform', { value: orig, configurable: true })
   })
 })
 
@@ -72,23 +71,6 @@ describe('httpGet', () => {
     const elapsed = Date.now() - start
     expect(result.ok).toBe(false)
     expect(elapsed).toBeLessThan(500) // Should timeout within ~100ms, not wait 2 seconds
-  })
-})
-
-describe('getCometPath - edge cases', () => {
-  it('throws CometNotFoundError when platform is unsupported (e.g., freebsd)', async () => {
-    const orig = process.platform
-    delete process.env.COMET_PATH
-    Object.defineProperty(process, 'platform', {
-      value: 'freebsd',
-      configurable: true,
-    })
-    const { getCometPath } = await import('../../../src/cdp/browser.js')
-    expect(() => getCometPath()).toThrow('Comet browser not found')
-    Object.defineProperty(process, 'platform', {
-      value: orig,
-      configurable: true,
-    })
   })
 })
 
