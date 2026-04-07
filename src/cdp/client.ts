@@ -132,6 +132,7 @@ export class CDPClient {
   }
 
   async screenshot(format: 'png' | 'jpeg' = 'png'): Promise<string> {
+    await this.ensureHealthyConnection()
     return await this.withAutoReconnect(async () => {
       if (!this.criClient) throw new CDPConnectionError('Not connected')
       await this.criClient.Page.enable()

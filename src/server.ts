@@ -219,6 +219,7 @@ interface RawAgentStatus {
   response: string
   hasStopButton: boolean
   hasLoadingSpinner?: boolean
+  proseCount?: number
 }
 
 function parseAgentStatus(raw: unknown): RawAgentStatus {
@@ -373,9 +374,13 @@ export async function startServer(): Promise<void> {
             }
           }
 
-          // Check for new response
+          // Check for new response — proseCount is the primary signal
+          const proseIncreased =
+            (status.proseCount ?? 0) > preSendState.proseCount
           const responseChanged =
-            status.response !== preSendState.lastProseText || hasSubstantialResponse(status)
+            proseIncreased ||
+            status.response !== preSendState.lastProseText ||
+            hasSubstantialResponse(status)
 
           if (responseChanged && status.response) {
             sawNewResponse = true

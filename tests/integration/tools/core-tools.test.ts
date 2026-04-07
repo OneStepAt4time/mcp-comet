@@ -186,5 +186,44 @@ describe('Core tool handlers', () => {
       expect(result.isError).toBe(true)
       expect(result.content[0].text).toContain('Error')
     })
+
+    it('sequential queries — returns new response when proseCount increases', async () => {
+      // Simulates BUG-2: second query should detect new response via proseCount
+      // even when old response text is still on the page
+      let callCount = 0
+      const oldResponse = 'This is the old response from the first query that is still on the page.'
+      const newResponse = 'This is the new response from the second query with different content.'
+
+      mocks.safeEvaluate.mockImplementation(async () => {
+        callCount++
+        // First call: pre-send state (old response still on page, proseCount=1)
+        if (callCount === 1) {
+          return { result: { value: JSON.stringify({ proseCount: 1, lastProseText: oldResponse }) } }
+        }
+        // Second call: type prompt
+        if (callCount === 2) return { result: { value: 'typed' } }
+        // Third call: submit
+        if (callCount === 3) return { result: { value: 'submitted' } }
+        // Fourth+ calls: status polling — proseCount now 2 (new prose added)
+        return {
+          result: {
+            value: JSON.stringify({
+              status: 'completed',
+              steps: ['Searching web'],
+              currentStep: 'Searching web',
+              response: newResponse,
+              hasStopButton: false,
+              proseCount: 2,
+            }),
+          },
+        }
+      })
+
+      const handler = getHandler('comet_ask')
+      const result = await handler({ prompt: 'What is 3+3?' })
+
+      expect(result.content[0].text).toContain(newResponse)
+      expect(result.content[0].text).not.toContain(oldResponse)
+    })
   })
 })

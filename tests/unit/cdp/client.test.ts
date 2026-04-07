@@ -202,6 +202,72 @@ describe('CDPClient screenshot()', () => {
     expect(callArgs.clip).toEqual({ x: 0, y: 0, width: 1440, height: 900, scale: 1 })
     expect(result).toBe('base64data')
   })
+
+  it('auto-reconnects before screenshot when connection drops', async () => {
+    let connectCount = 0
+    originalFetch = mockFetchForConnect()
+
+    // First CRI connection succeeds, health check fails, second connection succeeds
+    let screenshotAttempted = false
+    const healthyCriMock = {
+      Page: {
+        enable: vi.fn(),
+        navigate: vi.fn(),
+        loadEventFired: vi.fn().mockResolvedValue(undefined),
+        captureScreenshot: vi.fn().mockResolvedValue({ data: 'screenshot-data' }),
+      },
+      Runtime: {
+        enable: vi.fn(),
+        evaluate: vi.fn().mockImplementation(() => {
+          if (!screenshotAttempted) {
+            // First health check passes for initial connect
+            return Promise.resolve({ result: { value: 2 } })
+          }
+          return Promise.resolve({ result: { value: 2 } })
+        }),
+      },
+      Emulation: { setDeviceMetricsOverride: vi.fn().mockRejectedValue('ignore') },
+      Input: { dispatchKeyEvent: vi.fn() },
+      Target: { closeTarget: vi.fn() },
+      close: vi.fn(),
+    }
+
+    vi.mocked(CRI).mockImplementation(async () => {
+      connectCount++
+      return healthyCriMock as any
+    })
+
+    const client = CDPClient.getInstance()
+    await client.connect()
+
+    // Simulate connection drop
+    screenshotAttempted = true
+    // After disconnect, health check returns false, then reconnect succeeds
+    const originalEvaluate = healthyCriMock.Runtime.evaluate
+    healthyCriMock.Runtime.evaluate = vi.fn().mockImplementation(() => {
+      // Return unhealthy result to trigger reconnect
+      return Promise.resolve({ result: { value: null } })
+    })
+
+    // After reconnect, evaluation should succeed again
+    const fetchCalls: string[] = []
+    const origFetch = globalThis.fetch
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
+      fetchCalls.push(url)
+      if (url.includes('/json/version'))
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ Browser: 'Chrome/145' }) })
+      if (url.includes('/json/list'))
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([{ id: 't1', url: 'https://perplexity.ai', type: 'page', title: 'P' }]) })
+      return Promise.resolve({ ok: false })
+    }) as any
+
+    // screenshot() should call ensureHealthyConnection which triggers reconnect
+    const result = await client.screenshot('png')
+
+    globalThis.fetch = origFetch
+    expect(result).toBe('screenshot-data')
+    expect(connectCount).toBeGreaterThanOrEqual(2) // initial connect + reconnect
+  })
 })
 
 describe('CDPClient evaluate()', () => {

@@ -54,6 +54,6 @@ export function buildGetAgentStatusScript(selectors?: SelectorSet): string {
     else if (hasWorkingText) status = "working";
     else if (bodyText.indexOf('Ask a follow-up') !== -1 && results.length > 0 && !hasStopButton) status = "completed";
 
-    return JSON.stringify({ status: status, steps: steps, currentStep: currentStep, response: response, hasStopButton: hasStopButton, hasLoadingSpinner: hasLoadingSpinner });
+    return JSON.stringify({ status: status, steps: steps, currentStep: currentStep, response: response, hasStopButton: hasStopButton, hasLoadingSpinner: hasLoadingSpinner, proseCount: results.length });
   })()`
 }
