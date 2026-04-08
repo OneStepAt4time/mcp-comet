@@ -23,7 +23,7 @@ const MODE_DISPLAY_NAMES: Record<string, string> = {
 export function buildModeSwitchScript(mode: string): string {
   const displayName = MODE_DISPLAY_NAMES[mode] ?? mode
   return `(function() {
-    var displayName = '${displayName}';
+    var displayName = ${JSON.stringify(displayName)};
     if (!displayName) return 'standard_mode_no_action';
 
     // Find the contenteditable input

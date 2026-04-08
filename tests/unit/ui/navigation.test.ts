@@ -71,6 +71,19 @@ describe('buildModeSwitchScript', () => {
   })
 })
 
+describe('buildModeSwitchScript injection safety', () => {
+  it('escapes special characters in mode display name', () => {
+    // Simulate injection via unknown mode name that falls through
+    const malicious = "standard';alert(1);//"
+    const script = buildModeSwitchScript(malicious)
+    const literal = JSON.stringify(malicious)
+    // The displayName must be embedded as a JSON string literal
+    expect(script).toContain('var displayName = ' + literal + ';')
+    // Verify the literal round-trips safely through JSON.parse
+    expect(JSON.parse(literal)).toBe(malicious)
+  })
+})
+
 describe('buildNewChatScript', () => {
   it('navigates to perplexity.ai', () => {
     const s = buildNewChatScript()
