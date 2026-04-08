@@ -116,6 +116,33 @@ describe('UI control tool handlers', () => {
     })
   })
 
+  describe('comet_open_conversation', () => {
+    it('rejects domain suffix attack', async () => {
+      const handler = getHandler('comet_open_conversation')
+      const result = await handler({ url: 'https://perplexity.ai.evil.com/search/123' })
+      expect(result.content[0].text).toContain('Error')
+    })
+
+    it('rejects path-based bypass', async () => {
+      const handler = getHandler('comet_open_conversation')
+      const result = await handler({ url: 'https://evil.com/perplexity.ai/' })
+      expect(result.content[0].text).toContain('Error')
+    })
+
+    it('rejects credential-based URL confusion', async () => {
+      const handler = getHandler('comet_open_conversation')
+      const result = await handler({ url: 'https://perplexity.ai@evil.com/' })
+      expect(result.content[0].text).toContain('Error')
+    })
+
+    it('accepts valid perplexity.ai URL', async () => {
+      mocks.navigate.mockResolvedValue(undefined)
+      const handler = getHandler('comet_open_conversation')
+      const result = await handler({ url: 'https://www.perplexity.ai/search/abc123' })
+      expect(result.content[0].text).toContain('Navigated to:')
+    })
+  })
+
   describe('comet_switch_tab', () => {
     it('switches by tabId', async () => {
       mocks.listTargets.mockResolvedValue([

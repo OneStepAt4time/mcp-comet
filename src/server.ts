@@ -3,7 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 import { CDPClient } from './cdp/client.js'
 import { loadConfig } from './config.js'
-import { toMcpError } from './errors.js'
+import { EvaluationError, toMcpError } from './errors.js'
 import { createLogger } from './logger.js'
 import { buildPreSendStateScript } from './prose-filter.js'
 import type { SelectorSet } from './selectors/types.js'
@@ -206,7 +206,7 @@ function extractValue(result: {
 }): unknown {
   if (result.exceptionDetails) {
     const desc = result.result?.description ?? String(result.exceptionDetails)
-    throw new Error(`Script error: ${desc}`)
+    throw new EvaluationError(`Script error: ${desc}`, { expression: '(unknown)' })
   }
   return result.result?.value
 }
@@ -223,7 +223,13 @@ interface RawAgentStatus {
 }
 
 function parseAgentStatus(raw: unknown): RawAgentStatus {
-  if (typeof raw === 'string') return JSON.parse(raw) as RawAgentStatus
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw) as RawAgentStatus
+    } catch {
+      return { status: 'idle', steps: [], currentStep: '', response: '', hasStopButton: false, proseCount: 0 }
+    }
+  }
   return raw as RawAgentStatus
 }
 
@@ -358,10 +364,11 @@ export async function startServer(): Promise<void> {
         // POLLING LOOP
         const startTime = Date.now()
         let sawNewResponse = false
+        let timedOut = false
         const collectedSteps: string[] = []
         let lastResponse = ''
 
-        while (Date.now() - startTime < effectiveTimeout) {
+        while (!timedOut && Date.now() - startTime < effectiveTimeout) {
           await sleep(config.pollInterval)
 
           const statusRaw = await client.safeEvaluate(buildGetAgentStatusScript(activeSelectors))
@@ -400,6 +407,9 @@ export async function startServer(): Promise<void> {
             return textResult(status.response)
           }
         }
+
+        // Mark timed out to prevent any further polling
+        timedOut = true
 
         // Timeout
         const timeoutParts: string[] = ['Agent is still working. Use comet_poll to check status.']
@@ -590,7 +600,13 @@ export async function startServer(): Promise<void> {
     openConversationShape,
     async ({ url }) => {
       try {
-        if (!url.startsWith('https://') || !url.includes('perplexity.ai')) {
+        let parsed: URL
+        try {
+          parsed = new URL(url)
+        } catch {
+          return toMcpError(new Error(`Invalid URL: "${url}"`))
+        }
+        if (parsed.protocol !== 'https:' || !parsed.hostname.endsWith('perplexity.ai')) {
           return toMcpError(
             new Error(`Invalid URL: must be a https://perplexity.ai/ URL, got "${url}"`),
           )
