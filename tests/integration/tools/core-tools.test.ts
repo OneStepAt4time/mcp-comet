@@ -1,4 +1,5 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { EvaluationError } from '../../../src/errors.js'
 import { getHandler, mocks, registerHandlers, resetHarness } from './harness.js'
 
 describe('Core tool handlers', () => {
@@ -224,6 +225,71 @@ describe('Core tool handlers', () => {
 
       expect(result.content[0].text).toContain(newResponse)
       expect(result.content[0].text).not.toContain(oldResponse)
+    })
+
+    it('comet_ask stops polling after timeout — no runaway polling', async () => {
+      let evalCalls = 0
+      mocks.safeEvaluate.mockImplementation(async () => {
+        evalCalls++
+        if (evalCalls === 1) return { result: { value: '{"proseCount":0,"lastProseText":""}' } }
+        if (evalCalls === 2) return { result: { value: 'typed' } }
+        if (evalCalls === 3) return { result: { value: 'submitted' } }
+        return {
+          result: {
+            value: JSON.stringify({
+              status: 'working',
+              steps: [],
+              currentStep: '',
+              response: '',
+              hasStopButton: true,
+            }),
+          },
+        }
+      })
+
+      const handler = getHandler('comet_ask')
+      const result = await handler({ prompt: 'test', timeout: 300 })
+      expect(result.content[0].text).toContain('Agent is still working')
+
+      // Verify no runaway polling after timeout
+      const callsAfterTimeout = evalCalls
+      await new Promise((r) => setTimeout(r, 500))
+      expect(evalCalls).toBe(callsAfterTimeout)
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // extractValue / parseAgentStatus tests
+  // ---------------------------------------------------------------------------
+
+  describe('extractValue throws EvaluationError', () => {
+    it('comet_poll returns MCP error for evaluation failure with correct code', async () => {
+      mocks.safeEvaluate.mockResolvedValue({
+        exceptionDetails: { text: 'Script execution failed' },
+        result: { description: 'TypeError: foo is not defined' },
+      })
+
+      const handler = getHandler('comet_poll')
+      const result = await handler({})
+
+      expect(result.isError).toBe(true)
+      expect(result.content[0].text).toContain('EVALUATION_FAILED')
+      expect(result.content[0].text).toContain('Script error')
+    })
+  })
+
+  describe('parseAgentStatus handles malformed JSON', () => {
+    it('comet_poll returns idle status for malformed JSON string', async () => {
+      mocks.safeEvaluate.mockResolvedValue({
+        result: { value: 'not-valid-json{{{}}}' },
+      })
+
+      const handler = getHandler('comet_poll')
+      const result = await handler({})
+
+      expect(result.isError).toBeUndefined()
+      const parsed = JSON.parse(result.content[0].text)
+      expect(parsed.status).toBe('idle')
     })
   })
 })
