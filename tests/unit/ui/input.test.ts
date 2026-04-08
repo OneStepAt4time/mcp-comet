@@ -16,3 +16,30 @@ describe('buildTypePromptScript', () => {
     expect(s).toContain('insertText')
   })
 })
+
+describe('buildTypePromptScript injection safety', () => {
+  it('safely embeds backticks via JSON.stringify', () => {
+    const prompt = 'test` injected code'
+    const literal = JSON.stringify(prompt)
+    const script = buildTypePromptScript(prompt)
+    // The prompt must appear as a JSON string literal in the script
+    expect(script).toContain(literal)
+    // The literal must be parseable as JSON (proving safe embedding)
+    expect(() => JSON.parse(literal)).not.toThrow()
+  })
+
+  it('safely embeds template literal expressions via JSON.stringify', () => {
+    const prompt = '${document.cookie}'
+    const literal = JSON.stringify(prompt)
+    const script = buildTypePromptScript(prompt)
+    expect(script).toContain(literal)
+    expect(() => JSON.parse(literal)).not.toThrow()
+  })
+
+  it('escapes unicode line separators', () => {
+    const script = buildTypePromptScript('test\u2028line')
+    // JSON.stringify escapes U+2028 as \u2028
+    expect(script).not.toContain('\u2028')
+    expect(script).toContain('\\u2028')
+  })
+})
