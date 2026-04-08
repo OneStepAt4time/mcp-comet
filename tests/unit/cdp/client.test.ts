@@ -443,3 +443,89 @@ describe('CDPClient reconnect race condition', () => {
     expect(connectCalls).toBeLessThanOrEqual(3) // initial + at most 1 reconnect
   })
 })
+
+describe('CDPClient reconnection paths', () => {
+  let originalFetch: typeof globalThis.fetch
+
+  beforeEach(() => {
+    CDPClient.resetInstance()
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    if (originalFetch) globalThis.fetch = originalFetch
+  })
+
+  it('withAutoReconnect retries on connection error', async () => {
+    let attempt = 0
+    originalFetch = mockFetchForConnect()
+    mockCRI()
+
+    const client = CDPClient.getInstance()
+    await client.connect()
+
+    // First call throws connection error, second succeeds
+    const result = await client['withAutoReconnect'](async () => {
+      attempt++
+      if (attempt === 1) throw new Error('WebSocket CLOSED')
+      return 'success'
+    })
+
+    expect(result).toBe('success')
+    expect(attempt).toBe(2)
+  })
+
+  it('withAutoReconnect throws after max attempts', async () => {
+    originalFetch = mockFetchForConnect()
+    mockCRI()
+
+    // Use config with maxReconnectAttempts=1 to avoid long backoff
+    const client = CDPClient.getInstance({ maxReconnectAttempts: 1, maxReconnectDelay: 10 } as any)
+    // Need to manually connect since constructor already ran
+    client.state.port = 9222
+    await client.connect()
+
+    await expect(
+      client['withAutoReconnect'](async () => { throw new Error('WebSocket CLOSED') }),
+    ).rejects.toThrow('WebSocket CLOSED')
+  })
+
+  it('withAutoReconnect rethrows non-connection errors immediately', async () => {
+    originalFetch = mockFetchForConnect()
+    mockCRI()
+
+    const client = CDPClient.getInstance()
+    await client.connect()
+
+    await expect(
+      client['withAutoReconnect'](async () => { throw new Error('Some other error') }),
+    ).rejects.toThrow('Some other error')
+  })
+
+  it('ensureHealthyConnection calls reconnect when unhealthy', async () => {
+    originalFetch = mockFetchForConnect()
+    mockCRI()
+    const client = CDPClient.getInstance()
+    await client.connect()
+
+    const reconnectSpy = vi.spyOn(client as any, 'reconnect').mockResolvedValue(undefined)
+    vi.spyOn(client as any, 'isHealthy').mockResolvedValue(false)
+
+    await client['ensureHealthyConnection']()
+    expect(reconnectSpy).toHaveBeenCalled()
+  })
+
+  it('ensureHealthyConnection does not reconnect when healthy', async () => {
+    originalFetch = mockFetchForConnect()
+    mockCRI({
+      Runtime: { enable: vi.fn(), evaluate: vi.fn().mockResolvedValue({ result: { value: 2 } }) },
+    })
+    const client = CDPClient.getInstance()
+    await client.connect()
+
+    const reconnectSpy = vi.spyOn(client as any, 'reconnect')
+
+    await client['ensureHealthyConnection']()
+    expect(reconnectSpy).not.toHaveBeenCalled()
+  })
+})
