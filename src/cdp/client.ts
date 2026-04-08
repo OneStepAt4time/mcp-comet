@@ -21,6 +21,20 @@ export class CDPClient {
     isReconnecting: false,
   }
 
+  private opLock: Promise<void> = Promise.resolve()
+
+  private async enqueue<T>(fn: () => Promise<T>): Promise<T> {
+    const prev = this.opLock
+    let resolve!: () => void
+    this.opLock = new Promise((r) => { resolve = r })
+    await prev
+    try {
+      return await fn()
+    } finally {
+      resolve()
+    }
+  }
+
   private constructor(config?: CometConfig) {
     this.config = config ?? loadConfig()
     this.logger = createLogger(this.config.logLevel)
@@ -111,7 +125,7 @@ export class CDPClient {
     return page?.id ?? null
   }
 
-  async disconnect(): Promise<void> {
+  private async disconnectDirect(): Promise<void> {
     if (this.criClient) {
       try {
         await this.criClient.close()
@@ -122,35 +136,43 @@ export class CDPClient {
     this.state.targetId = null
   }
 
+  async disconnect(): Promise<void> {
+    return this.enqueue(() => this.disconnectDirect())
+  }
+
   async navigate(url: string): Promise<void> {
-    await this.withAutoReconnect(async () => {
-      if (!this.criClient) throw new CDPConnectionError('Not connected')
-      await this.criClient.Page.enable()
-      await this.criClient.Page.navigate({ url })
-      await this.criClient.Page.loadEventFired()
+    return this.enqueue(async () => {
+      await this.withAutoReconnect(async () => {
+        if (!this.criClient) throw new CDPConnectionError('Not connected')
+        await this.criClient.Page.enable()
+        await this.criClient.Page.navigate({ url })
+        await this.criClient.Page.loadEventFired()
+      })
     })
   }
 
   async screenshot(format: 'png' | 'jpeg' = 'png'): Promise<string> {
-    await this.ensureHealthyConnection()
-    return await this.withAutoReconnect(async () => {
-      if (!this.criClient) throw new CDPConnectionError('Not connected')
-      await this.criClient.Page.enable()
-      // Use explicit clip to avoid 0-width viewport issues (Chrome 145+)
-      const clip = {
-        x: 0,
-        y: 0,
-        width: this.config.windowWidth,
-        height: this.config.windowHeight,
-        scale: 1,
-      }
-      const { data } = await Promise.race([
-        this.criClient.Page.captureScreenshot({ format, clip }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Screenshot timed out after 15s')), 15000),
-        ),
-      ])
-      return data
+    return this.enqueue(async () => {
+      await this.ensureHealthyConnection()
+      return await this.withAutoReconnect(async () => {
+        if (!this.criClient) throw new CDPConnectionError('Not connected')
+        await this.criClient.Page.enable()
+        // Use explicit clip to avoid 0-width viewport issues (Chrome 145+)
+        const clip = {
+          x: 0,
+          y: 0,
+          width: this.config.windowWidth,
+          height: this.config.windowHeight,
+          scale: 1,
+        }
+        const { data } = await Promise.race([
+          this.criClient.Page.captureScreenshot({ format, clip }),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Screenshot timed out after 15s')), 15000),
+          ),
+        ])
+        return data
+      })
     })
   }
 
@@ -164,22 +186,26 @@ export class CDPClient {
   }
 
   async safeEvaluate(expression: string): Promise<EvaluateResult> {
-    await this.ensureHealthyConnection()
-    try {
-      return await this.withAutoReconnect(() => this.evaluate(expression))
-    } catch (err) {
-      throw new EvaluationError(
-        `Evaluation failed: ${err instanceof Error ? err.message : String(err)}`,
-        { expression },
-        err,
-      )
-    }
+    return this.enqueue(async () => {
+      await this.ensureHealthyConnection()
+      try {
+        return await this.withAutoReconnect(() => this.evaluate(expression))
+      } catch (err) {
+        throw new EvaluationError(
+          `Evaluation failed: ${err instanceof Error ? err.message : String(err)}`,
+          { expression },
+          err,
+        )
+      }
+    })
   }
 
   async pressKey(key: string): Promise<void> {
-    if (!this.criClient) throw new CDPConnectionError('Not connected')
-    await this.criClient.Input.dispatchKeyEvent({ type: 'keyDown', key })
-    await this.criClient.Input.dispatchKeyEvent({ type: 'keyUp', key })
+    return this.enqueue(async () => {
+      if (!this.criClient) throw new CDPConnectionError('Not connected')
+      await this.criClient.Input.dispatchKeyEvent({ type: 'keyDown', key })
+      await this.criClient.Input.dispatchKeyEvent({ type: 'keyUp', key })
+    })
   }
 
   async isHealthy(): Promise<boolean> {
@@ -224,7 +250,7 @@ export class CDPClient {
     if (this.state.isReconnecting) return
     this.state.isReconnecting = true
     try {
-      await this.disconnect()
+      await this.disconnectDirect()
       await this.connect(this.state.targetId ?? undefined)
       this.state.reconnectAttempts = 0
       this.logger.info('Reconnected')
@@ -274,24 +300,26 @@ export class CDPClient {
   }
 
   async closeExtraTabs(): Promise<void> {
-    try {
-      const cat = await this.listTabsCategorized()
-      // Only close agentBrowsing tabs (external pages opened by the agent).
-      // Never close chrome:// tabs (crashes Comet), sidecar (internal), or our own target.
-      const toClose = cat.agentBrowsing.filter((t) => t.id !== this.state.targetId)
+    return this.enqueue(async () => {
+      try {
+        const cat = await this.listTabsCategorized()
+        // Only close agentBrowsing tabs (external pages opened by the agent).
+        // Never close chrome:// tabs (crashes Comet), sidecar (internal), or our own target.
+        const toClose = cat.agentBrowsing.filter((t) => t.id !== this.state.targetId)
 
-      for (const tab of toClose) {
-        try {
-          if (this.criClient) await this.criClient.Target.closeTarget({ targetId: tab.id })
-        } catch {
+        for (const tab of toClose) {
           try {
-            await httpGet(`http://127.0.0.1:${this.state.port}/json/close/${tab.id}`)
-          } catch {}
+            if (this.criClient) await this.criClient.Target.closeTarget({ targetId: tab.id })
+          } catch {
+            try {
+              await httpGet(`http://127.0.0.1:${this.state.port}/json/close/${tab.id}`)
+            } catch {}
+          }
         }
+      } catch {
+        // Non-critical — tab cleanup is best-effort
+        this.logger.debug('Tab cleanup skipped (connection issue)')
       }
-    } catch {
-      // Non-critical — tab cleanup is best-effort
-      this.logger.debug('Tab cleanup skipped (connection issue)')
-    }
+    })
   }
 }

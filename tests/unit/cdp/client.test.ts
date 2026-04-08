@@ -365,3 +365,36 @@ describe('CDPClient isHealthy()', () => {
     expect(healthy).toBe(false)
   })
 })
+
+describe('CDPClient operation queue', () => {
+  let originalFetch: typeof globalThis.fetch
+
+  beforeEach(() => {
+    CDPClient.resetInstance()
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    if (originalFetch) globalThis.fetch = originalFetch
+  })
+
+  it('serializes concurrent operations', async () => {
+    originalFetch = mockFetchForConnect()
+    mockCRI()
+
+    const client = CDPClient.getInstance()
+    await client.connect()
+
+    const order: number[] = []
+    const op1 = client['enqueue'](async () => {
+      order.push(1)
+      await new Promise((r) => setTimeout(r, 50))
+      order.push(2)
+    })
+    const op2 = client['enqueue'](async () => {
+      order.push(3)
+    })
+    await Promise.all([op1, op2])
+    expect(order).toEqual([1, 2, 3])
+  })
+})
