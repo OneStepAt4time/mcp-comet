@@ -6,7 +6,7 @@ const DEFAULTS: CometConfig = {
   port: 9222,
   timeout: 30000,
   cometPath: null,
-  responseTimeout: 120000,
+  responseTimeout: 180000,
   logLevel: 'info',
   screenshotFormat: 'png',
   screenshotQuality: 80,

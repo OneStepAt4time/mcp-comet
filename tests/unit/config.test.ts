@@ -22,7 +22,7 @@ describe('loadConfig', () => {
     expect(config.port).toBe(9222)
     expect(config.timeout).toBe(30000)
     expect(config.cometPath).toBeNull()
-    expect(config.responseTimeout).toBe(120000)
+    expect(config.responseTimeout).toBe(180000)
     expect(config.logLevel).toBe('info')
     expect(config.screenshotFormat).toBe('png')
     expect(config.screenshotQuality).toBe(80)

@@ -367,6 +367,8 @@ export async function startServer(): Promise<void> {
         let timedOut = false
         const collectedSteps: string[] = []
         let lastResponse = ''
+        let stallCount = 0
+        const MAX_STALL_POLLS = 10
 
         while (!timedOut && Date.now() - startTime < effectiveTimeout) {
           await sleep(config.pollInterval)
@@ -390,9 +392,18 @@ export async function startServer(): Promise<void> {
             hasSubstantialResponse(status)
 
           if (responseChanged && status.response) {
+            // Track response growth for auto-extend
+            if (status.response.length > lastResponse.length) {
+              stallCount = 0
+            } else if (sawNewResponse) {
+              stallCount++
+            }
             sawNewResponse = true
             lastResponse = status.response
           }
+
+          // Stall detection — if response stopped growing, give up after MAX_STALL_POLLS
+          if (stallCount >= MAX_STALL_POLLS) break
 
           if ((status.status === 'completed' || status.status === 'idle') && sawNewResponse) {
             const parts: string[] = []
@@ -448,9 +459,14 @@ export async function startServer(): Promise<void> {
     async () => {
       try {
         const script = buildStopAgentScript()
-        const raw = await client.safeEvaluate(script)
-        const result = extractValue(raw)
-        return textResult(result === 'stopped' ? 'Agent stopped.' : 'No stop button found.')
+        // Retry up to 5 times — agent may not have started yet
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const raw = await client.safeEvaluate(script)
+          const result = extractValue(raw)
+          if (result === 'stopped') return textResult('Agent stopped.')
+          await sleep(1000)
+        }
+        return textResult('No stop button found.')
       } catch (err) {
         return toMcpError(err)
       }

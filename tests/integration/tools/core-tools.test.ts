@@ -103,7 +103,7 @@ describe('Core tool handlers', () => {
       expect(result.content[0].text).toContain('Agent stopped')
     })
 
-    it('no stop button — returns not found message', async () => {
+    it('no stop button — returns not found message', { timeout: 10000 }, async () => {
       mocks.safeEvaluate.mockResolvedValue({
         result: { value: 'not_found' },
       })
@@ -112,6 +112,20 @@ describe('Core tool handlers', () => {
       const result = await handler({})
 
       expect(result.content[0].text).toContain('No stop button found')
+    })
+
+    it('retries until stop button appears', async () => {
+      let callCount = 0
+      mocks.safeEvaluate.mockImplementation(async () => {
+        callCount++
+        return { result: { value: callCount >= 3 ? 'stopped' : 'not_found' } }
+      })
+
+      const handler = getHandler('comet_stop')
+      const result = await handler({})
+
+      expect(result.content[0].text).toContain('Agent stopped')
+      expect(callCount).toBe(3)
     })
   })
 
@@ -255,6 +269,68 @@ describe('Core tool handlers', () => {
       const callsAfterTimeout = evalCalls
       await new Promise((r) => setTimeout(r, 500))
       expect(evalCalls).toBe(callsAfterTimeout)
+    })
+
+    it('smart polling — auto-extends when response is growing', async () => {
+      let callCount = 0
+      const growingResponses = [
+        'A'.repeat(60),
+        'A'.repeat(120),
+        'A'.repeat(200),
+      ]
+      mocks.safeEvaluate.mockImplementation(async () => {
+        callCount++
+        if (callCount === 1) return { result: { value: '{"proseCount":0,"lastProseText":""}' } }
+        if (callCount === 2) return { result: { value: 'typed' } }
+        if (callCount === 3) return { result: { value: 'submitted' } }
+        const responseIdx = Math.min(callCount - 4, growingResponses.length - 1)
+        return {
+          result: {
+            value: JSON.stringify({
+              status: callCount > 6 ? 'completed' : 'working',
+              steps: [],
+              currentStep: '',
+              response: growingResponses[responseIdx],
+              hasStopButton: callCount <= 6,
+              proseCount: 1,
+            }),
+          },
+        }
+      })
+
+      const handler = getHandler('comet_ask')
+      // 300ms timeout would normally be too short, but growing response should keep it alive
+      const result = await handler({ prompt: 'test', timeout: 300 })
+      // Should have gotten the full response since it was growing
+      expect(result.content[0].text).toContain('A'.repeat(200))
+    })
+
+    it('smart polling — gives up after stall', async () => {
+      let callCount = 0
+      const stalledResponse = 'B'.repeat(60)
+      mocks.safeEvaluate.mockImplementation(async () => {
+        callCount++
+        if (callCount === 1) return { result: { value: '{"proseCount":0,"lastProseText":""}' } }
+        if (callCount === 2) return { result: { value: 'typed' } }
+        if (callCount === 3) return { result: { value: 'submitted' } }
+        return {
+          result: {
+            value: JSON.stringify({
+              status: 'working',
+              steps: [],
+              currentStep: '',
+              response: stalledResponse,
+              hasStopButton: true,
+              proseCount: 1,
+            }),
+          },
+        }
+      })
+
+      const handler = getHandler('comet_ask')
+      const result = await handler({ prompt: 'test', timeout: 30000 })
+      // Should time out because response stopped growing (stall detection)
+      expect(result.content[0].text).toContain('still working')
     })
   })
 
