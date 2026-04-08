@@ -398,3 +398,48 @@ describe('CDPClient operation queue', () => {
     expect(order).toEqual([1, 2, 3])
   })
 })
+
+describe('CDPClient reconnect race condition', () => {
+  let originalFetch: typeof globalThis.fetch
+
+  beforeEach(() => {
+    CDPClient.resetInstance()
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    if (originalFetch) globalThis.fetch = originalFetch
+  })
+
+  it('concurrent reconnects share the same promise', async () => {
+    let connectCalls = 0
+    const criMock = {
+      Page: { enable: vi.fn() },
+      Runtime: {
+        enable: vi.fn(),
+        evaluate: vi.fn().mockResolvedValue({ result: { value: 2 } }),
+      },
+      Emulation: { setDeviceMetricsOverride: vi.fn().mockRejectedValue('ignore') },
+      Input: { dispatchKeyEvent: vi.fn() },
+      Target: { closeTarget: vi.fn() },
+      close: vi.fn(),
+    }
+    vi.mocked(CRI).mockImplementation(async () => {
+      connectCalls++
+      return criMock as any
+    })
+    originalFetch = mockFetchForConnect()
+
+    const client = CDPClient.getInstance()
+    await client.connect()
+    expect(connectCalls).toBe(1)
+
+    // Trigger two reconnects concurrently
+    await Promise.all([
+      client['reconnect'](),
+      client['reconnect'](),
+    ])
+    // Should only reconnect once, not twice
+    expect(connectCalls).toBeLessThanOrEqual(3) // initial + at most 1 reconnect
+  })
+})

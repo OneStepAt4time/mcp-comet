@@ -23,6 +23,8 @@ export class CDPClient {
 
   private opLock: Promise<void> = Promise.resolve()
 
+  private reconnectPromise: Promise<void> | null = null
+
   private async enqueue<T>(fn: () => Promise<T>): Promise<T> {
     const prev = this.opLock
     let resolve!: () => void
@@ -247,20 +249,24 @@ export class CDPClient {
   }
 
   private async reconnect(): Promise<void> {
-    if (this.state.isReconnecting) return
+    if (this.reconnectPromise) return this.reconnectPromise
     this.state.isReconnecting = true
-    try {
-      await this.disconnectDirect()
-      await this.connect(this.state.targetId ?? undefined)
-      this.state.reconnectAttempts = 0
-      this.logger.info('Reconnected')
-    } catch (err) {
-      this.state.reconnectAttempts++
-      this.logger.error(`Reconnect failed: ${err instanceof Error ? err.message : String(err)}`)
-      throw err
-    } finally {
-      this.state.isReconnecting = false
-    }
+    this.reconnectPromise = (async () => {
+      try {
+        await this.disconnectDirect()
+        await this.connect(this.state.targetId ?? undefined)
+        this.state.reconnectAttempts = 0
+        this.logger.info('Reconnected')
+      } catch (err) {
+        this.state.reconnectAttempts++
+        this.logger.error(`Reconnect failed: ${err instanceof Error ? err.message : String(err)}`)
+        throw err
+      } finally {
+        this.state.isReconnecting = false
+        this.reconnectPromise = null
+      }
+    })()
+    return this.reconnectPromise
   }
 
   async listTabsCategorized(): Promise<CategorizedTabs> {
