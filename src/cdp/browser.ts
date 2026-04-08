@@ -113,5 +113,6 @@ export function startCometProcess(cometPath: string, port: number, logger: Logge
     stdio: 'ignore',
     shell: isWindows(),
   })
+  child.on('error', (err) => logger.error(`Comet spawn failed: ${err.message}`))
   child.unref()
 }

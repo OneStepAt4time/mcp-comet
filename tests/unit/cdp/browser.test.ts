@@ -95,6 +95,7 @@ describe('startCometProcess', () => {
     const childProcess = await import('node:child_process')
     const mockChild = {
       unref: vi.fn(),
+      on: vi.fn(),
       stdin: null,
       stdout: null,
       stderr: null,
@@ -124,6 +125,36 @@ describe('startCometProcess', () => {
         stdio: 'ignore',
       }),
     )
+
+    vi.doUnmock('node:child_process')
+    vi.resetModules()
+  })
+
+  it('attaches error handler to spawned process', async () => {
+    const childProcess = await import('node:child_process')
+    const mockChild = {
+      unref: vi.fn(),
+      on: vi.fn(),
+      stdin: null,
+      stdout: null,
+      stderr: null,
+    }
+    const spawnMock = vi.fn().mockReturnValue(mockChild)
+
+    vi.doMock('node:child_process', () => ({
+      ...childProcess,
+      spawn: spawnMock,
+      execSync: childProcess.execSync,
+    }))
+
+    vi.resetModules()
+
+    const { startCometProcess } = await import('../../../src/cdp/browser.js')
+    const mockLogger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+
+    startCometProcess('/path/to/comet', 9222, mockLogger as unknown as import('../../../src/logger.js').Logger)
+
+    expect(mockChild.on).toHaveBeenCalledWith('error', expect.any(Function))
 
     vi.doUnmock('node:child_process')
     vi.resetModules()
