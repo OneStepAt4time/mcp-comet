@@ -295,7 +295,7 @@ export class CDPClient {
     // Not running — launch a new instance
     const cometPath = getCometPath()
     killComet()
-    startCometProcess(cometPath, p, this.logger)
+    startCometProcess(cometPath, p, this.logger, this.config.userDataDir)
 
     // Give Comet time to start the debugging port
     await new Promise((r) => setTimeout(r, 3000))

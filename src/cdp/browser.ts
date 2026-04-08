@@ -105,8 +105,14 @@ export function killComet(): void {
   } catch {}
 }
 
-export function startCometProcess(cometPath: string, port: number, logger: Logger): void {
+export function startCometProcess(
+  cometPath: string,
+  port: number,
+  logger: Logger,
+  userDataDir?: string | null,
+): void {
   const args = [`--remote-debugging-port=${port}`]
+  if (userDataDir) args.push(`--user-data-dir=${userDataDir}`)
   logger.info(`Launching Comet: ${cometPath} ${args.join(' ')}`)
   const child = spawn(cometPath, args, {
     detached: true,

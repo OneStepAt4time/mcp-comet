@@ -130,6 +130,82 @@ describe('startCometProcess', () => {
     vi.resetModules()
   })
 
+  it('passes --user-data-dir when userDataDir is provided', async () => {
+    const childProcess = await import('node:child_process')
+    const mockChild = {
+      unref: vi.fn(),
+      on: vi.fn(),
+      stdin: null,
+      stdout: null,
+      stderr: null,
+    }
+    const spawnMock = vi.fn().mockReturnValue(mockChild)
+
+    vi.doMock('node:child_process', () => ({
+      ...childProcess,
+      spawn: spawnMock,
+      execSync: childProcess.execSync,
+    }))
+    vi.resetModules()
+
+    const { startCometProcess } = await import('../../../src/cdp/browser.js')
+    const mockLogger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+
+    startCometProcess(
+      '/path/to/comet',
+      9222,
+      mockLogger as unknown as import('../../../src/logger.js').Logger,
+      '/custom/profile',
+    )
+
+    expect(spawnMock).toHaveBeenCalledWith(
+      '/path/to/comet',
+      ['--remote-debugging-port=9222', '--user-data-dir=/custom/profile'],
+      expect.objectContaining({ detached: true, stdio: 'ignore' }),
+    )
+
+    vi.doUnmock('node:child_process')
+    vi.resetModules()
+  })
+
+  it('omits --user-data-dir when userDataDir is null', async () => {
+    const childProcess = await import('node:child_process')
+    const mockChild = {
+      unref: vi.fn(),
+      on: vi.fn(),
+      stdin: null,
+      stdout: null,
+      stderr: null,
+    }
+    const spawnMock = vi.fn().mockReturnValue(mockChild)
+
+    vi.doMock('node:child_process', () => ({
+      ...childProcess,
+      spawn: spawnMock,
+      execSync: childProcess.execSync,
+    }))
+    vi.resetModules()
+
+    const { startCometProcess } = await import('../../../src/cdp/browser.js')
+    const mockLogger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+
+    startCometProcess(
+      '/path/to/comet',
+      9222,
+      mockLogger as unknown as import('../../../src/logger.js').Logger,
+      null,
+    )
+
+    expect(spawnMock).toHaveBeenCalledWith(
+      '/path/to/comet',
+      ['--remote-debugging-port=9222'],
+      expect.objectContaining({ detached: true, stdio: 'ignore' }),
+    )
+
+    vi.doUnmock('node:child_process')
+    vi.resetModules()
+  })
+
   it('attaches error handler to spawned process', async () => {
     const childProcess = await import('node:child_process')
     const mockChild = {

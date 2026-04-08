@@ -15,6 +15,7 @@ const DEFAULTS: CometConfig = {
   maxReconnectAttempts: 5,
   maxReconnectDelay: 5000,
   pollInterval: 1000,
+  userDataDir: null,
 }
 
 function env(name: string): string | undefined {
@@ -99,6 +100,9 @@ export function loadConfig(overrides?: Partial<CometConfig>): CometConfig {
   const pollIntervalEnv = env('ASTERIA_POLL_INTERVAL')
   if (pollIntervalEnv !== undefined)
     envConfig.pollInterval = Number(pollIntervalEnv) || DEFAULTS.pollInterval
+
+  const userDataDirEnv = env('ASTERIA_USER_DATA_DIR')
+  if (userDataDirEnv !== undefined) envConfig.userDataDir = userDataDirEnv
 
   return {
     ...DEFAULTS,

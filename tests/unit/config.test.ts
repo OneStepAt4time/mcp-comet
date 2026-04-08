@@ -31,6 +31,7 @@ describe('loadConfig', () => {
     expect(config.maxReconnectAttempts).toBe(5)
     expect(config.maxReconnectDelay).toBe(5000)
     expect(config.pollInterval).toBe(1000)
+    expect(config.userDataDir).toBeNull()
   })
 
   it('env vars override defaults', async () => {
@@ -103,6 +104,7 @@ describe('loadConfig', () => {
       { name: 'ASTERIA_MAX_RECONNECT', key: 'maxReconnectAttempts' as const, value: '10', expected: 10 },
       { name: 'ASTERIA_RECONNECT_DELAY', key: 'maxReconnectDelay' as const, value: '10000', expected: 10000 },
       { name: 'ASTERIA_POLL_INTERVAL', key: 'pollInterval' as const, value: '500', expected: 500 },
+      { name: 'ASTERIA_USER_DATA_DIR', key: 'userDataDir' as const, value: '/tmp/comet-profile', expected: '/tmp/comet-profile' },
     ]
 
     for (const { name, key, value, expected } of envVars) {

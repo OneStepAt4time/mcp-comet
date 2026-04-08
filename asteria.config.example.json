@@ -2,7 +2,7 @@
   "port": 9222,
   "timeout": 30000,
   "cometPath": null,
-  "responseTimeout": 120000,
+  "responseTimeout": 180000,
   "logLevel": "info",
   "screenshotFormat": "png",
   "screenshotQuality": 80,
@@ -10,5 +10,6 @@
   "windowHeight": 900,
   "maxReconnectAttempts": 5,
   "maxReconnectDelay": 5000,
-  "pollInterval": 1000
+  "pollInterval": 1000,
+  "userDataDir": null
 }

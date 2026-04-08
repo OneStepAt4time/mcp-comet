@@ -59,4 +59,5 @@ export interface CometConfig {
   maxReconnectAttempts: number
   maxReconnectDelay: number
   pollInterval: number
+  userDataDir: string | null
 }
