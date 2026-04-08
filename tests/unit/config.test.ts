@@ -90,4 +90,35 @@ describe('loadConfig', () => {
     expect(config.port).toBe(8080)
     expect((config as Record<string, unknown>).unknownKey).toBeUndefined()
   })
+
+  describe('env var branches — each ASTERIA_* env var', () => {
+    const envVars = [
+      { name: 'ASTERIA_PORT', key: 'port' as const, value: '9999', expected: 9999 },
+      { name: 'ASTERIA_TIMEOUT', key: 'timeout' as const, value: '10000', expected: 10000 },
+      { name: 'ASTERIA_RESPONSE_TIMEOUT', key: 'responseTimeout' as const, value: '60000', expected: 60000 },
+      { name: 'ASTERIA_SCREENSHOT_FORMAT', key: 'screenshotFormat' as const, value: 'jpeg', expected: 'jpeg' },
+      { name: 'ASTERIA_SCREENSHOT_QUALITY', key: 'screenshotQuality' as const, value: '90', expected: 90 },
+      { name: 'ASTERIA_WINDOW_WIDTH', key: 'windowWidth' as const, value: '1920', expected: 1920 },
+      { name: 'ASTERIA_WINDOW_HEIGHT', key: 'windowHeight' as const, value: '1080', expected: 1080 },
+      { name: 'ASTERIA_MAX_RECONNECT', key: 'maxReconnectAttempts' as const, value: '10', expected: 10 },
+      { name: 'ASTERIA_RECONNECT_DELAY', key: 'maxReconnectDelay' as const, value: '10000', expected: 10000 },
+      { name: 'ASTERIA_POLL_INTERVAL', key: 'pollInterval' as const, value: '500', expected: 500 },
+    ]
+
+    for (const { name, key, value, expected } of envVars) {
+      it(`reads ${name} from environment`, async () => {
+        vi.stubEnv(name, value)
+        const { loadConfig } = await import('../../src/config.js')
+        const config = loadConfig()
+        expect(config[key]).toBe(expected)
+      })
+    }
+
+    it('falls back to default for invalid number env var', async () => {
+      vi.stubEnv('ASTERIA_PORT', 'not-a-number')
+      const { loadConfig } = await import('../../src/config.js')
+      const config = loadConfig()
+      expect(config.port).toBe(9222)
+    })
+  })
 })
