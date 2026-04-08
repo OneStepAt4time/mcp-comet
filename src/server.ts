@@ -386,10 +386,12 @@ export async function startServer(): Promise<void> {
           // Check for new response — proseCount is the primary signal
           const proseIncreased =
             (status.proseCount ?? 0) > preSendState.proseCount
+          // Only consider response "changed" if:
+          // 1. proseCount increased (new prose element added), OR
+          // 2. Fresh page had no prose before, and now there's a substantial response
           const responseChanged =
             proseIncreased ||
-            status.response !== preSendState.lastProseText ||
-            hasSubstantialResponse(status)
+            (!preSendState.lastProseText && hasSubstantialResponse(status))
 
           if (responseChanged && status.response) {
             // Track response growth for auto-extend
@@ -414,7 +416,7 @@ export async function startServer(): Promise<void> {
             return textResult(parts.join('') || 'Agent completed with no visible response.')
           }
 
-          if (status.status === 'idle' && !sawNewResponse && status.response) {
+          if (status.status === 'idle' && !sawNewResponse && status.response && !preSendState.lastProseText) {
             return textResult(status.response)
           }
         }

@@ -332,6 +332,42 @@ describe('Core tool handlers', () => {
       // Should time out because response stopped growing (stall detection)
       expect(result.content[0].text).toContain('still working')
     })
+
+    it('ignores old substantial response — no false positive from hasSubstantialResponse', async () => {
+      // Regression: hasSubstantialResponse was OR'd into responseChanged,
+      // causing old responses to be treated as new when proseCount didn't increase.
+      const oldResponse = 'This is an old response from a previous query that is still on the page and is quite long.'
+      let callCount = 0
+      mocks.safeEvaluate.mockImplementation(async () => {
+        callCount++
+        // pre-send state: old response still on page
+        if (callCount === 1) {
+          return { result: { value: JSON.stringify({ proseCount: 1, lastProseText: oldResponse }) } }
+        }
+        if (callCount === 2) return { result: { value: 'typed' } }
+        if (callCount === 3) return { result: { value: 'submitted' } }
+        // Polling: agent hasn't started yet, old response still visible
+        return {
+          result: {
+            value: JSON.stringify({
+              status: 'working',
+              steps: [],
+              currentStep: '',
+              response: oldResponse,
+              hasStopButton: true,
+              proseCount: 1,
+            }),
+          },
+        }
+      })
+
+      const handler = getHandler('comet_ask')
+      const result = await handler({ prompt: 'New question?', timeout: 1500 })
+
+      // Should NOT return the old response as if it were the new answer
+      // Instead should timeout since no new response detected
+      expect(result.content[0].text).toContain('still working')
+    })
   })
 
   // ---------------------------------------------------------------------------
