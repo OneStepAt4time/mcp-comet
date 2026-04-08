@@ -131,7 +131,9 @@ export class CDPClient {
     if (this.criClient) {
       try {
         await this.criClient.close()
-      } catch {}
+      } catch (err) {
+        this.logger.debug(`Disconnect error (ignored): ${err instanceof Error ? err.message : String(err)}`)
+      }
       this.criClient = null
     }
     this.state.connected = false
@@ -229,7 +231,11 @@ export class CDPClient {
   private async ensureHealthyConnection(): Promise<void> {
     if (await this.isHealthy()) return
     this.logger.warn('Connection unhealthy, reconnecting...')
-    await this.reconnect()
+    try {
+      await this.reconnect()
+    } catch (err) {
+      this.logger.warn(`Reconnect failed during health check: ${err instanceof Error ? err.message : String(err)}`)
+    }
   }
 
   private async withAutoReconnect<T>(operation: () => Promise<T>): Promise<T> {
@@ -317,9 +323,12 @@ export class CDPClient {
           try {
             if (this.criClient) await this.criClient.Target.closeTarget({ targetId: tab.id })
           } catch {
+            this.logger.debug(`Target.closeTarget failed for ${tab.id}, trying HTTP fallback`)
             try {
               await httpGet(`http://127.0.0.1:${this.state.port}/json/close/${tab.id}`)
-            } catch {}
+            } catch (err) {
+              this.logger.debug(`HTTP tab close also failed for ${tab.id}: ${err instanceof Error ? err.message : String(err)}`)
+            }
           }
         }
       } catch {

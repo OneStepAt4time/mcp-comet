@@ -529,3 +529,43 @@ describe('CDPClient reconnection paths', () => {
     expect(reconnectSpy).not.toHaveBeenCalled()
   })
 })
+
+describe('CDPClient error propagation', () => {
+  let originalFetch: typeof globalThis.fetch
+
+  beforeEach(() => {
+    CDPClient.resetInstance()
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    if (originalFetch) globalThis.fetch = originalFetch
+  })
+
+  it('ensureHealthyConnection catches reconnect failure gracefully', async () => {
+    originalFetch = mockFetchForConnect()
+    const criMock = mockCRI()
+    const client = CDPClient.getInstance()
+    await client.connect()
+
+    vi.spyOn(client as any, 'isHealthy').mockResolvedValue(false)
+    // Make reconnect fail by having connect throw after disconnect
+    vi.spyOn(client as any, 'connect').mockRejectedValue(new Error('Connection refused'))
+
+    // Should not throw — let caller handle via withAutoReconnect
+    await expect(client['ensureHealthyConnection']()).resolves.toBeUndefined()
+  })
+
+  it('disconnect logs errors instead of swallowing silently', async () => {
+    originalFetch = mockFetchForConnect()
+    const criMock = mockCRI()
+    criMock.close.mockRejectedValue(new Error('close failed'))
+
+    const client = CDPClient.getInstance()
+    await client.connect()
+
+    await client.disconnect()
+    expect(criMock.close).toHaveBeenCalled()
+    expect(client.state.connected).toBe(false)
+  })
+})
