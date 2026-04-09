@@ -124,6 +124,23 @@ describe('loadConfig', () => {
       expect(loadConfig({ maxReconnectAttempts: 3 }).maxReconnectAttempts).toBe(3)
     })
 
+    it('clamps responseTimeout to minimum 1000ms', async () => {
+      const { loadConfig } = await import('../../src/config.js')
+      expect(loadConfig({ responseTimeout: 0 }).responseTimeout).toBe(1000)
+      expect(loadConfig({ responseTimeout: -500 }).responseTimeout).toBe(1000)
+      expect(loadConfig({ responseTimeout: 180000 }).responseTimeout).toBe(180000)
+    })
+
+    it('handles NaN port gracefully via clamping', async () => {
+      // clamp(NaN, 1, 65535) returns NaN — verify it falls back to default
+      const { loadConfig } = await import('../../src/config.js')
+      const cfg = loadConfig({ port: Number.NaN })
+      // NaN should be caught — port must be a valid number
+      expect(Number.isNaN(cfg.port)).toBe(false)
+      expect(cfg.port).toBeGreaterThanOrEqual(1)
+      expect(cfg.port).toBeLessThanOrEqual(65535)
+    })
+
     it('falls back to default for invalid logLevel env var', async () => {
       vi.stubEnv('ASTERIA_LOG_LEVEL', 'verbose')
       const { loadConfig } = await import('../../src/config.js')

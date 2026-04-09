@@ -60,13 +60,16 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function validatedConfig(raw: CometConfig): CometConfig {
+  const safeClamp = (v: number, min: number, max: number, fallback: number) =>
+    clamp(Number.isFinite(v) ? v : fallback, min, max)
+
   return {
     ...raw,
-    port: clamp(raw.port, 1, 65535),
-    timeout: clamp(raw.timeout, 1000, Number.POSITIVE_INFINITY),
-    responseTimeout: clamp(raw.responseTimeout, 1000, Number.POSITIVE_INFINITY),
-    pollInterval: clamp(raw.pollInterval, 100, Number.POSITIVE_INFINITY),
-    maxReconnectAttempts: Math.max(0, raw.maxReconnectAttempts),
+    port: safeClamp(raw.port, 1, 65535, DEFAULTS.port),
+    timeout: safeClamp(raw.timeout, 1000, Number.POSITIVE_INFINITY, DEFAULTS.timeout),
+    responseTimeout: safeClamp(raw.responseTimeout, 1000, Number.POSITIVE_INFINITY, DEFAULTS.responseTimeout),
+    pollInterval: safeClamp(raw.pollInterval, 100, Number.POSITIVE_INFINITY, DEFAULTS.pollInterval),
+    maxReconnectAttempts: Math.max(0, Number.isFinite(raw.maxReconnectAttempts) ? raw.maxReconnectAttempts : DEFAULTS.maxReconnectAttempts),
     logLevel: VALID_LOG_LEVELS.includes(raw.logLevel as (typeof VALID_LOG_LEVELS)[number])
       ? raw.logLevel
       : DEFAULTS.logLevel,
