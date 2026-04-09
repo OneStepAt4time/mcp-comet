@@ -19,36 +19,41 @@ export function buildExtractSourcesScript(): string {
       }
     }
 
-    function findLinksInTabpanel() {
-      var tabpanels = document.querySelectorAll('[role="tabpanel"]');
-      var sources = [];
-      var seenUrls = {};
+    var sources = [];
+    var seenUrls = {};
 
-      for (var t = 0; t < tabpanels.length; t++) {
-        var tabpanel = tabpanels[t];
-        var anchors = tabpanel.querySelectorAll('a[href]');
-
-        for (var i = 0; i < anchors.length; i++) {
-          var a = anchors[i];
-          var href = a.href;
-          var text = (a.innerText || '').trim();
-
-          if (!href || seenUrls[href]) continue;
-          if (href.indexOf('javascript:') === 0) continue;
-          if (href.indexOf('#') === href.length - 1) continue;
-          if (isInternalLink(href)) continue;
-
-          seenUrls[href] = true;
-          sources.push({
-            url: href,
-            title: text || extractDomain(href) || href
-          });
-        }
+    // Strategy A: Find links inside tabpanel elements
+    var tabpanels = document.querySelectorAll('[role="tabpanel"]');
+    for (var t = 0; t < tabpanels.length; t++) {
+      var anchors = tabpanels[t].querySelectorAll('a[href]');
+      for (var i = 0; i < anchors.length; i++) {
+        var a = anchors[i];
+        var href = a.href;
+        var text = (a.innerText || '').trim();
+        if (!href || seenUrls[href]) continue;
+        if (href.indexOf('javascript:') === 0) continue;
+        if (href.indexOf('#') === href.length - 1) continue;
+        if (isInternalLink(href)) continue;
+        seenUrls[href] = true;
+        sources.push({ url: href, title: text || extractDomain(href) || href });
       }
-      return sources;
     }
 
-    var sources = findLinksInTabpanel();
+    // Strategy B: Find citation elements (Comet v145 source format)
+    var citations = document.querySelectorAll('[class*="citation"]');
+    for (var c = 0; c < citations.length; c++) {
+      var el = citations[c];
+      if (el.className.indexOf('citation-nbsp') !== -1) continue;
+      var anchor = el.closest('a') || el.querySelector('a');
+      if (!anchor) continue;
+      var href2 = anchor.href;
+      if (!href2 || seenUrls[href2]) continue;
+      if (isInternalLink(href2)) continue;
+      seenUrls[href2] = true;
+      var text2 = (el.innerText || '').trim().split('\\n')[0].trim();
+      sources.push({ url: href2, title: text2 || extractDomain(href2) || href2 });
+    }
+
     return JSON.stringify(sources);
   })()`
 }

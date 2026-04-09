@@ -58,6 +58,24 @@ describe('buildExtractSourcesScript', () => {
   })
 })
 
+describe('citation extraction strategy', () => {
+  it('includes citation element strategy', () => {
+    const s = buildExtractSourcesScript()
+    expect(s).toContain('citation')
+  })
+
+  it('looks for citation class elements', () => {
+    const s = buildExtractSourcesScript()
+    expect(s).toContain('[class*="citation"]')
+  })
+
+  it('extracts URL from closest anchor parent of citation', () => {
+    const s = buildExtractSourcesScript()
+    expect(s).toContain('closest')
+    expect(s).toContain('a')
+  })
+})
+
 describe('buildExtractPageContentScript', () => {
   it('extracts body text', () => {
     const s = buildExtractPageContentScript()
