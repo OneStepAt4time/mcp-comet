@@ -624,7 +624,9 @@ export async function startServer(): Promise<void> {
         } catch {
           return toMcpError(new Error(`Invalid URL: "${url}"`))
         }
-        if (parsed.protocol !== 'https:' || !parsed.hostname.endsWith('perplexity.ai')) {
+        const isPerplexityHost =
+          parsed.hostname === 'perplexity.ai' || parsed.hostname.endsWith('.perplexity.ai')
+        if (parsed.protocol !== 'https:' || !isPerplexityHost) {
           return toMcpError(
             new Error(`Invalid URL: must be a https://perplexity.ai/ URL, got "${url}"`),
           )

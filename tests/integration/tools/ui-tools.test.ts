@@ -135,6 +135,12 @@ describe('UI control tool handlers', () => {
       expect(result.content[0].text).toContain('Error')
     })
 
+    it('rejects evilperplexity.ai domain suffix attack', async () => {
+      const handler = getHandler('comet_open_conversation')
+      const result = await handler({ url: 'https://evilperplexity.ai/search/123' })
+      expect(result.content[0].text).toContain('Error')
+    })
+
     it('accepts valid perplexity.ai URL', async () => {
       mocks.navigate.mockResolvedValue(undefined)
       const handler = getHandler('comet_open_conversation')
