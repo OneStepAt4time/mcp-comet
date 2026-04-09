@@ -45,13 +45,23 @@ export function buildExtractSourcesScript(): string {
       var el = citations[c];
       if (el.className.indexOf('citation-nbsp') !== -1) continue;
       var anchor = el.closest('a') || el.querySelector('a');
-      if (!anchor) continue;
-      var href2 = anchor.href;
-      if (!href2 || seenUrls[href2]) continue;
-      if (isInternalLink(href2)) continue;
-      seenUrls[href2] = true;
-      var text2 = (el.innerText || '').trim().split('\\n')[0].trim();
-      sources.push({ url: href2, title: text2 || extractDomain(href2) || href2 });
+      if (anchor) {
+        var href2 = anchor.href;
+        if (!href2 || seenUrls[href2]) continue;
+        if (isInternalLink(href2)) continue;
+        seenUrls[href2] = true;
+        var text2 = (el.innerText || '').trim().split('\\n')[0].trim();
+        sources.push({ url: href2, title: text2 || extractDomain(href2) || href2 });
+      } else {
+        // Collapsed citation without link — extract source name from text
+        var rawText = (el.innerText || '').trim().split('\\n')[0].trim();
+        // Strip "+N" count suffix (e.g., "ainews+3" → "ainews")
+        var plusIdx = rawText.lastIndexOf('+');
+        var citeTitle = plusIdx > 0 ? rawText.substring(0, plusIdx).trim() : rawText;
+        if (!citeTitle || seenUrls[citeTitle]) continue;
+        seenUrls[citeTitle] = true;
+        sources.push({ url: '', title: citeTitle });
+      }
     }
 
     return JSON.stringify(sources);

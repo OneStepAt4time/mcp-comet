@@ -30,11 +30,11 @@ describe('buildGetCurrentModeScript', () => {
     expect(s).toContain('/computer/tasks/')
   })
 
-  it('checks for active mode indicator via icon', () => {
+  it('uses URL-based detection only (no icon checks)', () => {
     const s = buildGetCurrentModeScript()
-    expect(s).toContain('telescope')
-    expect(s).toContain('gavel')
-    expect(s).toContain('book')
+    expect(s).not.toContain('telescope')
+    expect(s).not.toContain('gavel')
+    expect(s).not.toContain('bg-subtle')
   })
 })
 

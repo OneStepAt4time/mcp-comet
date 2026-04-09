@@ -61,23 +61,8 @@ export function buildNewChatScript(): string {
 export function buildGetCurrentModeScript(): string {
   return `(function() {
     var url = window.location.href;
-
-    // Check URL patterns for mode hints
     if (url.indexOf('/copilot/') !== -1) return 'computer';
     if (url.indexOf('/computer/tasks/') !== -1) return 'computer';
-
-    // Check for active mode indicator in the typeahead menu
-    var activeBg = document.querySelector('[role="menuitem"] .bg-subtle use, [role="menuitem"] .bg-subtle [role="img"]');
-    if (activeBg) {
-      var href = activeBg.getAttribute('xlink:href') || activeBg.getAttribute('href') || '';
-      if (href.indexOf('telescope') !== -1) return 'deep-research';
-      if (href.indexOf('gavel') !== -1) return 'model-council';
-      if (href.indexOf('book') !== -1) return 'learn';
-      if (href.indexOf('file-check') !== -1) return 'review';
-      if (href.indexOf('click') !== -1) return 'computer';
-      if (href.indexOf('custom-computer') !== -1) return 'computer';
-    }
-
     return 'standard';
   })()`
 }

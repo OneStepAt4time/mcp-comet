@@ -533,6 +533,9 @@ export async function startServer(): Promise<void> {
           const currentMode = extractValue(raw)
           return textResult(`Current mode: ${currentMode}`)
         }
+        // Navigate to home page for clean input (mode typeahead only works on new chat page)
+        await client.navigate('https://www.perplexity.ai')
+        await sleep(2000)
         const MAX_MODE_RETRIES = 10
         for (let attempt = 0; attempt < MAX_MODE_RETRIES; attempt++) {
           // Focus input, clear via Cmd+A+Backspace, then type / via CDP
