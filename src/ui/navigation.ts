@@ -26,45 +26,26 @@ export function buildModeSwitchScript(mode: string): string {
     var displayName = ${JSON.stringify(displayName)};
     if (!displayName) return 'standard_mode_no_action';
 
-    // Find the contenteditable input
     var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
     if (!input) return 'no_input_found';
 
-    // Focus and type "/" to open the typeahead menu
     input.focus();
     input.textContent = '/';
     input.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
     input.dispatchEvent(new KeyboardEvent('keydown', { key: '/', bubbles: true }));
 
-    // Wait for the typeahead menu to appear
-    var attempts = 0;
-    var maxAttempts = 20;
+    var listbox = document.querySelector('[role="listbox"]');
+    if (!listbox) return 'no_listbox_found';
 
-    function tryClickMenuItem() {
-      var listbox = document.querySelector('[role="listbox"]');
-      if (!listbox) {
-        attempts++;
-        if (attempts < maxAttempts) {
-          setTimeout(tryClickMenuItem, 100);
-        } else {
-          return 'timeout_waiting_for_menu';
-        }
-        return;
+    var menuItems = document.querySelectorAll('[role="menuitem"]');
+    for (var i = 0; i < menuItems.length; i++) {
+      var itemText = menuItems[i].textContent || '';
+      if (itemText.indexOf(displayName) !== -1) {
+        menuItems[i].click();
+        return 'clicked:' + displayName;
       }
-
-      // Find menuitem whose text includes the display name
-      var menuItems = document.querySelectorAll('[role="menuitem"]');
-      for (var i = 0; i < menuItems.length; i++) {
-        var itemText = menuItems[i].textContent || '';
-        if (itemText.indexOf(displayName) !== -1) {
-          menuItems[i].click();
-          return 'clicked:' + displayName;
-        }
-      }
-      return 'menu_item_not_found:' + displayName;
     }
-
-    return tryClickMenuItem();
+    return 'menu_item_not_found:' + displayName;
   })()`
 }
 

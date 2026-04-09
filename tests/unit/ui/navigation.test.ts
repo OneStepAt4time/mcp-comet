@@ -63,11 +63,23 @@ describe('buildModeSwitchScript', () => {
     expect(s).toContain('unknown-custom-mode')
   })
 
-  it('has listbox retry with maxAttempts', () => {
+  it('returns no_listbox_found when listbox missing', () => {
     const s = buildModeSwitchScript('deep-research')
-    expect(s).toContain('maxAttempts')
-    expect(s).toContain('attempts')
-    expect(s).toContain('setTimeout')
+    expect(s).toContain('no_listbox_found')
+    expect(s).not.toContain('setTimeout')
+    expect(s).not.toContain('maxAttempts')
+  })
+})
+
+describe('buildModeSwitchScript synchronous behavior', () => {
+  it('does not use setTimeout', () => {
+    const s = buildModeSwitchScript('deep-research')
+    expect(s).not.toContain('setTimeout')
+  })
+
+  it('returns a synchronous IIFE', () => {
+    const s = buildModeSwitchScript('deep-research')
+    expect(s).toMatch(/^\(function\(\)\s*\{[\s\S]*\}\)\(\)$/)
   })
 })
 
