@@ -62,6 +62,30 @@ describe('UI control tool handlers', () => {
       expect(result.content[0].text).toContain('clicked:Deep research')
     })
 
+    it('retries mode switch when listbox not immediately available', async () => {
+      mocks.safeEvaluate.mockReset()
+      // First two calls return no_listbox_found, third returns clicked
+      mocks.safeEvaluate
+        .mockResolvedValueOnce({ result: { value: 'no_listbox_found' } })
+        .mockResolvedValueOnce({ result: { value: 'no_listbox_found' } })
+        .mockResolvedValueOnce({ result: { value: 'clicked:Deep research' } })
+      const handler = getHandler('comet_mode')
+      const result = await handler({ mode: 'deep-research' })
+
+      expect(result.content[0].text).toContain('clicked:Deep research')
+      expect(mocks.safeEvaluate).toHaveBeenCalledTimes(3)
+    })
+
+    it('returns failure after max retries when listbox never appears', async () => {
+      mocks.safeEvaluate.mockReset()
+      mocks.safeEvaluate.mockResolvedValue({ result: { value: 'no_listbox_found' } })
+      const handler = getHandler('comet_mode')
+      const result = await handler({ mode: 'deep-research' })
+
+      expect(result.content[0].text).toContain('Mode switch failed')
+      expect(mocks.safeEvaluate).toHaveBeenCalledTimes(5)
+    })
+
     it('returns error response when safeEvaluate fails', async () => {
       mocks.safeEvaluate.mockRejectedValue(new Error('Evaluate failed'))
       const handler = getHandler('comet_mode')
