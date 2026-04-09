@@ -1,8 +1,6 @@
 import { CDPClient } from './cdp/client.js'
-import { createLogger } from './logger.js'
 
 export async function runSnapshot(): Promise<void> {
-  const _logger = createLogger('info')
   const client = CDPClient.getInstance()
 
   await client.launchOrConnect()
