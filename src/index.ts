@@ -1,6 +1,11 @@
 #!/usr/bin/env node
-import { startServer } from './server.js'
+import { createLogger } from './logger.js'
 
-startServer().catch((_err) => {
-  process.exit(1)
-})
+const logger = createLogger('info')
+
+import('./server.js')
+  .then(({ startServer }) => startServer())
+  .catch((err: unknown) => {
+    logger.error(`Fatal: ${err instanceof Error ? err.message : String(err)}`)
+    process.exit(1)
+  })
