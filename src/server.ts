@@ -425,14 +425,19 @@ export async function startServer(): Promise<void> {
           if (stallCount >= MAX_STALL_POLLS) break
 
           if ((status.status === 'completed' || status.status === 'idle') && sawNewResponse) {
-            // Wait for response to stabilize (Comet may still be rendering)
-            await sleep(1000)
-            const settledRaw = await client.safeEvaluate(buildGetAgentStatusScript(activeSelectors))
-            const settledStatus = parseAgentStatus(extractValue(settledRaw))
+            // Wait for response to stabilize — poll until length stops growing
+            let settledResponse = lastResponse
+            for (let settle = 0; settle < 5; settle++) {
+              await sleep(1000)
+              const settledRaw = await client.safeEvaluate(buildGetAgentStatusScript(activeSelectors))
+              const settledStatus = parseAgentStatus(extractValue(settledRaw))
+              const candidate = settledStatus.response || settledResponse
+              if (candidate.length <= settledResponse.length) break
+              settledResponse = candidate
+            }
 
-            const finalResponse = settledStatus.response || lastResponse
             const parts: string[] = []
-            if (finalResponse) parts.push(finalResponse)
+            if (settledResponse) parts.push(settledResponse)
             if (collectedSteps.length > 0) {
               parts.push(`\n\nSteps:\n${collectedSteps.map((s) => `  - ${s}`).join('\n')}`)
             }
@@ -630,7 +635,10 @@ export async function startServer(): Promise<void> {
           return textResult('No sources found on the current page.')
         }
 
-        const lines = sources.map((s, i) => `${i + 1}. ${s.title}\n   ${s.url}`)
+        const lines = sources.map((s, i) => {
+          const entry = `${i + 1}. ${s.title}`
+          return s.url ? `${entry}\n   ${s.url}` : entry
+        })
         return textResult(`Sources (${sources.length}):\n\n${lines.join('\n\n')}`)
       } catch (err) {
         return toMcpError(err)
