@@ -239,4 +239,23 @@ describe('UI control tool handlers', () => {
       expect(result.content[0].text).toContain('Connect failed')
     })
   })
+
+  describe('auto-connect', () => {
+    it('auto-connects when no targetId set for comet_list_tabs', async () => {
+      mocks.state.targetId = null
+      mocks.launchOrConnect.mockResolvedValue('target-1')
+      mocks.closeExtraTabs.mockResolvedValue(undefined)
+      mocks.listTabsCategorized.mockResolvedValue({
+        main: [{ id: 'target-1', url: 'https://www.perplexity.ai', type: 'page', title: 'Perplexity' }],
+        sidecar: [],
+        agentBrowsing: [],
+        overlay: [],
+        others: [],
+      })
+      const handler = getHandler('comet_list_tabs')
+      const result = await handler({})
+      expect(mocks.launchOrConnect).toHaveBeenCalled()
+      expect(result.content[0].text).toContain('Main')
+    })
+  })
 })

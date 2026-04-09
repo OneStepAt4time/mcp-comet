@@ -33,6 +33,21 @@ const client = CDPClient.getInstance(config)
 /** Active selector set — updated after each comet_connect to match Comet's Chrome version. */
 let activeSelectors: SelectorSet = SELECTORS
 
+/** Ensure the client is connected before using tools. Auto-connects if needed. */
+async function ensureConnected(): Promise<void> {
+  if (client.state.targetId) return
+  logger.info('Auto-connecting to Comet...')
+  await client.launchOrConnect()
+  await client.closeExtraTabs()
+  try {
+    const { chromeMajor, selectors } = await detectCometVersion(config.port)
+    activeSelectors = selectors
+    logger.info(`Auto-connected to Comet Chrome/${chromeMajor}`)
+  } catch {
+    // Version detection failure is non-fatal
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Tool definitions (exported for testing)
 // ---------------------------------------------------------------------------
@@ -324,6 +339,7 @@ export async function startServer(): Promise<void> {
     askShape,
     async ({ prompt, newChat, timeout }) => {
       try {
+        await ensureConnected()
         const normalizedPrompt = client.normalizePrompt(prompt)
         const effectiveTimeout = timeout ?? config.responseTimeout
 
@@ -445,6 +461,7 @@ export async function startServer(): Promise<void> {
     {},
     async () => {
       try {
+        await ensureConnected()
         const raw = await client.safeEvaluate(buildGetAgentStatusScript(activeSelectors))
         const status = parseAgentStatus(extractValue(raw))
         return textResult(JSON.stringify(status, null, 2))
@@ -461,6 +478,7 @@ export async function startServer(): Promise<void> {
     {},
     async () => {
       try {
+        await ensureConnected()
         const script = buildStopAgentScript()
         // Retry up to 5 times — agent may not have started yet
         for (let attempt = 0; attempt < 5; attempt++) {
@@ -483,6 +501,7 @@ export async function startServer(): Promise<void> {
     screenshotShape,
     async ({ format }) => {
       try {
+        await ensureConnected()
         const fmt = format ?? config.screenshotFormat
         const data = await client.screenshot(fmt)
         const mimeType = fmt === 'jpeg' ? 'image/jpeg' : 'image/png'
@@ -502,6 +521,7 @@ export async function startServer(): Promise<void> {
     modeShape,
     async ({ mode }) => {
       try {
+        await ensureConnected()
         if (mode === undefined || mode === null) {
           const raw = await client.safeEvaluate(buildGetCurrentModeScript())
           const currentMode = extractValue(raw)
@@ -530,6 +550,7 @@ export async function startServer(): Promise<void> {
     {},
     async () => {
       try {
+        await ensureConnected()
         const categorized = await client.listTabsCategorized()
         return textResult(formatTabs(categorized))
       } catch (err) {
@@ -545,6 +566,7 @@ export async function startServer(): Promise<void> {
     switchTabShape,
     async ({ tabId, title }) => {
       try {
+        await ensureConnected()
         const targets = await client.listTargets()
         let target: TabInfo | undefined
 
@@ -575,6 +597,7 @@ export async function startServer(): Promise<void> {
     {},
     async () => {
       try {
+        await ensureConnected()
         const raw = await client.safeEvaluate(buildExtractSourcesScript())
         const sources = JSON.parse(String(extractValue(raw))) as Array<{
           url: string
@@ -600,6 +623,7 @@ export async function startServer(): Promise<void> {
     {},
     async () => {
       try {
+        await ensureConnected()
         const script = buildListConversationsScript()
         const raw = await client.safeEvaluate(script)
         const conversations = JSON.parse(String(extractValue(raw))) as Array<{
@@ -626,6 +650,7 @@ export async function startServer(): Promise<void> {
     openConversationShape,
     async ({ url }) => {
       try {
+        await ensureConnected()
         let parsed: URL
         try {
           parsed = new URL(url)
@@ -652,6 +677,7 @@ export async function startServer(): Promise<void> {
     getPageContentShape,
     async ({ maxLength }) => {
       try {
+        await ensureConnected()
         const len = maxLength ?? 10000
         const raw = await client.safeEvaluate(buildExtractPageContentScript(len))
         const parsed = JSON.parse(String(extractValue(raw))) as { title: string; text: string }
