@@ -1,3 +1,4 @@
+import { createServer, type Server } from 'node:http'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('getCometPath', () => {
@@ -40,14 +41,6 @@ describe('isWindows', () => {
 })
 
 describe('httpGet', () => {
-  it('returns ok:true for successful fetch', async () => {
-    const { httpGet } = await import('../../../src/cdp/browser.js')
-    // Use a reliable endpoint or mock
-    const result = await httpGet('https://httpbin.org/status/200', 5000)
-    expect(result.ok).toBe(true)
-    expect(result.status).toBe(200)
-  })
-
   it('returns ok:false for failed fetch (rejected promise)', async () => {
     const { httpGet } = await import('../../../src/cdp/browser.js')
     // Invalid URL that will fail
@@ -55,22 +48,60 @@ describe('httpGet', () => {
     expect(result.ok).toBe(false)
     expect(result.status).toBe(0)
   })
+})
+
+describe('httpGet with local server', () => {
+  let server: Server
+  let port: number
+
+  beforeEach(async () => {
+    server = createServer((req, res) => {
+      if (req.url === '/ok') {
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end('{"status":"ok"}')
+      } else if (req.url === '/fail') {
+        res.writeHead(500)
+        res.end('error')
+      } else if (req.url === '/slow') {
+        setTimeout(() => { res.writeHead(200); res.end('late') }, 5000)
+      } else {
+        res.writeHead(404)
+        res.end()
+      }
+    })
+    await new Promise<void>((resolve) => {
+      server.listen(0, () => {
+        port = (server.address() as { port: number }).port
+        resolve()
+      })
+    })
+  })
+
+  afterEach(async () => {
+    await new Promise<void>((resolve) => { server.close(() => resolve()) })
+  })
+
+  it('returns ok:true for successful fetch', async () => {
+    const { httpGet } = await import('../../../src/cdp/browser.js')
+    const result = await httpGet(`http://127.0.0.1:${port}/ok`, 3000)
+    expect(result.ok).toBe(true)
+    expect(result.status).toBe(200)
+  })
 
   it('returns ok:false for non-200 status', async () => {
     const { httpGet } = await import('../../../src/cdp/browser.js')
-    const result = await httpGet('https://httpbin.org/status/500', 5000)
+    const result = await httpGet(`http://127.0.0.1:${port}/fail`, 3000)
     expect(result.ok).toBe(false)
     expect(result.status).toBe(500)
   })
 
   it('aborts after timeout', async () => {
     const { httpGet } = await import('../../../src/cdp/browser.js')
-    // httpbin delay endpoint - request takes 2 seconds, timeout at 100ms
     const start = Date.now()
-    const result = await httpGet('https://httpbin.org/delay/2', 100)
+    const result = await httpGet(`http://127.0.0.1:${port}/slow`, 100)
     const elapsed = Date.now() - start
     expect(result.ok).toBe(false)
-    expect(elapsed).toBeLessThan(500) // Should timeout within ~100ms, not wait 2 seconds
+    expect(elapsed).toBeLessThan(500)
   })
 })
 
