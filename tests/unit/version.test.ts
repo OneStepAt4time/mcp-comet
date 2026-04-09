@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 
 describe('detectCometVersion', () => {
-  it('returns default v145 selectors on fetch failure', async () => {
+  it('returns default selectors on fetch failure', async () => {
     const { detectCometVersion } = await import('../../src/version.js')
     const originalFetch = globalThis.fetch
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('no connection')) as any
 
     const result = await detectCometVersion(9222)
-    expect(result.chromeMajor).toBe(145)
+    expect(result.chromeMajor).toBe(0)
     expect(result.browser).toBe('Unknown')
     expect(result.selectors).toBeDefined()
 
@@ -36,8 +36,18 @@ describe('detectCometVersion', () => {
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 }) as any
 
     const result = await detectCometVersion(9222)
-    expect(result.chromeMajor).toBe(145) // Falls back
+    expect(result.chromeMajor).toBe(0) // Falls back
 
     globalThis.fetch = originalFetch
+  })
+
+  it('logs warning on fetch failure before falling back', async () => {
+    const stderrWrite = vi.spyOn(process.stderr, 'write').mockReturnValue(true)
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('connection refused'))
+    const { detectCometVersion } = await import('../../src/version.js')
+    const result = await detectCometVersion(9222)
+    expect(result.chromeMajor).toBe(0)
+    expect(stderrWrite).toHaveBeenCalledWith(expect.stringContaining('warn'))
+    stderrWrite.mockRestore()
   })
 })

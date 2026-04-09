@@ -11,7 +11,11 @@ export async function detectCometVersion(port: number): Promise<CometVersion> {
     const resp = await fetch(`http://127.0.0.1:${port}/json/version`, {
       signal: AbortSignal.timeout(3000),
     })
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+    if (!resp.ok) {
+      process.stderr.write('[asteria:warn] Comet version detection: non-OK response, using default selectors\n')
+      const { getSelectorsForVersion } = await import('./selectors/index.js')
+      return { chromeMajor: 0, browser: 'Unknown', selectors: getSelectorsForVersion(0) }
+    }
     const data = (await resp.json()) as { Browser?: string }
     const browser = data.Browser ?? 'Unknown'
     const match = browser.match(/Chrome\/(\d+)/)
@@ -19,7 +23,8 @@ export async function detectCometVersion(port: number): Promise<CometVersion> {
     const { getSelectorsForVersion } = await import('./selectors/index.js')
     return { chromeMajor, browser, selectors: getSelectorsForVersion(chromeMajor) }
   } catch {
-    const { v145Selectors } = await import('./selectors/v145.js')
-    return { chromeMajor: 145, browser: 'Unknown', selectors: v145Selectors }
+    process.stderr.write('[asteria:warn] Comet version detection failed, using default selectors\n')
+    const { getSelectorsForVersion } = await import('./selectors/index.js')
+    return { chromeMajor: 0, browser: 'Unknown', selectors: getSelectorsForVersion(0) }
   }
 }
