@@ -83,7 +83,7 @@ describe('UI control tool handlers', () => {
       const result = await handler({ mode: 'deep-research' })
 
       expect(result.content[0].text).toContain('Mode switch failed')
-      expect(mocks.safeEvaluate).toHaveBeenCalledTimes(5)
+      expect(mocks.safeEvaluate).toHaveBeenCalledTimes(10)
     })
 
     it('returns error response when safeEvaluate fails', async () => {

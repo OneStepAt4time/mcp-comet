@@ -527,14 +527,15 @@ export async function startServer(): Promise<void> {
           const currentMode = extractValue(raw)
           return textResult(`Current mode: ${currentMode}`)
         }
-        const MAX_MODE_RETRIES = 5
+        const MAX_MODE_RETRIES = 10
         for (let attempt = 0; attempt < MAX_MODE_RETRIES; attempt++) {
           const raw = await client.safeEvaluate(buildModeSwitchScript(mode))
           const result = extractValue(raw)
           if (result !== 'no_listbox_found') {
             return textResult(`Mode switch result: ${result}`)
           }
-          await sleep(200)
+          // Wait longer between retries to give Comet time to render
+          await sleep(300)
         }
         return textResult('Mode switch failed: typeahead menu did not appear after retries')
       } catch (err) {
