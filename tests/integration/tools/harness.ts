@@ -34,6 +34,9 @@ export const mocks = {
     overlay: [],
     others: [],
   }),
+  pressKey: vi.fn<(key: string) => Promise<void>>().mockResolvedValue(undefined),
+  typeChar: vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined),
+  pressKeyWithModifier: vi.fn<(key: string, modifier: number) => Promise<void>>().mockResolvedValue(undefined),
   normalizePrompt: vi.fn<(s: string) => string>().mockImplementation((s: string) =>
     s.replace(/^[-*]\s+/gm, '').replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim(),
   ),

@@ -28,7 +28,7 @@ export function buildGetAgentStatusScript(selectors?: SelectorSet): string {
     }
 
     var bodyText = document.body ? document.body.innerText : '';
-    var workingPatterns = ['Working', 'Searching', 'Reviewing sources', 'Preparing to assist', 'Clicking', 'Typing:', 'Navigating to', 'Reading', 'Analyzing'];
+    var workingPatterns = ['Working', 'Searching', 'Reviewing sources', 'Preparing to assist', 'Clicking', 'Typing:', 'Navigating to', 'Reading', 'Analyzing', 'Ricerca', 'Analisi', 'Preparazione', 'Digitando', 'Navigazione', 'Lettura'];
     var hasWorkingText = false;
     for (var w = 0; w < workingPatterns.length; w++) {
       if (bodyText.indexOf(workingPatterns[w]) !== -1) { hasWorkingText = true; break; }

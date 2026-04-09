@@ -53,28 +53,35 @@ describe('UI control tool handlers', () => {
     })
 
     it('switches mode and returns result', async () => {
-      mocks.safeEvaluate.mockResolvedValue({ result: { value: 'clicked:Deep research' } })
+      mocks.safeEvaluate.mockResolvedValue({ result: { value: 'clicked:#pplx-icon-telescope' } })
       const handler = getHandler('comet_mode')
       const result = await handler({ mode: 'deep-research' })
 
       expect(result.content[0].type).toBe('text')
       expect(result.content[0].text).toContain('Mode switch result')
-      expect(result.content[0].text).toContain('clicked:Deep research')
+      expect(result.content[0].text).toContain('clicked:#pplx-icon-telescope')
     })
 
     it('retries mode switch when listbox not immediately available', async () => {
       mocks.safeEvaluate.mockReset()
-      // First two calls return no_listbox_found, third returns clicked
+      mocks.pressKey.mockClear()
+      // Each retry attempt calls safeEvaluate twice (focus + mode switch)
+      // Attempt 1: focus(default) + mode(no_listbox_found)
+      // Attempt 2: focus(default) + mode(no_listbox_found)
+      // Attempt 3: focus(default) + mode(clicked)
       mocks.safeEvaluate
+        .mockResolvedValueOnce({ result: { value: undefined } })
         .mockResolvedValueOnce({ result: { value: 'no_listbox_found' } })
+        .mockResolvedValueOnce({ result: { value: undefined } })
         .mockResolvedValueOnce({ result: { value: 'no_listbox_found' } })
-        .mockResolvedValueOnce({ result: { value: 'clicked:Deep research' } })
+        .mockResolvedValueOnce({ result: { value: undefined } })
+        .mockResolvedValueOnce({ result: { value: 'clicked:#pplx-icon-telescope' } })
       const handler = getHandler('comet_mode')
       const result = await handler({ mode: 'deep-research' })
 
-      expect(result.content[0].text).toContain('clicked:Deep research')
-      expect(mocks.safeEvaluate).toHaveBeenCalledTimes(3)
-    })
+      expect(result.content[0].text).toContain('clicked:#pplx-icon-telescope')
+      expect(mocks.safeEvaluate).toHaveBeenCalledTimes(6)
+    }, 10000)
 
     it('returns failure after max retries when listbox never appears', async () => {
       mocks.safeEvaluate.mockReset()
@@ -83,8 +90,9 @@ describe('UI control tool handlers', () => {
       const result = await handler({ mode: 'deep-research' })
 
       expect(result.content[0].text).toContain('Mode switch failed')
-      expect(mocks.safeEvaluate).toHaveBeenCalledTimes(10)
-    })
+      // 10 retries × 2 safeEvaluate calls each = 20
+      expect(mocks.safeEvaluate).toHaveBeenCalledTimes(20)
+    }, 15000)
 
     it('returns error response when safeEvaluate fails', async () => {
       mocks.safeEvaluate.mockRejectedValue(new Error('Evaluate failed'))

@@ -212,6 +212,23 @@ export class CDPClient {
     })
   }
 
+  /** Type a character via CDP char event (inserts text into focused element). */
+  async typeChar(text: string): Promise<void> {
+    return this.enqueue(async () => {
+      if (!this.criClient) throw new CDPConnectionError('Not connected')
+      await this.criClient.Input.dispatchKeyEvent({ type: 'char', text })
+    })
+  }
+
+  /** Press a key with modifier (e.g., Cmd+A for select all). modifier bit: 1=Alt, 2=Ctrl, 4=Meta, 8=Shift. */
+  async pressKeyWithModifier(key: string, modifier: number): Promise<void> {
+    return this.enqueue(async () => {
+      if (!this.criClient) throw new CDPConnectionError('Not connected')
+      await this.criClient.Input.dispatchKeyEvent({ type: 'keyDown', key, modifiers: modifier })
+      await this.criClient.Input.dispatchKeyEvent({ type: 'keyUp', key, modifiers: modifier })
+    })
+  }
+
   async isHealthy(): Promise<boolean> {
     if (!this.criClient) return false
     try {

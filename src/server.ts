@@ -425,8 +425,14 @@ export async function startServer(): Promise<void> {
           if (stallCount >= MAX_STALL_POLLS) break
 
           if ((status.status === 'completed' || status.status === 'idle') && sawNewResponse) {
+            // Wait for response to stabilize (Comet may still be rendering)
+            await sleep(1000)
+            const settledRaw = await client.safeEvaluate(buildGetAgentStatusScript(activeSelectors))
+            const settledStatus = parseAgentStatus(extractValue(settledRaw))
+
+            const finalResponse = settledStatus.response || lastResponse
             const parts: string[] = []
-            if (lastResponse) parts.push(lastResponse)
+            if (finalResponse) parts.push(finalResponse)
             if (collectedSteps.length > 0) {
               parts.push(`\n\nSteps:\n${collectedSteps.map((s) => `  - ${s}`).join('\n')}`)
             }
@@ -529,12 +535,24 @@ export async function startServer(): Promise<void> {
         }
         const MAX_MODE_RETRIES = 10
         for (let attempt = 0; attempt < MAX_MODE_RETRIES; attempt++) {
+          // Focus input, clear via Cmd+A+Backspace, then type / via CDP
+          await client.safeEvaluate(`(function() {
+            var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
+            if (input) input.focus();
+          })()`)
+          // Select all (Meta/Cmd = modifier 4) and delete
+          await client.pressKeyWithModifier('a', 4)
+          await client.pressKey('Backspace')
+          await sleep(100)
+          // Type / via char event (inserts into Lexical editor)
+          await client.typeChar('/')
+          await sleep(500)
+
           const raw = await client.safeEvaluate(buildModeSwitchScript(mode))
           const result = extractValue(raw)
-          if (result !== 'no_listbox_found') {
+          if (result !== 'no_listbox_found' && result !== 'no_input_found') {
             return textResult(`Mode switch result: ${result}`)
           }
-          // Wait longer between retries to give Comet time to render
           await sleep(300)
         }
         return textResult('Mode switch failed: typeahead menu did not appear after retries')

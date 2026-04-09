@@ -9,43 +9,48 @@ export function buildSubmitPromptScript(): string {
   })()`
 }
 
-/** Map internal mode names to display names shown in Comet's slash menu. */
-const MODE_DISPLAY_NAMES: Record<string, string> = {
+/** Map internal mode names to SVG icon href identifiers (locale-independent). */
+const MODE_ICONS: Record<string, string> = {
   standard: '',
-  'deep-research': 'Deep research',
-  'model-council': 'Model council',
-  create: 'Create files and apps',
-  learn: 'Learn step by step',
-  review: 'Review documents',
-  computer: 'Computer',
+  'deep-research': '#pplx-icon-telescope',
+  'model-council': '#pplx-icon-gavel',
+  create: '#pplx-icon-custom-computer',
+  learn: '#pplx-icon-book',
+  review: '#pplx-icon-file-check',
+  computer: '#pplx-icon-click',
 }
 
+/**
+ * Build script to click a mode item in the typeahead menu.
+ * The caller MUST inject '/' via CDP Input API before running this script.
+ * Matching is done by SVG icon href — locale-independent.
+ */
 export function buildModeSwitchScript(mode: string): string {
-  const displayName = MODE_DISPLAY_NAMES[mode] ?? mode
+  const iconHref = MODE_ICONS[mode] ?? (mode ? `#pplx-icon-${mode}` : '')
   return `(function() {
-    var displayName = ${JSON.stringify(displayName)};
-    if (!displayName) return 'standard_mode_no_action';
-
-    var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
-    if (!input) return 'no_input_found';
-
-    input.focus();
-    input.textContent = '/';
-    input.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: '/', bubbles: true }));
+    var iconHref = ${JSON.stringify(iconHref)};
+    if (!iconHref) return 'standard_mode_no_action';
 
     var listbox = document.querySelector('[role="listbox"]');
     if (!listbox) return 'no_listbox_found';
 
     var menuItems = document.querySelectorAll('[role="menuitem"]');
     for (var i = 0; i < menuItems.length; i++) {
-      var itemText = menuItems[i].textContent || '';
-      if (itemText.indexOf(displayName) !== -1) {
-        menuItems[i].click();
-        return 'clicked:' + displayName;
+      var item = menuItems[i];
+      // Skip shortcut items (slash commands like /write, /teach-me-comet)
+      if (item.className.indexOf('shortcut-typeahead-option') !== -1) continue;
+
+      // Match by icon SVG use href
+      var useEls = item.querySelectorAll('use');
+      for (var u = 0; u < useEls.length; u++) {
+        var href = useEls[u].getAttribute('xlink:href') || useEls[u].getAttribute('href') || '';
+        if (href === iconHref) {
+          item.click();
+          return 'clicked:' + iconHref;
+        }
       }
     }
-    return 'menu_item_not_found:' + displayName;
+    return 'menu_item_not_found:' + iconHref;
   })()`
 }
 
@@ -55,12 +60,23 @@ export function buildNewChatScript(): string {
 
 export function buildGetCurrentModeScript(): string {
   return `(function() {
-    // Comet's current UI has no visible mode indicator on result pages
-    // Default to 'standard' mode
     var url = window.location.href;
 
     // Check URL patterns for mode hints
     if (url.indexOf('/copilot/') !== -1) return 'computer';
+    if (url.indexOf('/computer/tasks/') !== -1) return 'computer';
+
+    // Check for active mode indicator in the typeahead menu
+    var activeBg = document.querySelector('[role="menuitem"] .bg-subtle use, [role="menuitem"] .bg-subtle [role="img"]');
+    if (activeBg) {
+      var href = activeBg.getAttribute('xlink:href') || activeBg.getAttribute('href') || '';
+      if (href.indexOf('telescope') !== -1) return 'deep-research';
+      if (href.indexOf('gavel') !== -1) return 'model-council';
+      if (href.indexOf('book') !== -1) return 'learn';
+      if (href.indexOf('file-check') !== -1) return 'review';
+      if (href.indexOf('click') !== -1) return 'computer';
+      if (href.indexOf('custom-computer') !== -1) return 'computer';
+    }
 
     return 'standard';
   })()`
