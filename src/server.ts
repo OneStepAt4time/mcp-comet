@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { CDPClient } from './cdp/client.js'
 import { loadConfig } from './config.js'
 import { EvaluationError, toMcpError } from './errors.js'
+import { isPerplexityDomain } from './utils.js'
 import { createLogger } from './logger.js'
 import { buildPreSendStateScript } from './prose-filter.js'
 import type { SelectorSet } from './selectors/types.js'
@@ -506,9 +507,16 @@ export async function startServer(): Promise<void> {
           const currentMode = extractValue(raw)
           return textResult(`Current mode: ${currentMode}`)
         }
-        const raw = await client.safeEvaluate(buildModeSwitchScript(mode))
-        const result = extractValue(raw)
-        return textResult(`Mode switch result: ${result}`)
+        const MAX_MODE_RETRIES = 5
+        for (let attempt = 0; attempt < MAX_MODE_RETRIES; attempt++) {
+          const raw = await client.safeEvaluate(buildModeSwitchScript(mode))
+          const result = extractValue(raw)
+          if (result !== 'no_listbox_found') {
+            return textResult(`Mode switch result: ${result}`)
+          }
+          await sleep(200)
+        }
+        return textResult('Mode switch failed: typeahead menu did not appear after retries')
       } catch (err) {
         return toMcpError(err)
       }
@@ -624,9 +632,7 @@ export async function startServer(): Promise<void> {
         } catch {
           return toMcpError(new Error(`Invalid URL: "${url}"`))
         }
-        const isPerplexityHost =
-          parsed.hostname === 'perplexity.ai' || parsed.hostname.endsWith('.perplexity.ai')
-        if (parsed.protocol !== 'https:' || !isPerplexityHost) {
+        if (parsed.protocol !== 'https:' || !isPerplexityDomain(parsed.hostname)) {
           return toMcpError(
             new Error(`Invalid URL: must be a https://perplexity.ai/ URL, got "${url}"`),
           )

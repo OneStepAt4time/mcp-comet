@@ -4,6 +4,7 @@ export function buildExtractSourcesScript(): string {
       if (!url) return true;
       try {
         var hostname = new URL(url).hostname;
+        // Domain check must match src/utils.ts isPerplexityDomain()
         return hostname === 'perplexity.ai' || hostname.endsWith('.perplexity.ai');
       } catch (e) {
         return true;
