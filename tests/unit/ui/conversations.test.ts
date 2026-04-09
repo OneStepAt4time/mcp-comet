@@ -52,4 +52,14 @@ describe('buildListConversationsScript', () => {
     const s = buildListConversationsScript()
     expect(s).toContain('conversations = []')
   })
+
+  it('filters for /computer/tasks/ URLs', () => {
+    const s = buildListConversationsScript()
+    expect(s).toContain('/computer/tasks/')
+  })
+
+  it('deduplicates doubled title text', () => {
+    const s = buildListConversationsScript()
+    expect(s).toContain('dedupeTitle')
+  })
 })
