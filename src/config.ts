@@ -52,6 +52,32 @@ function loadConfigFile(): Partial<CometConfig> {
   }
 }
 
+const VALID_LOG_LEVELS = ['debug', 'info', 'warn', 'error'] as const
+const VALID_SCREENSHOT_FORMATS = ['png', 'jpeg'] as const
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value))
+}
+
+function validatedConfig(raw: CometConfig): CometConfig {
+  return {
+    ...raw,
+    port: clamp(raw.port, 1, 65535),
+    timeout: clamp(raw.timeout, 1000, Number.POSITIVE_INFINITY),
+    responseTimeout: clamp(raw.responseTimeout, 1000, Number.POSITIVE_INFINITY),
+    pollInterval: clamp(raw.pollInterval, 100, Number.POSITIVE_INFINITY),
+    maxReconnectAttempts: Math.max(0, raw.maxReconnectAttempts),
+    logLevel: VALID_LOG_LEVELS.includes(raw.logLevel as (typeof VALID_LOG_LEVELS)[number])
+      ? raw.logLevel
+      : DEFAULTS.logLevel,
+    screenshotFormat: VALID_SCREENSHOT_FORMATS.includes(
+      raw.screenshotFormat as (typeof VALID_SCREENSHOT_FORMATS)[number],
+    )
+      ? raw.screenshotFormat
+      : DEFAULTS.screenshotFormat,
+  }
+}
+
 export function loadConfig(overrides?: Partial<CometConfig>): CometConfig {
   const fileConfig = loadConfigFile()
 
@@ -104,10 +130,10 @@ export function loadConfig(overrides?: Partial<CometConfig>): CometConfig {
   const userDataDirEnv = env('ASTERIA_USER_DATA_DIR')
   if (userDataDirEnv !== undefined) envConfig.userDataDir = userDataDirEnv
 
-  return {
+  return validatedConfig({
     ...DEFAULTS,
     ...fileConfig,
     ...envConfig,
     ...overrides,
-  }
+  })
 }

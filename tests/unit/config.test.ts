@@ -92,6 +92,53 @@ describe('loadConfig', () => {
     expect((config as Record<string, unknown>).unknownKey).toBeUndefined()
   })
 
+  describe('config validation', () => {
+    beforeEach(() => {
+      vi.unstubAllEnvs()
+    })
+
+    it('clamps port to valid range 1-65535', async () => {
+      const { loadConfig } = await import('../../src/config.js')
+      expect(loadConfig({ port: 0 }).port).toBe(1)
+      expect(loadConfig({ port: 99999 }).port).toBe(65535)
+      expect(loadConfig({ port: 9222 }).port).toBe(9222)
+    })
+
+    it('clamps timeout to minimum 1000ms', async () => {
+      const { loadConfig } = await import('../../src/config.js')
+      expect(loadConfig({ timeout: 0 }).timeout).toBe(1000)
+      expect(loadConfig({ timeout: -500 }).timeout).toBe(1000)
+      expect(loadConfig({ timeout: 5000 }).timeout).toBe(5000)
+    })
+
+    it('clamps pollInterval to minimum 100ms', async () => {
+      const { loadConfig } = await import('../../src/config.js')
+      expect(loadConfig({ pollInterval: 0 }).pollInterval).toBe(100)
+      expect(loadConfig({ pollInterval: 50 }).pollInterval).toBe(100)
+      expect(loadConfig({ pollInterval: 2000 }).pollInterval).toBe(2000)
+    })
+
+    it('clamps maxReconnectAttempts to minimum 0', async () => {
+      const { loadConfig } = await import('../../src/config.js')
+      expect(loadConfig({ maxReconnectAttempts: -5 }).maxReconnectAttempts).toBe(0)
+      expect(loadConfig({ maxReconnectAttempts: 3 }).maxReconnectAttempts).toBe(3)
+    })
+
+    it('falls back to default for invalid logLevel env var', async () => {
+      vi.stubEnv('ASTERIA_LOG_LEVEL', 'verbose')
+      const { loadConfig } = await import('../../src/config.js')
+      const cfg = loadConfig()
+      expect(cfg.logLevel).toBe('info')
+    })
+
+    it('falls back to default for invalid screenshotFormat env var', async () => {
+      vi.stubEnv('ASTERIA_SCREENSHOT_FORMAT', 'gif')
+      const { loadConfig } = await import('../../src/config.js')
+      const cfg = loadConfig()
+      expect(cfg.screenshotFormat).toBe('png')
+    })
+  })
+
   describe('env var branches — each ASTERIA_* env var', () => {
     const envVars = [
       { name: 'ASTERIA_PORT', key: 'port' as const, value: '9999', expected: 9999 },
