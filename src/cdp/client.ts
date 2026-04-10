@@ -28,7 +28,9 @@ export class CDPClient {
   private async enqueue<T>(fn: () => Promise<T>): Promise<T> {
     const prev = this.opLock
     let resolve!: () => void
-    this.opLock = new Promise((r) => { resolve = r })
+    this.opLock = new Promise((r) => {
+      resolve = r
+    })
     await prev
     try {
       return await fn()
@@ -132,7 +134,9 @@ export class CDPClient {
       try {
         await this.criClient.close()
       } catch (err) {
-        this.logger.debug(`Disconnect error (ignored): ${err instanceof Error ? err.message : String(err)}`)
+        this.logger.debug(
+          `Disconnect error (ignored): ${err instanceof Error ? err.message : String(err)}`,
+        )
       }
       this.criClient = null
     }
@@ -251,7 +255,9 @@ export class CDPClient {
     try {
       await this.reconnect()
     } catch (err) {
-      this.logger.warn(`Reconnect failed during health check: ${err instanceof Error ? err.message : String(err)}`)
+      this.logger.warn(
+        `Reconnect failed during health check: ${err instanceof Error ? err.message : String(err)}`,
+      )
     }
   }
 
@@ -344,7 +350,9 @@ export class CDPClient {
             try {
               await httpGet(`http://127.0.0.1:${this.state.port}/json/close/${tab.id}`)
             } catch (err) {
-              this.logger.debug(`HTTP tab close also failed for ${tab.id}: ${err instanceof Error ? err.message : String(err)}`)
+              this.logger.debug(
+                `HTTP tab close also failed for ${tab.id}: ${err instanceof Error ? err.message : String(err)}`,
+              )
             }
           }
         }

@@ -28,6 +28,7 @@ describe('buildTypePromptScript injection safety', () => {
     expect(() => JSON.parse(literal)).not.toThrow()
   })
 
+  // biome-ignore lint/suspicious/noTemplateCurlyInString: test verifies injection safety of ${...} in strings
   it('safely embeds template literal expressions via JSON.stringify', () => {
     const prompt = '${document.cookie}'
     const literal = JSON.stringify(prompt)

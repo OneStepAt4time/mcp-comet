@@ -121,7 +121,9 @@ describe('UI control tool handlers', () => {
   describe('comet_list_tabs', () => {
     it('returns categorized tabs', async () => {
       mocks.listTabsCategorized.mockResolvedValue({
-        main: [{ id: 'target-1', url: 'https://www.perplexity.ai', type: 'page', title: 'Perplexity' }],
+        main: [
+          { id: 'target-1', url: 'https://www.perplexity.ai', type: 'page', title: 'Perplexity' },
+        ],
         sidecar: [{ id: 'target-2', url: 'https://example.com', type: 'page', title: 'Sidecar' }],
         agentBrowsing: [],
         overlay: [],
@@ -267,7 +269,9 @@ describe('UI control tool handlers', () => {
       mocks.launchOrConnect.mockResolvedValue('target-1')
       mocks.closeExtraTabs.mockResolvedValue(undefined)
       mocks.listTabsCategorized.mockResolvedValue({
-        main: [{ id: 'target-1', url: 'https://www.perplexity.ai', type: 'page', title: 'Perplexity' }],
+        main: [
+          { id: 'target-1', url: 'https://www.perplexity.ai', type: 'page', title: 'Perplexity' },
+        ],
         sidecar: [],
         agentBrowsing: [],
         overlay: [],

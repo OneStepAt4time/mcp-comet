@@ -69,7 +69,7 @@ describe('buildPreSendStateScript', () => {
     const { buildPreSendStateScript } = await import('../../src/prose-filter.js')
     const js = buildPreSendStateScript()
     expect(js).toContain('proseElements')
-    expect(js).toContain("querySelectorAll('main [class*=\"prose\"]")
+    expect(js).toContain('querySelectorAll(\'main [class*="prose"]')
   })
 
   it('includes excludeTags array', async () => {

@@ -2,35 +2,21 @@ name: Release
 
 on:
   push:
-    branches: [main, master]
+    tags: ['v*']
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
   id-token: write
 
 jobs:
-  release-please:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: google-github-actions/release-please-action@v4
-        id: release
-        with:
-          release-type: node
-          package-name: asteria
-
-  npm-publish:
-    needs: release-please
-    if: ${{ needs.release-please.outputs.releases_created }}
+  publish-npm:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          registry-url: "https://registry.npmjs.org"
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
       - run: npm ci
       - run: npm run build
       - run: npx vitest run

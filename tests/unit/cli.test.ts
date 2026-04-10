@@ -1,7 +1,7 @@
+import { spawnSync } from 'node:child_process'
 import { describe, expect, it } from 'vitest'
-import { execSync, spawnSync } from 'node:child_process'
 
-const CLI_PATH = 'node dist/cli.js'
+const _CLI_PATH = 'node dist/cli.js'
 
 function runCli(args: string): { stdout: string; stderr: string; status: number | null } {
   const result = spawnSync('node', ['dist/cli.js', ...args.split(' ')], {

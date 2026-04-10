@@ -67,9 +67,19 @@ function validatedConfig(raw: CometConfig): CometConfig {
     ...raw,
     port: safeClamp(raw.port, 1, 65535, DEFAULTS.port),
     timeout: safeClamp(raw.timeout, 1000, Number.POSITIVE_INFINITY, DEFAULTS.timeout),
-    responseTimeout: safeClamp(raw.responseTimeout, 1000, Number.POSITIVE_INFINITY, DEFAULTS.responseTimeout),
+    responseTimeout: safeClamp(
+      raw.responseTimeout,
+      1000,
+      Number.POSITIVE_INFINITY,
+      DEFAULTS.responseTimeout,
+    ),
     pollInterval: safeClamp(raw.pollInterval, 100, Number.POSITIVE_INFINITY, DEFAULTS.pollInterval),
-    maxReconnectAttempts: Math.max(0, Number.isFinite(raw.maxReconnectAttempts) ? raw.maxReconnectAttempts : DEFAULTS.maxReconnectAttempts),
+    maxReconnectAttempts: Math.max(
+      0,
+      Number.isFinite(raw.maxReconnectAttempts)
+        ? raw.maxReconnectAttempts
+        : DEFAULTS.maxReconnectAttempts,
+    ),
     logLevel: VALID_LOG_LEVELS.includes(raw.logLevel as (typeof VALID_LOG_LEVELS)[number])
       ? raw.logLevel
       : DEFAULTS.logLevel,

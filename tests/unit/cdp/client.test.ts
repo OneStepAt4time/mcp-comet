@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CRI from 'chrome-remote-interface'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CDPClient } from '../../../src/cdp/client.js'
 import { CDPConnectionError } from '../../../src/errors.js'
 
@@ -243,7 +243,7 @@ describe('CDPClient screenshot()', () => {
     // Simulate connection drop
     screenshotAttempted = true
     // After disconnect, health check returns false, then reconnect succeeds
-    const originalEvaluate = healthyCriMock.Runtime.evaluate
+    const _originalEvaluate = healthyCriMock.Runtime.evaluate
     healthyCriMock.Runtime.evaluate = vi.fn().mockImplementation(() => {
       // Return unhealthy result to trigger reconnect
       return Promise.resolve({ result: { value: null } })
@@ -257,7 +257,11 @@ describe('CDPClient screenshot()', () => {
       if (url.includes('/json/version'))
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ Browser: 'Chrome/145' }) })
       if (url.includes('/json/list'))
-        return Promise.resolve({ ok: true, json: () => Promise.resolve([{ id: 't1', url: 'https://perplexity.ai', type: 'page', title: 'P' }]) })
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve([{ id: 't1', url: 'https://perplexity.ai', type: 'page', title: 'P' }]),
+        })
       return Promise.resolve({ ok: false })
     }) as any
 
@@ -326,8 +330,14 @@ describe('CDPClient pressKey()', () => {
     await client.pressKey('Enter')
 
     expect(criMock.Input.dispatchKeyEvent).toHaveBeenCalledTimes(2)
-    expect(criMock.Input.dispatchKeyEvent).toHaveBeenNthCalledWith(1, { type: 'keyDown', key: 'Enter' })
-    expect(criMock.Input.dispatchKeyEvent).toHaveBeenNthCalledWith(2, { type: 'keyUp', key: 'Enter' })
+    expect(criMock.Input.dispatchKeyEvent).toHaveBeenNthCalledWith(1, {
+      type: 'keyDown',
+      key: 'Enter',
+    })
+    expect(criMock.Input.dispatchKeyEvent).toHaveBeenNthCalledWith(2, {
+      type: 'keyUp',
+      key: 'Enter',
+    })
   })
 })
 
@@ -386,12 +396,12 @@ describe('CDPClient operation queue', () => {
     await client.connect()
 
     const order: number[] = []
-    const op1 = client['enqueue'](async () => {
+    const op1 = client.enqueue(async () => {
       order.push(1)
       await new Promise((r) => setTimeout(r, 50))
       order.push(2)
     })
-    const op2 = client['enqueue'](async () => {
+    const op2 = client.enqueue(async () => {
       order.push(3)
     })
     await Promise.all([op1, op2])
@@ -435,10 +445,7 @@ describe('CDPClient reconnect race condition', () => {
     expect(connectCalls).toBe(1)
 
     // Trigger two reconnects concurrently
-    await Promise.all([
-      client['reconnect'](),
-      client['reconnect'](),
-    ])
+    await Promise.all([client.reconnect(), client.reconnect()])
     // Should only reconnect once, not twice
     expect(connectCalls).toBeLessThanOrEqual(3) // initial + at most 1 reconnect
   })
@@ -465,7 +472,7 @@ describe('CDPClient reconnection paths', () => {
     await client.connect()
 
     // First call throws connection error, second succeeds
-    const result = await client['withAutoReconnect'](async () => {
+    const result = await client.withAutoReconnect(async () => {
       attempt++
       if (attempt === 1) throw new Error('WebSocket CLOSED')
       return 'success'
@@ -486,7 +493,9 @@ describe('CDPClient reconnection paths', () => {
     await client.connect()
 
     await expect(
-      client['withAutoReconnect'](async () => { throw new Error('WebSocket CLOSED') }),
+      client.withAutoReconnect(async () => {
+        throw new Error('WebSocket CLOSED')
+      }),
     ).rejects.toThrow('WebSocket CLOSED')
   })
 
@@ -498,7 +507,9 @@ describe('CDPClient reconnection paths', () => {
     await client.connect()
 
     await expect(
-      client['withAutoReconnect'](async () => { throw new Error('Some other error') }),
+      client.withAutoReconnect(async () => {
+        throw new Error('Some other error')
+      }),
     ).rejects.toThrow('Some other error')
   })
 
@@ -511,7 +522,7 @@ describe('CDPClient reconnection paths', () => {
     const reconnectSpy = vi.spyOn(client as any, 'reconnect').mockResolvedValue(undefined)
     vi.spyOn(client as any, 'isHealthy').mockResolvedValue(false)
 
-    await client['ensureHealthyConnection']()
+    await client.ensureHealthyConnection()
     expect(reconnectSpy).toHaveBeenCalled()
   })
 
@@ -525,7 +536,7 @@ describe('CDPClient reconnection paths', () => {
 
     const reconnectSpy = vi.spyOn(client as any, 'reconnect')
 
-    await client['ensureHealthyConnection']()
+    await client.ensureHealthyConnection()
     expect(reconnectSpy).not.toHaveBeenCalled()
   })
 })
@@ -544,7 +555,7 @@ describe('CDPClient error propagation', () => {
 
   it('ensureHealthyConnection catches reconnect failure gracefully', async () => {
     originalFetch = mockFetchForConnect()
-    const criMock = mockCRI()
+    const _criMock = mockCRI()
     const client = CDPClient.getInstance()
     await client.connect()
 
@@ -553,7 +564,7 @@ describe('CDPClient error propagation', () => {
     vi.spyOn(client as any, 'connect').mockRejectedValue(new Error('Connection refused'))
 
     // Should not throw — let caller handle via withAutoReconnect
-    await expect(client['ensureHealthyConnection']()).resolves.toBeUndefined()
+    await expect(client.ensureHealthyConnection()).resolves.toBeUndefined()
   })
 
   it('disconnect logs errors instead of swallowing silently', async () => {

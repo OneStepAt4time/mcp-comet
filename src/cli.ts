@@ -174,8 +174,8 @@ async function runCall(args: string[]): Promise<void> {
         const msg = JSON.parse(line)
 
         if (msg.id === 0 && msg.result) {
-          child.stdin.write(initializedNotif + '\n')
-          child.stdin.write(toolMsg + '\n')
+          child.stdin.write(`${initializedNotif}\n`)
+          child.stdin.write(`${toolMsg}\n`)
           continue
         }
 
@@ -211,7 +211,7 @@ async function runCall(args: string[]): Promise<void> {
 
   child.stderr.on('data', (chunk: Buffer) => {
     const msg = chunk.toString().trim()
-    if (msg) console.error(`[asteria] ${msg}`)
+    if (msg) process.stderr.write(`[asteria] ${msg}\n`)
   })
 
   function shutdown(code: number): void {
@@ -222,7 +222,7 @@ async function runCall(args: string[]): Promise<void> {
   }
 
   // Start handshake
-  child.stdin.write(initMsg + '\n')
+  child.stdin.write(`${initMsg}\n`)
 
   // Timeout after 3 minutes
   setTimeout(() => {

@@ -67,14 +67,16 @@ vi.mock('../../src/server.js', () => ({
 }))
 
 describe('CLI runDetect', () => {
-  let exitCode: number | undefined
+  let _exitCode: number | undefined
 
   beforeEach(() => {
     vi.clearAllMocks()
     captureConsole()
-    exitCode = undefined
+    _exitCode = undefined
     // Use a non-throwing process.exit mock
-    process.exit = ((code: number) => { exitCode = code }) as any
+    process.exit = ((code: number) => {
+      _exitCode = code
+    }) as any
     mockStdin.write.mockClear()
     mockStdout.on.mockClear()
     mockStderr.on.mockClear()
@@ -114,7 +116,9 @@ describe('CLI runDetect', () => {
 
   it('handles Comet path not found', async () => {
     const { getCometPath, isCometProcessRunning } = await import('../../src/cdp/browser.js')
-    vi.mocked(getCometPath).mockImplementation(() => { throw new Error('Not found') })
+    vi.mocked(getCometPath).mockImplementation(() => {
+      throw new Error('Not found')
+    })
     vi.mocked(isCometProcessRunning).mockReturnValue(false)
 
     const origFetch = globalThis.fetch
@@ -138,7 +142,9 @@ describe('CLI runCall', () => {
     vi.clearAllMocks()
     captureConsole()
     exitCode = undefined
-    process.exit = ((code: number) => { exitCode = code }) as any
+    process.exit = ((code: number) => {
+      exitCode = code
+    }) as any
     mockStdin.write.mockClear()
     mockStdout.on.mockClear()
     mockStderr.on.mockClear()
@@ -202,9 +208,9 @@ describe('CLI runCall', () => {
         })
         // Send responses asynchronously
         setTimeout(() => {
-          cb(Buffer.from(initResp + '\n'))
+          cb(Buffer.from(`${initResp}\n`))
           setTimeout(() => {
-            cb(Buffer.from(toolResp + '\n'))
+            cb(Buffer.from(`${toolResp}\n`))
           }, 10)
         }, 10)
       }
@@ -236,7 +242,7 @@ describe('CLI runCall', () => {
       if (event === 'data' && !responded) {
         const initResp = JSON.stringify({ jsonrpc: '2.0', id: 0, result: {} })
         setTimeout(() => {
-          cb(Buffer.from(initResp + '\n'))
+          cb(Buffer.from(`${initResp}\n`))
           // After initialized notification, send tool response
           setTimeout(() => {
             const toolResp = JSON.stringify({
@@ -244,7 +250,7 @@ describe('CLI runCall', () => {
               id: 1,
               result: { content: [{ type: 'text', text: 'Response text' }] },
             })
-            cb(Buffer.from(toolResp + '\n'))
+            cb(Buffer.from(`${toolResp}\n`))
             responded = true
           }, 10)
         }, 10)
@@ -259,10 +265,13 @@ describe('CLI runCall', () => {
       try {
         const parsed = JSON.parse(w)
         return parsed.method === 'tools/call'
-      } catch { return false }
+      } catch {
+        return false
+      }
     })
 
     expect(toolMsg).toBeDefined()
+    // biome-ignore lint/style/noNonNullAssertion: test asserts defined above
     const parsed = JSON.parse(toolMsg!)
     expect(parsed.params.name).toBe('comet_ask')
     expect(parsed.params.arguments.prompt).toBe('test')
@@ -275,14 +284,14 @@ describe('CLI runCall', () => {
       if (event === 'data') {
         const initResp = JSON.stringify({ jsonrpc: '2.0', id: 0, result: {} })
         setTimeout(() => {
-          cb(Buffer.from(initResp + '\n'))
+          cb(Buffer.from(`${initResp}\n`))
           setTimeout(() => {
             const errResp = JSON.stringify({
               jsonrpc: '2.0',
               id: 1,
               error: { code: -32603, message: 'Internal error' },
             })
-            cb(Buffer.from(errResp + '\n'))
+            cb(Buffer.from(`${errResp}\n`))
           }, 10)
         }, 10)
       }
@@ -302,7 +311,9 @@ describe('CLI unknown command', () => {
   beforeEach(() => {
     captureConsole()
     exitCode = undefined
-    process.exit = ((code: number) => { exitCode = code }) as any
+    process.exit = ((code: number) => {
+      exitCode = code
+    }) as any
     vi.clearAllMocks()
   })
 

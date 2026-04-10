@@ -63,7 +63,10 @@ describe('httpGet with local server', () => {
         res.writeHead(500)
         res.end('error')
       } else if (req.url === '/slow') {
-        setTimeout(() => { res.writeHead(200); res.end('late') }, 5000)
+        setTimeout(() => {
+          res.writeHead(200)
+          res.end('late')
+        }, 5000)
       } else {
         res.writeHead(404)
         res.end()
@@ -78,7 +81,9 @@ describe('httpGet with local server', () => {
   })
 
   afterEach(async () => {
-    await new Promise<void>((resolve) => { server.close(() => resolve()) })
+    await new Promise<void>((resolve) => {
+      server.close(() => resolve())
+    })
   })
 
   it('returns ok:true for successful fetch', async () => {
@@ -146,7 +151,11 @@ describe('startCometProcess', () => {
     const { startCometProcess } = await import('../../../src/cdp/browser.js')
     const mockLogger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 
-    startCometProcess('/path/to/comet', 9223, mockLogger as unknown as import('../../../src/logger.js').Logger)
+    startCometProcess(
+      '/path/to/comet',
+      9223,
+      mockLogger as unknown as import('../../../src/logger.js').Logger,
+    )
 
     expect(spawnMock).toHaveBeenCalledWith(
       '/path/to/comet',
@@ -259,7 +268,11 @@ describe('startCometProcess', () => {
     const { startCometProcess } = await import('../../../src/cdp/browser.js')
     const mockLogger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 
-    startCometProcess('/path/to/comet', 9222, mockLogger as unknown as import('../../../src/logger.js').Logger)
+    startCometProcess(
+      '/path/to/comet',
+      9222,
+      mockLogger as unknown as import('../../../src/logger.js').Logger,
+    )
 
     expect(mockChild.on).toHaveBeenCalledWith('error', expect.any(Function))
 

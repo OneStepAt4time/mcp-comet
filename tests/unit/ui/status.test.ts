@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildGetAgentStatusScript } from '../../../src/ui/status.js'
 import { SELECTORS } from '../../../src/ui/selectors.js'
+import { buildGetAgentStatusScript } from '../../../src/ui/status.js'
 
 describe('buildGetAgentStatusScript', () => {
   it('generates valid JS with status fields', () => {

@@ -22,11 +22,14 @@ export const mocks = {
   connect: vi.fn<(id?: string) => Promise<string>>().mockResolvedValue('target-1'),
   navigate: vi.fn<(url: string) => Promise<void>>().mockResolvedValue(undefined),
   screenshot: vi.fn<(fmt?: string) => Promise<string>>().mockResolvedValue('base64data'),
-  safeEvaluate: vi.fn<(expr: string) => Promise<{ result?: { value?: unknown }; exceptionDetails?: unknown }>>()
+  safeEvaluate: vi
+    .fn<(expr: string) => Promise<{ result?: { value?: unknown }; exceptionDetails?: unknown }>>()
     .mockResolvedValue({ result: { value: '{}' } }),
-  listTargets: vi.fn<() => Promise<any[]>>().mockResolvedValue([
-    { id: 'target-1', url: 'https://www.perplexity.ai', type: 'page', title: 'Perplexity' },
-  ]),
+  listTargets: vi
+    .fn<() => Promise<any[]>>()
+    .mockResolvedValue([
+      { id: 'target-1', url: 'https://www.perplexity.ai', type: 'page', title: 'Perplexity' },
+    ]),
   listTabsCategorized: vi.fn<() => Promise<any>>().mockResolvedValue({
     main: [{ id: 'target-1', url: 'https://www.perplexity.ai', type: 'page', title: 'Perplexity' }],
     sidecar: [],
@@ -36,9 +39,15 @@ export const mocks = {
   }),
   pressKey: vi.fn<(key: string) => Promise<void>>().mockResolvedValue(undefined),
   typeChar: vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined),
-  pressKeyWithModifier: vi.fn<(key: string, modifier: number) => Promise<void>>().mockResolvedValue(undefined),
+  pressKeyWithModifier: vi
+    .fn<(key: string, modifier: number) => Promise<void>>()
+    .mockResolvedValue(undefined),
   normalizePrompt: vi.fn<(s: string) => string>().mockImplementation((s: string) =>
-    s.replace(/^[-*]\s+/gm, '').replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim(),
+    s
+      .replace(/^[-*]\s+/gm, '')
+      .replace(/\n+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim(),
   ),
   state: {
     connected: true,
@@ -161,6 +170,9 @@ export async function registerHandlers(): Promise<void> {
  */
 export function getHandler(name: string): (...args: any[]) => Promise<any> {
   const handler = capturedHandlers[name]
-  if (!handler) throw new Error(`Handler not found: ${name}. Available: ${Object.keys(capturedHandlers).join(', ')}`)
+  if (!handler)
+    throw new Error(
+      `Handler not found: ${name}. Available: ${Object.keys(capturedHandlers).join(', ')}`,
+    )
   return handler
 }

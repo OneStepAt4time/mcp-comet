@@ -12,7 +12,9 @@ export async function detectCometVersion(port: number): Promise<CometVersion> {
       signal: AbortSignal.timeout(3000),
     })
     if (!resp.ok) {
-      process.stderr.write('[asteria:warn] Comet version detection: non-OK response, using default selectors\n')
+      process.stderr.write(
+        '[asteria:warn] Comet version detection: non-OK response, using default selectors\n',
+      )
       const { getSelectorsForVersion } = await import('./selectors/index.js')
       return { chromeMajor: 0, browser: 'Unknown', selectors: getSelectorsForVersion(0) }
     }

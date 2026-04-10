@@ -4,12 +4,16 @@ import { z } from 'zod'
 import { CDPClient } from './cdp/client.js'
 import { loadConfig } from './config.js'
 import { EvaluationError, toMcpError } from './errors.js'
-import { isPerplexityDomain } from './utils.js'
 import { createLogger } from './logger.js'
 import { buildPreSendStateScript } from './prose-filter.js'
 import type { SelectorSet } from './selectors/types.js'
 import type { CategorizedTabs, TabInfo } from './types.js'
-import { buildExpandCollapsedCitationsScript, buildExtractPageContentScript, buildExtractSourcesScript } from './ui/extraction.js'
+import { buildListConversationsScript } from './ui/conversations.js'
+import {
+  buildExpandCollapsedCitationsScript,
+  buildExtractPageContentScript,
+  buildExtractSourcesScript,
+} from './ui/extraction.js'
 import { buildTypePromptScript } from './ui/input.js'
 import {
   buildModeSwitchScript,
@@ -19,7 +23,7 @@ import {
 import { SELECTORS } from './ui/selectors.js'
 import { buildGetAgentStatusScript } from './ui/status.js'
 import { buildStopAgentScript } from './ui/stop.js'
-import { buildListConversationsScript } from './ui/conversations.js'
+import { isPerplexityDomain } from './utils.js'
 import { detectCometVersion } from './version.js'
 
 // ---------------------------------------------------------------------------
@@ -252,7 +256,14 @@ function parseAgentStatus(raw: unknown): RawAgentStatus {
     try {
       return JSON.parse(raw) as RawAgentStatus
     } catch {
-      return { status: 'idle', steps: [], currentStep: '', response: '', hasStopButton: false, proseCount: 0 }
+      return {
+        status: 'idle',
+        steps: [],
+        currentStep: '',
+        response: '',
+        hasStopButton: false,
+        proseCount: 0,
+      }
     }
   }
   return raw as RawAgentStatus
@@ -410,14 +421,12 @@ export async function startServer(): Promise<void> {
           }
 
           // Check for new response — proseCount is the primary signal
-          const proseIncreased =
-            (status.proseCount ?? 0) > preSendState.proseCount
+          const proseIncreased = (status.proseCount ?? 0) > preSendState.proseCount
           // Only consider response "changed" if:
           // 1. proseCount increased (new prose element added), OR
           // 2. Fresh page had no prose before, and now there's a substantial response
           const responseChanged =
-            proseIncreased ||
-            (!preSendState.lastProseText && hasSubstantialResponse(status))
+            proseIncreased || (!preSendState.lastProseText && hasSubstantialResponse(status))
 
           if (responseChanged && status.response) {
             // Track response growth for auto-extend
@@ -438,7 +447,9 @@ export async function startServer(): Promise<void> {
             let settledResponse = lastResponse
             for (let settle = 0; settle < 5; settle++) {
               await sleep(1000)
-              const settledRaw = await client.safeEvaluate(buildGetAgentStatusScript(activeSelectors))
+              const settledRaw = await client.safeEvaluate(
+                buildGetAgentStatusScript(activeSelectors),
+              )
               const settledStatus = parseAgentStatus(extractValue(settledRaw))
               const candidate = settledStatus.response || settledResponse
               if (candidate.length <= settledResponse.length) break
@@ -453,7 +464,12 @@ export async function startServer(): Promise<void> {
             return textResult(parts.join('') || 'Agent completed with no visible response.')
           }
 
-          if (status.status === 'idle' && !sawNewResponse && status.response && !preSendState.lastProseText) {
+          if (
+            status.status === 'idle' &&
+            !sawNewResponse &&
+            status.response &&
+            !preSendState.lastProseText
+          ) {
             return textResult(status.response)
           }
         }
@@ -825,7 +841,9 @@ export async function startServer(): Promise<void> {
             let settledResponse = lastResponse
             for (let settle = 0; settle < 5; settle++) {
               await sleep(1000)
-              const settledRaw = await client.safeEvaluate(buildGetAgentStatusScript(activeSelectors))
+              const settledRaw = await client.safeEvaluate(
+                buildGetAgentStatusScript(activeSelectors),
+              )
               const settledStatus = parseAgentStatus(extractValue(settledRaw))
               const candidate = settledStatus.response || settledResponse
               if (candidate.length <= settledResponse.length) break

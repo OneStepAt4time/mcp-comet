@@ -1,5 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { EvaluationError } from '../../../src/errors.js'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { getHandler, mocks, registerHandlers, resetHarness } from './harness.js'
 
 describe('Core tool handlers', () => {
@@ -40,7 +39,12 @@ describe('Core tool handlers', () => {
 
     it('non-main page navigation — navigates to perplexity.ai when only sidecar present', async () => {
       mocks.listTargets.mockResolvedValue([
-        { id: 'target-1', url: 'https://www.perplexity.ai/sidecar', type: 'page', title: 'Sidecar' },
+        {
+          id: 'target-1',
+          url: 'https://www.perplexity.ai/sidecar',
+          type: 'page',
+          title: 'Sidecar',
+        },
       ])
 
       const handler = getHandler('comet_connect')
@@ -213,7 +217,9 @@ describe('Core tool handlers', () => {
         callCount++
         // First call: pre-send state (old response still on page, proseCount=1)
         if (callCount === 1) {
-          return { result: { value: JSON.stringify({ proseCount: 1, lastProseText: oldResponse }) } }
+          return {
+            result: { value: JSON.stringify({ proseCount: 1, lastProseText: oldResponse }) },
+          }
         }
         // Second call: type prompt
         if (callCount === 2) return { result: { value: 'typed' } }
@@ -273,11 +279,7 @@ describe('Core tool handlers', () => {
 
     it('smart polling — auto-extends when response is growing', async () => {
       let callCount = 0
-      const growingResponses = [
-        'A'.repeat(60),
-        'A'.repeat(120),
-        'A'.repeat(200),
-      ]
+      const growingResponses = ['A'.repeat(60), 'A'.repeat(120), 'A'.repeat(200)]
       mocks.safeEvaluate.mockImplementation(async () => {
         callCount++
         if (callCount === 1) return { result: { value: '{"proseCount":0,"lastProseText":""}' } }
@@ -336,13 +338,16 @@ describe('Core tool handlers', () => {
     it('ignores old substantial response — no false positive from hasSubstantialResponse', async () => {
       // Regression: hasSubstantialResponse was OR'd into responseChanged,
       // causing old responses to be treated as new when proseCount didn't increase.
-      const oldResponse = 'This is an old response from a previous query that is still on the page and is quite long.'
+      const oldResponse =
+        'This is an old response from a previous query that is still on the page and is quite long.'
       let callCount = 0
       mocks.safeEvaluate.mockImplementation(async () => {
         callCount++
         // pre-send state: old response still on page
         if (callCount === 1) {
-          return { result: { value: JSON.stringify({ proseCount: 1, lastProseText: oldResponse }) } }
+          return {
+            result: { value: JSON.stringify({ proseCount: 1, lastProseText: oldResponse }) },
+          }
         }
         if (callCount === 2) return { result: { value: 'typed' } }
         if (callCount === 3) return { result: { value: 'submitted' } }

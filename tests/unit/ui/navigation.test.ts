@@ -80,7 +80,7 @@ describe('buildModeSwitchScript injection safety', () => {
     const malicious = "test';alert(1);//"
     const script = buildModeSwitchScript(malicious)
     const expected = JSON.stringify(`#pplx-icon-${malicious}`)
-    expect(script).toContain('var iconHref = ' + expected + ';')
+    expect(script).toContain(`var iconHref = ${expected};`)
     // Verify JSON round-trip is safe
     expect(JSON.parse(expected)).toBe(`#pplx-icon-${malicious}`)
   })
@@ -117,31 +117,31 @@ describe('buildReadActiveModeScript', () => {
 
   it('maps telescope icon to deep-research', () => {
     const s = buildReadActiveModeScript()
-    expect(s).toContain("#pplx-icon-telescope")
+    expect(s).toContain('#pplx-icon-telescope')
     expect(s).toContain('"deep-research"')
   })
 
   it('maps gavel icon to model-council', () => {
     const s = buildReadActiveModeScript()
-    expect(s).toContain("#pplx-icon-gavel")
+    expect(s).toContain('#pplx-icon-gavel')
     expect(s).toContain('"model-council"')
   })
 
   it('maps book icon to learn', () => {
     const s = buildReadActiveModeScript()
-    expect(s).toContain("#pplx-icon-book")
+    expect(s).toContain('#pplx-icon-book')
     expect(s).toContain('"learn"')
   })
 
   it('maps file-check icon to review', () => {
     const s = buildReadActiveModeScript()
-    expect(s).toContain("#pplx-icon-file-check")
+    expect(s).toContain('#pplx-icon-file-check')
     expect(s).toContain('"review"')
   })
 
   it('maps click icon to computer', () => {
     const s = buildReadActiveModeScript()
-    expect(s).toContain("#pplx-icon-click")
+    expect(s).toContain('#pplx-icon-click')
   })
 
   it('skips shortcut-typeahead-option items', () => {

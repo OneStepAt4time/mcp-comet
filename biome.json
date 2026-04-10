@@ -31,6 +31,19 @@
     }
   },
   "files": {
-    "includes": ["**", "!dist", "!node_modules", "!.claude"]
-  }
+    "includes": ["**", "!dist", "!node_modules", "!.claude", "!coverage"]
+  },
+  "overrides": [
+    {
+      "includes": ["tests/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off",
+            "noConsole": "off"
+          }
+        }
+      }
+    }
+  ]
 }
