@@ -142,7 +142,7 @@ All settings can be overridden via environment variables:
 | `COMET_PATH` | auto-detect | Path to Comet executable |
 | `ASTERIA_LOG_LEVEL` | `info` | Log level: `debug` / `info` / `warn` / `error` |
 | `ASTERIA_TIMEOUT` | `30000` | Comet launch timeout (ms) |
-| `ASTERIA_RESPONSE_TIMEOUT` | `120000` | Max wait for response (ms) |
+| `ASTERIA_RESPONSE_TIMEOUT` | `180000` | Max wait for response (ms) |
 | `ASTERIA_POLL_INTERVAL` | `1000` | Status poll interval (ms) |
 | `ASTERIA_SCREENSHOT_FORMAT` | `png` | Screenshot format: `png` / `jpeg` |
 | `ASTERIA_MAX_RECONNECT` | `5` | Max reconnection attempts |
