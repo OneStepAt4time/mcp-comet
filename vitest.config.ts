@@ -14,12 +14,7 @@ export default defineConfig({
         functions: 80,
         lines: 75,
       },
-      exclude: [
-        'tests/**',
-        'dist/**',
-        'node_modules/**',
-        'src/selectors/types.ts',
-      ],
+      exclude: ['tests/**', 'dist/**', 'node_modules/**', 'src/selectors/types.ts'],
     },
   },
 })

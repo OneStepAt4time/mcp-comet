@@ -31,7 +31,7 @@
     }
   },
   "files": {
-    "includes": ["**", "!dist", "!node_modules", "!.claude", "!coverage"]
+    "includes": ["**", "!dist", "!node_modules", "!.claude", "!coverage", "!.mcp.json"]
   },
   "overrides": [
     {
