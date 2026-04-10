@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
-  buildGetCurrentModeScript,
   buildModeSwitchScript,
   buildNewChatScript,
+  buildReadActiveModeScript,
   buildSubmitPromptScript,
 } from '../../../src/ui/navigation.js'
 
@@ -10,31 +10,6 @@ describe('buildSubmitPromptScript', () => {
   it('generates multi-strategy submit', () => {
     const s = buildSubmitPromptScript()
     expect(s).toContain('Enter')
-  })
-})
-
-describe('buildGetCurrentModeScript', () => {
-  it('returns standard mode by default', () => {
-    const s = buildGetCurrentModeScript()
-    expect(s).toContain('standard')
-  })
-
-  it('detects computer mode from /copilot/ URL', () => {
-    const s = buildGetCurrentModeScript()
-    expect(s).toContain('/copilot/')
-    expect(s).toContain("return 'computer'")
-  })
-
-  it('detects computer mode from /computer/tasks/ URL', () => {
-    const s = buildGetCurrentModeScript()
-    expect(s).toContain('/computer/tasks/')
-  })
-
-  it('uses URL-based detection only (no icon checks)', () => {
-    const s = buildGetCurrentModeScript()
-    expect(s).not.toContain('telescope')
-    expect(s).not.toContain('gavel')
-    expect(s).not.toContain('bg-subtle')
   })
 })
 
@@ -115,5 +90,72 @@ describe('buildNewChatScript', () => {
   it('navigates to perplexity.ai', () => {
     const s = buildNewChatScript()
     expect(s).toContain('perplexity.ai')
+  })
+})
+
+describe('buildReadActiveModeScript', () => {
+  it('returns a synchronous IIFE', () => {
+    const s = buildReadActiveModeScript()
+    expect(s).toMatch(/^\(function\(\)\s*\{[\s\S]*\}\)\(\)$/)
+  })
+
+  it('detects computer mode from /copilot/ URL', () => {
+    const s = buildReadActiveModeScript()
+    expect(s).toContain('/copilot/')
+    expect(s).toContain("return 'computer'")
+  })
+
+  it('detects computer mode from /computer/tasks/ URL', () => {
+    const s = buildReadActiveModeScript()
+    expect(s).toContain('/computer/tasks/')
+  })
+
+  it('looks for bg-subtle class on menuitems', () => {
+    const s = buildReadActiveModeScript()
+    expect(s).toContain('.bg-subtle')
+  })
+
+  it('maps telescope icon to deep-research', () => {
+    const s = buildReadActiveModeScript()
+    expect(s).toContain("#pplx-icon-telescope")
+    expect(s).toContain('"deep-research"')
+  })
+
+  it('maps gavel icon to model-council', () => {
+    const s = buildReadActiveModeScript()
+    expect(s).toContain("#pplx-icon-gavel")
+    expect(s).toContain('"model-council"')
+  })
+
+  it('maps book icon to learn', () => {
+    const s = buildReadActiveModeScript()
+    expect(s).toContain("#pplx-icon-book")
+    expect(s).toContain('"learn"')
+  })
+
+  it('maps file-check icon to review', () => {
+    const s = buildReadActiveModeScript()
+    expect(s).toContain("#pplx-icon-file-check")
+    expect(s).toContain('"review"')
+  })
+
+  it('maps click icon to computer', () => {
+    const s = buildReadActiveModeScript()
+    expect(s).toContain("#pplx-icon-click")
+  })
+
+  it('skips shortcut-typeahead-option items', () => {
+    const s = buildReadActiveModeScript()
+    expect(s).toContain('shortcut-typeahead-option')
+  })
+
+  it('returns standard as default fallback', () => {
+    const s = buildReadActiveModeScript()
+    expect(s).toContain("return 'standard'")
+  })
+
+  it('does not use setTimeout', () => {
+    const s = buildReadActiveModeScript()
+    expect(s).not.toContain('setTimeout')
   })
 })

@@ -9,11 +9,11 @@ import { createLogger } from './logger.js'
 import { buildPreSendStateScript } from './prose-filter.js'
 import type { SelectorSet } from './selectors/types.js'
 import type { CategorizedTabs, TabInfo } from './types.js'
-import { buildExtractPageContentScript, buildExtractSourcesScript } from './ui/extraction.js'
+import { buildExpandCollapsedCitationsScript, buildExtractPageContentScript, buildExtractSourcesScript } from './ui/extraction.js'
 import { buildTypePromptScript } from './ui/input.js'
 import {
-  buildGetCurrentModeScript,
   buildModeSwitchScript,
+  buildReadActiveModeScript,
   buildSubmitPromptScript,
 } from './ui/navigation.js'
 import { SELECTORS } from './ui/selectors.js'
@@ -140,6 +140,9 @@ const openConversationShape = { url: z.string().describe('Full URL of the conver
 const getPageContentShape = {
   maxLength: z.number().optional().describe('Maximum characters of page text to extract'),
 }
+const waitShape = {
+  timeout: z.number().optional().describe('Maximum wait time in ms (default: 120000)'),
+}
 
 export const toolDefinitions: ToolDef[] = [
   {
@@ -205,6 +208,12 @@ export const toolDefinitions: ToolDef[] = [
     name: 'comet_get_page_content',
     description: 'Extract the current page content (title and body text) up to a maximum length.',
     inputSchema: buildInputSchema(getPageContentShape),
+  },
+  {
+    name: 'comet_wait',
+    description:
+      'Poll until the current agent finishes responding and return the full response. Use after comet_ask times out.',
+    inputSchema: buildInputSchema(waitShape),
   },
 ]
 
@@ -534,8 +543,43 @@ export async function startServer(): Promise<void> {
       try {
         await ensureConnected()
         if (mode === undefined || mode === null) {
-          const raw = await client.safeEvaluate(buildGetCurrentModeScript())
-          const currentMode = extractValue(raw)
+          // 1. Fast URL-based check for computer mode
+          const urlRaw = await client.safeEvaluate(buildReadActiveModeScript())
+          const urlMode = extractValue(urlRaw)
+          if (urlMode !== 'standard') {
+            return textResult(`Current mode: ${urlMode}`)
+          }
+
+          // 2. Open typeahead to read active mode from menu
+          await client.navigate('https://www.perplexity.ai')
+          await sleep(2000)
+
+          let currentMode: unknown = 'standard'
+          for (let attempt = 0; attempt < 5; attempt++) {
+            // Focus input, clear, type /
+            await client.safeEvaluate(`(function() {
+              var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
+              if (input) input.focus();
+            })()`)
+            await client.pressKeyWithModifier('a', 4)
+            await client.pressKey('Backspace')
+            await sleep(100)
+            await client.typeChar('/')
+            await sleep(500)
+
+            const raw = await client.safeEvaluate(buildReadActiveModeScript())
+            const result = extractValue(raw)
+            if (result !== 'standard') {
+              currentMode = result
+              // Close typeahead
+              await client.pressKey('Escape')
+              break
+            }
+            await sleep(300)
+          }
+
+          // Close typeahead if still open
+          await client.pressKey('Escape')
           return textResult(`Current mode: ${currentMode}`)
         }
         // Navigate to home page for clean input (mode typeahead only works on new chat page)
@@ -626,10 +670,35 @@ export async function startServer(): Promise<void> {
       try {
         await ensureConnected()
         const raw = await client.safeEvaluate(buildExtractSourcesScript())
-        const sources = JSON.parse(String(extractValue(raw))) as Array<{
+        let sources = JSON.parse(String(extractValue(raw))) as Array<{
           url: string
           title: string
         }>
+
+        // Second pass: expand collapsed citations (empty URLs) and re-extract
+        const collapsedSources = sources.filter((s) => !s.url)
+        if (collapsedSources.length > 0) {
+          const clickRaw = await client.safeEvaluate(buildExpandCollapsedCitationsScript())
+          const clickedCount = extractValue(clickRaw)
+          if (typeof clickedCount === 'number' && clickedCount > 0) {
+            await sleep(500)
+            const raw2 = await client.safeEvaluate(buildExtractSourcesScript())
+            const expandedSources = JSON.parse(String(extractValue(raw2))) as Array<{
+              url: string
+              title: string
+            }>
+            // Merge: keep original sources with URLs, replace collapsed ones with expanded
+            const withUrl = sources.filter((s) => s.url)
+            const seenUrls = new Set(withUrl.map((s) => s.url))
+            for (const es of expandedSources) {
+              if (es.url && !seenUrls.has(es.url)) {
+                withUrl.push(es)
+                seenUrls.add(es.url)
+              }
+            }
+            sources = withUrl
+          }
+        }
 
         if (sources.length === 0) {
           return textResult('No sources found on the current page.')
@@ -712,6 +781,73 @@ export async function startServer(): Promise<void> {
         const raw = await client.safeEvaluate(buildExtractPageContentScript(len))
         const parsed = JSON.parse(String(extractValue(raw))) as { title: string; text: string }
         return textResult(`Title: ${parsed.title}\n\n${parsed.text}`)
+      } catch (err) {
+        return toMcpError(err)
+      }
+    },
+  )
+
+  // 13. comet_wait
+  server.tool(
+    'comet_wait',
+    'Poll until the current agent finishes responding and return the full response. Use after comet_ask times out.',
+    waitShape,
+    async ({ timeout }) => {
+      try {
+        await ensureConnected()
+        const effectiveTimeout = timeout ?? 120000
+        const startTime = Date.now()
+        let lastResponse = ''
+        let stallCount = 0
+        const MAX_STALL_POLLS = 10
+        const collectedSteps: string[] = []
+
+        while (Date.now() - startTime < effectiveTimeout) {
+          await sleep(config.pollInterval)
+          const statusRaw = await client.safeEvaluate(buildGetAgentStatusScript(activeSelectors))
+          const status = parseAgentStatus(extractValue(statusRaw))
+
+          for (const step of status.steps) {
+            if (!collectedSteps.includes(step)) collectedSteps.push(step)
+          }
+
+          if (status.response && status.response.length > lastResponse.length) {
+            lastResponse = status.response
+            stallCount = 0
+          } else if (status.response && lastResponse.length > 0) {
+            stallCount++
+          }
+
+          if (stallCount >= MAX_STALL_POLLS && lastResponse) break
+
+          if ((status.status === 'completed' || status.status === 'idle') && lastResponse) {
+            // Wait for response to stabilize
+            let settledResponse = lastResponse
+            for (let settle = 0; settle < 5; settle++) {
+              await sleep(1000)
+              const settledRaw = await client.safeEvaluate(buildGetAgentStatusScript(activeSelectors))
+              const settledStatus = parseAgentStatus(extractValue(settledRaw))
+              const candidate = settledStatus.response || settledResponse
+              if (candidate.length <= settledResponse.length) break
+              settledResponse = candidate
+            }
+
+            const parts: string[] = []
+            if (settledResponse) parts.push(settledResponse)
+            if (collectedSteps.length > 0) {
+              parts.push(`\n\nSteps:\n${collectedSteps.map((s) => `  - ${s}`).join('\n')}`)
+            }
+            return textResult(parts.join('') || 'Agent completed with no visible response.')
+          }
+        }
+
+        // Timeout
+        const timeoutParts: string[] = ['Agent is still working after timeout.']
+        if (collectedSteps.length > 0) {
+          timeoutParts.push(`\nSteps so far:\n${collectedSteps.map((s) => `  - ${s}`).join('\n')}`)
+        }
+        if (lastResponse) timeoutParts.push(`\nPartial response:\n${lastResponse}`)
+        return textResult(timeoutParts.join('\n'))
       } catch (err) {
         return toMcpError(err)
       }

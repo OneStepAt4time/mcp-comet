@@ -404,4 +404,58 @@ describe('Core tool handlers', () => {
       expect(parsed.status).toBe('idle')
     })
   })
+
+  // ---------------------------------------------------------------------------
+  // comet_wait tests
+  // ---------------------------------------------------------------------------
+
+  describe('comet_wait', () => {
+    it('returns response when agent completes', async () => {
+      const completedStatus = {
+        status: 'completed',
+        steps: ['Searched', 'Analyzed'],
+        currentStep: '',
+        response: 'This is the full response from the agent.',
+        hasStopButton: false,
+      }
+      mocks.safeEvaluate
+        .mockResolvedValueOnce({ result: { value: JSON.stringify(completedStatus) } })
+        // Settle polls
+        .mockResolvedValue({ result: { value: JSON.stringify(completedStatus) } })
+
+      const handler = getHandler('comet_wait')
+      const result = await handler({ timeout: 5000 })
+
+      expect(result.content[0].text).toContain('full response')
+      expect(result.content[0].text).toContain('Searched')
+    })
+
+    it('returns timeout message when agent does not complete', async () => {
+      const workingStatus = {
+        status: 'working',
+        steps: [],
+        currentStep: 'Searching...',
+        response: '',
+        hasStopButton: true,
+      }
+      mocks.safeEvaluate.mockResolvedValue({
+        result: { value: JSON.stringify(workingStatus) },
+      })
+
+      const handler = getHandler('comet_wait')
+      const result = await handler({ timeout: 500 })
+
+      expect(result.content[0].text).toContain('still working')
+    })
+
+    it('error handling — returns MCP error when safeEvaluate throws', async () => {
+      mocks.safeEvaluate.mockRejectedValue(new Error('Evaluation failed'))
+
+      const handler = getHandler('comet_wait')
+      const result = await handler({})
+
+      expect(result.isError).toBe(true)
+      expect(result.content[0].text).toContain('Error')
+    })
+  })
 })

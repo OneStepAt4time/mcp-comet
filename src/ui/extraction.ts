@@ -68,6 +68,32 @@ export function buildExtractSourcesScript(): string {
   })()`
 }
 
+/**
+ * Build script that clicks all collapsed citations (those matching "+N" pattern)
+ * to expand them and reveal hidden source links.
+ * Returns the number of citations clicked.
+ */
+export function buildExpandCollapsedCitationsScript(): string {
+  return `(function() {
+    var clicked = 0;
+    var citations = document.querySelectorAll('[class*="citation"]');
+    for (var c = 0; c < citations.length; c++) {
+      var el = citations[c];
+      if (el.className.indexOf('citation-nbsp') !== -1) continue;
+      // Only click if this is a collapsed citation (no anchor link nearby)
+      var anchor = el.closest('a') || el.querySelector('a');
+      if (anchor) continue;
+      // Check if text matches collapsed pattern (e.g., "wsj+3")
+      var rawText = (el.innerText || '').trim();
+      if (rawText.indexOf('+') !== -1) {
+        el.click();
+        clicked++;
+      }
+    }
+    return clicked;
+  })()`
+}
+
 export function buildExtractPageContentScript(maxLength = 10000): string {
   return `(function() {
     var body = document.body;

@@ -43,14 +43,27 @@ describe('UI control tool handlers', () => {
   })
 
   describe('comet_mode', () => {
-    it('returns current mode when no mode param provided', async () => {
-      mocks.safeEvaluate.mockResolvedValue({ result: { value: 'standard' } })
+    it('returns current mode via URL detection (non-standard)', async () => {
+      mocks.safeEvaluate.mockResolvedValue({ result: { value: 'computer' } })
+      const handler = getHandler('comet_mode')
+      const result = await handler({})
+
+      expect(result.content[0].type).toBe('text')
+      expect(result.content[0].text).toContain('Current mode: computer')
+    })
+
+    it('returns standard mode via typeahead fallback', async () => {
+      mocks.safeEvaluate
+        // 1st call: URL-based check returns 'standard' → enters typeahead flow
+        .mockResolvedValueOnce({ result: { value: 'standard' } })
+        // 2nd-11th calls: focus + readActiveMode (5 attempts × 2 calls each)
+        .mockResolvedValue({ result: { value: 'standard' } })
       const handler = getHandler('comet_mode')
       const result = await handler({})
 
       expect(result.content[0].type).toBe('text')
       expect(result.content[0].text).toContain('Current mode: standard')
-    })
+    }, 15000)
 
     it('switches mode and returns result', async () => {
       mocks.safeEvaluate.mockResolvedValue({ result: { value: 'clicked:#pplx-icon-telescope' } })

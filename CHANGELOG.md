@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.0] - 2026-04-10
+
+### Added
+
+- `comet_wait` tool: polls until agent finishes, returns full response (useful after `comet_ask` timeout)
+- Typeahead-based active mode detection via `buildReadActiveModeScript()` — reads mode from SVG icons in typeahead menu
+- Collapsed citation expansion: `buildExpandCollapsedCitationsScript()` clicks collapsed citations to reveal full source URLs
+- Second-pass source extraction: automatically expands collapsed citations and merges revealed URLs
+
+### Changed
+
+- `comet_mode` (get) now uses typeahead menu inspection instead of URL-only detection
+- `comet_get_sources` automatically expands collapsed citations (`wsj+3` pattern) for full URLs
+- 13 tools total (was 12)
+
 ## [1.0.0] - 2026-04-10
 
 First stable release. MCP server for Perplexity Comet browser automation via Chrome DevTools Protocol.

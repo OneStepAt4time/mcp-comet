@@ -58,11 +58,43 @@ export function buildNewChatScript(): string {
   return `(function() { location.href = 'https://www.perplexity.ai'; return 'navigating'; })()`
 }
 
-export function buildGetCurrentModeScript(): string {
+/** Reverse map: SVG icon href → internal mode name. */
+const ICON_TO_MODE: Record<string, string> = {
+  '#pplx-icon-telescope': 'deep-research',
+  '#pplx-icon-gavel': 'model-council',
+  '#pplx-icon-book': 'learn',
+  '#pplx-icon-file-check': 'review',
+  '#pplx-icon-click': 'computer',
+  '#pplx-icon-custom-computer': 'computer',
+}
+
+/**
+ * Build script to read the active mode from the typeahead menu.
+ * Assumes the typeahead is already open (caller must open it via CDP first).
+ * Returns the mode name or "standard" if no active item found.
+ */
+export function buildReadActiveModeScript(): string {
+  const iconToModeEntries = Object.entries(ICON_TO_MODE)
+    .map(([icon, mode]) => `if (href === ${JSON.stringify(icon)}) return ${JSON.stringify(mode)};`)
+    .join('\n      ')
+
   return `(function() {
     var url = window.location.href;
     if (url.indexOf('/copilot/') !== -1) return 'computer';
     if (url.indexOf('/computer/tasks/') !== -1) return 'computer';
+
+    var items = document.querySelectorAll('[role="menuitem"]');
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      if (item.className.indexOf('shortcut-typeahead-option') !== -1) continue;
+      // Check if this item has the active/selected background
+      var inner = item.querySelector('.bg-subtle');
+      if (!inner) continue;
+      var useEl = item.querySelector('use');
+      if (!useEl) continue;
+      var href = useEl.getAttribute('xlink:href') || useEl.getAttribute('href') || '';
+      ${iconToModeEntries}
+    }
     return 'standard';
   })()`
 }

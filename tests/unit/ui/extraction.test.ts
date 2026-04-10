@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildExpandCollapsedCitationsScript,
   buildExtractPageContentScript,
   buildExtractSourcesScript,
 } from '../../../src/ui/extraction.js'
@@ -103,5 +104,44 @@ describe('buildExtractPageContentScript', () => {
     const s = buildExtractPageContentScript()
     expect(s).toContain('Sign in')
     expect(s).toContain('Log in')
+  })
+})
+
+describe('buildExpandCollapsedCitationsScript', () => {
+  it('returns a synchronous IIFE', () => {
+    const s = buildExpandCollapsedCitationsScript()
+    expect(s).toMatch(/^\(function\(\)\s*\{[\s\S]*\}\)\(\)$/)
+  })
+
+  it('targets citation elements', () => {
+    const s = buildExpandCollapsedCitationsScript()
+    expect(s).toContain('[class*="citation"]')
+  })
+
+  it('skips citation-nbsp elements', () => {
+    const s = buildExpandCollapsedCitationsScript()
+    expect(s).toContain('citation-nbsp')
+  })
+
+  it('skips citations that already have an anchor link', () => {
+    const s = buildExpandCollapsedCitationsScript()
+    expect(s).toContain('closest')
+    expect(s).toContain('querySelector')
+  })
+
+  it('clicks citations with + pattern', () => {
+    const s = buildExpandCollapsedCitationsScript()
+    expect(s).toContain("indexOf('+')")
+    expect(s).toContain('.click()')
+  })
+
+  it('returns the count of clicked citations', () => {
+    const s = buildExpandCollapsedCitationsScript()
+    expect(s).toContain('clicked')
+  })
+
+  it('does not use setTimeout', () => {
+    const s = buildExpandCollapsedCitationsScript()
+    expect(s).not.toContain('setTimeout')
   })
 })
