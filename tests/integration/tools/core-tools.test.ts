@@ -138,240 +138,26 @@ describe('Core tool handlers', () => {
   // ---------------------------------------------------------------------------
 
   describe('comet_ask', () => {
-    it('quick response — returns agent response', async () => {
+    it('returns immediate submission message without polling', async () => {
       let callCount = 0
-      const responseText =
-        'The answer is 42, which is the meaning of life according to Douglas Adams'
-
       mocks.safeEvaluate.mockImplementation(async () => {
         callCount++
-        // First call: pre-send state
-        if (callCount === 1) {
-          return { result: { value: '{"proseCount":0,"lastProseText":""}' } }
-        }
-        // Second call: type prompt
-        if (callCount === 2) {
-          return { result: { value: 'typed' } }
-        }
-        // Third call: submit
-        if (callCount === 3) {
-          return { result: { value: 'submitted' } }
-        }
-        // Fourth+ calls: status polling (completed)
-        return {
-          result: {
-            value: JSON.stringify({
-              status: 'completed',
-              steps: ['Searching web'],
-              currentStep: 'Searching web',
-              response: responseText,
-              hasStopButton: false,
-            }),
-          },
-        }
+        return { result: { value: '{"proseCount":0,"lastProseText":""}' } }
       })
-
-      const handler = getHandler('comet_ask')
-      const result = await handler({ prompt: 'What is 42?' })
-
-      expect(result.content[0].text).toContain(responseText)
-    })
-
-    it('timeout — returns still working message', async () => {
-      mocks.safeEvaluate.mockResolvedValue({
-        result: {
-          value: JSON.stringify({
-            status: 'working',
-            steps: [],
-            currentStep: '',
-            response: '',
-            hasStopButton: true,
-          }),
-        },
-      })
-
-      const handler = getHandler('comet_ask')
-      const result = await handler({ prompt: 'test', timeout: 300 })
-
-      expect(result.content[0].text).toContain('Agent is still working')
-    })
-
-    it('error handling — returns MCP error when safeEvaluate throws', async () => {
-      mocks.safeEvaluate.mockRejectedValue(new Error('Script error'))
 
       const handler = getHandler('comet_ask')
       const result = await handler({ prompt: 'test' })
 
+      expect(result.content[0].text).toContain('Prompt submitted successfully')
+      expect(result.content[0].text).toContain('comet_poll')
+    })
+
+    it('error handling — returns MCP error when safeEvaluate throws', async () => {
+      mocks.safeEvaluate.mockRejectedValue(new Error('Script error'))
+      const handler = getHandler('comet_ask')
+      const result = await handler({ prompt: 'test' })
       expect(result.isError).toBe(true)
       expect(result.content[0].text).toContain('Error')
-    })
-
-    it('sequential queries — returns new response when proseCount increases', async () => {
-      // Simulates BUG-2: second query should detect new response via proseCount
-      // even when old response text is still on the page
-      let callCount = 0
-      const oldResponse = 'This is the old response from the first query that is still on the page.'
-      const newResponse = 'This is the new response from the second query with different content.'
-
-      mocks.safeEvaluate.mockImplementation(async () => {
-        callCount++
-        // First call: pre-send state (old response still on page, proseCount=1)
-        if (callCount === 1) {
-          return {
-            result: { value: JSON.stringify({ proseCount: 1, lastProseText: oldResponse }) },
-          }
-        }
-        // Second call: type prompt
-        if (callCount === 2) return { result: { value: 'typed' } }
-        // Third call: submit
-        if (callCount === 3) return { result: { value: 'submitted' } }
-        // Fourth+ calls: status polling — proseCount now 2 (new prose added)
-        return {
-          result: {
-            value: JSON.stringify({
-              status: 'completed',
-              steps: ['Searching web'],
-              currentStep: 'Searching web',
-              response: newResponse,
-              hasStopButton: false,
-              proseCount: 2,
-            }),
-          },
-        }
-      })
-
-      const handler = getHandler('comet_ask')
-      const result = await handler({ prompt: 'What is 3+3?' })
-
-      expect(result.content[0].text).toContain(newResponse)
-      expect(result.content[0].text).not.toContain(oldResponse)
-    })
-
-    it('comet_ask stops polling after timeout — no runaway polling', async () => {
-      let evalCalls = 0
-      mocks.safeEvaluate.mockImplementation(async () => {
-        evalCalls++
-        if (evalCalls === 1) return { result: { value: '{"proseCount":0,"lastProseText":""}' } }
-        if (evalCalls === 2) return { result: { value: 'typed' } }
-        if (evalCalls === 3) return { result: { value: 'submitted' } }
-        return {
-          result: {
-            value: JSON.stringify({
-              status: 'working',
-              steps: [],
-              currentStep: '',
-              response: '',
-              hasStopButton: true,
-            }),
-          },
-        }
-      })
-
-      const handler = getHandler('comet_ask')
-      const result = await handler({ prompt: 'test', timeout: 300 })
-      expect(result.content[0].text).toContain('Agent is still working')
-
-      // Verify no runaway polling after timeout
-      const callsAfterTimeout = evalCalls
-      await new Promise((r) => setTimeout(r, 500))
-      expect(evalCalls).toBe(callsAfterTimeout)
-    })
-
-    it('smart polling — auto-extends when response is growing', async () => {
-      let callCount = 0
-      const growingResponses = ['A'.repeat(60), 'A'.repeat(120), 'A'.repeat(200)]
-      mocks.safeEvaluate.mockImplementation(async () => {
-        callCount++
-        if (callCount === 1) return { result: { value: '{"proseCount":0,"lastProseText":""}' } }
-        if (callCount === 2) return { result: { value: 'typed' } }
-        if (callCount === 3) return { result: { value: 'submitted' } }
-        const responseIdx = Math.min(callCount - 4, growingResponses.length - 1)
-        return {
-          result: {
-            value: JSON.stringify({
-              status: callCount > 6 ? 'completed' : 'working',
-              steps: [],
-              currentStep: '',
-              response: growingResponses[responseIdx],
-              hasStopButton: callCount <= 6,
-              proseCount: 1,
-            }),
-          },
-        }
-      })
-
-      const handler = getHandler('comet_ask')
-      // 300ms timeout would normally be too short, but growing response should keep it alive
-      const result = await handler({ prompt: 'test', timeout: 300 })
-      // Should have gotten the full response since it was growing
-      expect(result.content[0].text).toContain('A'.repeat(200))
-    })
-
-    it('smart polling — gives up after stall', async () => {
-      let callCount = 0
-      const stalledResponse = 'B'.repeat(60)
-      mocks.safeEvaluate.mockImplementation(async () => {
-        callCount++
-        if (callCount === 1) return { result: { value: '{"proseCount":0,"lastProseText":""}' } }
-        if (callCount === 2) return { result: { value: 'typed' } }
-        if (callCount === 3) return { result: { value: 'submitted' } }
-        return {
-          result: {
-            value: JSON.stringify({
-              status: 'working',
-              steps: [],
-              currentStep: '',
-              response: stalledResponse,
-              hasStopButton: true,
-              proseCount: 1,
-            }),
-          },
-        }
-      })
-
-      const handler = getHandler('comet_ask')
-      const result = await handler({ prompt: 'test', timeout: 30000 })
-      // Should time out because response stopped growing (stall detection)
-      expect(result.content[0].text).toContain('still working')
-    })
-
-    it('ignores old substantial response — no false positive from hasSubstantialResponse', async () => {
-      // Regression: hasSubstantialResponse was OR'd into responseChanged,
-      // causing old responses to be treated as new when proseCount didn't increase.
-      const oldResponse =
-        'This is an old response from a previous query that is still on the page and is quite long.'
-      let callCount = 0
-      mocks.safeEvaluate.mockImplementation(async () => {
-        callCount++
-        // pre-send state: old response still on page
-        if (callCount === 1) {
-          return {
-            result: { value: JSON.stringify({ proseCount: 1, lastProseText: oldResponse }) },
-          }
-        }
-        if (callCount === 2) return { result: { value: 'typed' } }
-        if (callCount === 3) return { result: { value: 'submitted' } }
-        // Polling: agent hasn't started yet, old response still visible
-        return {
-          result: {
-            value: JSON.stringify({
-              status: 'working',
-              steps: [],
-              currentStep: '',
-              response: oldResponse,
-              hasStopButton: true,
-              proseCount: 1,
-            }),
-          },
-        }
-      })
-
-      const handler = getHandler('comet_ask')
-      const result = await handler({ prompt: 'New question?', timeout: 1500 })
-
-      // Should NOT return the old response as if it were the new answer
-      // Instead should timeout since no new response detected
-      expect(result.content[0].text).toContain('still working')
     })
   })
 
