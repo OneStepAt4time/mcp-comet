@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.1] - 2026-04-11
+
+### Fixed
+
+- **Screenshot Format (Issue #1, PR #6):** Correctly handles MCP error responses during screenshots to prevent false-positive failures on transient connection drops. `comet_screenshot` explicitly documents `jpeg` support.
+- **Protocol Violation in `comet_ask` (Issue #2, PR #7):** Decoupled the polling loop from `comet_ask` to prevent MCP transport timeouts (60s) during deep research tasks. The tool now submits the prompt and returns immediately; clients should use `comet_poll` or `comet_wait` to retrieve the final result.
+- **Aggressive Health Check (Issue #3, PR #8):** Increased the `isHealthy` CDP evaluate tolerance from 3s to 10s to prevent aggressive reconnections when Comet is busy rendering heavy React hydration tasks.
+- **Brittle State Detection Heuristics (Issue #4, PR #9):** Removed fragile English text heuristics (e.g., 'Ask a follow-up') from the agent status detection script (`status.ts`). It now reliably determines completion based on the structural presence of parsed prose chunks (`results.length > 0`).
+
 ## [1.1.0] - 2026-04-10
 
 ### Added
