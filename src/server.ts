@@ -533,7 +533,7 @@ export async function startServer(): Promise<void> {
   // 5. comet_screenshot
   server.tool(
     'comet_screenshot',
-    'Take a screenshot of the current Comet browser tab.',
+    'Take a screenshot of the current Comet browser tab (supports png and jpeg formats).',
     screenshotShape,
     async ({ format }) => {
       try {
