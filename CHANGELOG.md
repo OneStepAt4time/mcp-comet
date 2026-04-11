@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2] - 2026-04-11
+
+### Fixed
+
+- **CI/CD:** Cleaned up unused variables and parameters in `src/server.ts` to satisfy strict linting requirements in the CI pipeline.
+- **Code Quality:** Resolved `noUnusedVariables` and `noExplicitAny` warnings in internal scripts.
+
 ## [1.1.1] - 2026-04-11
 
 ### Fixed
