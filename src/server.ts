@@ -158,7 +158,7 @@ export const toolDefinitions: ToolDef[] = [
   {
     name: 'comet_ask',
     description:
-      'Send a prompt to Perplexity Comet and poll until the agent responds or times out. Supports newChat to start fresh.',
+      'Send a prompt to Perplexity Comet and return immediately. Supports newChat to start fresh. Use comet_poll or comet_wait to get the response.',
     inputSchema: buildInputSchema(askShape),
   },
   {
@@ -355,7 +355,7 @@ export async function startServer(): Promise<void> {
   // 2. comet_ask
   server.tool(
     'comet_ask',
-    'Send a prompt to Perplexity Comet and poll until the agent responds or times out. Supports newChat to start fresh.',
+    'Send a prompt to Perplexity Comet and return immediately. Supports newChat to start fresh. Use comet_poll or comet_wait to get the response.',
     askShape,
     async ({ prompt, newChat, timeout }) => {
       try {
@@ -398,92 +398,7 @@ export async function startServer(): Promise<void> {
         const submitResult = await client.safeEvaluate(buildSubmitPromptScript())
         logger.debug('Submit result:', extractValue(submitResult))
 
-        // POLLING LOOP
-        const startTime = Date.now()
-        let sawNewResponse = false
-        let timedOut = false
-        const collectedSteps: string[] = []
-        let lastResponse = ''
-        let stallCount = 0
-        const MAX_STALL_POLLS = 10
-
-        while (!timedOut && Date.now() - startTime < effectiveTimeout) {
-          await sleep(config.pollInterval)
-
-          const statusRaw = await client.safeEvaluate(buildGetAgentStatusScript(activeSelectors))
-          const status = parseAgentStatus(extractValue(statusRaw))
-
-          // Collect new steps
-          for (const step of status.steps) {
-            if (!collectedSteps.includes(step)) {
-              collectedSteps.push(step)
-            }
-          }
-
-          // Check for new response — proseCount is the primary signal
-          const proseIncreased = (status.proseCount ?? 0) > preSendState.proseCount
-          // Only consider response "changed" if:
-          // 1. proseCount increased (new prose element added), OR
-          // 2. Fresh page had no prose before, and now there's a substantial response
-          const responseChanged =
-            proseIncreased || (!preSendState.lastProseText && hasSubstantialResponse(status))
-
-          if (responseChanged && status.response) {
-            // Track response growth for auto-extend
-            if (status.response.length > lastResponse.length) {
-              stallCount = 0
-            } else if (sawNewResponse) {
-              stallCount++
-            }
-            sawNewResponse = true
-            lastResponse = status.response
-          }
-
-          // Stall detection — if response stopped growing, give up after MAX_STALL_POLLS
-          if (stallCount >= MAX_STALL_POLLS) break
-
-          if ((status.status === 'completed' || status.status === 'idle') && sawNewResponse) {
-            // Wait for response to stabilize — poll until length stops growing
-            let settledResponse = lastResponse
-            for (let settle = 0; settle < 5; settle++) {
-              await sleep(1000)
-              const settledRaw = await client.safeEvaluate(
-                buildGetAgentStatusScript(activeSelectors),
-              )
-              const settledStatus = parseAgentStatus(extractValue(settledRaw))
-              const candidate = settledStatus.response || settledResponse
-              if (candidate.length <= settledResponse.length) break
-              settledResponse = candidate
-            }
-
-            const parts: string[] = []
-            if (settledResponse) parts.push(settledResponse)
-            if (collectedSteps.length > 0) {
-              parts.push(`\n\nSteps:\n${collectedSteps.map((s) => `  - ${s}`).join('\n')}`)
-            }
-            return textResult(parts.join('') || 'Agent completed with no visible response.')
-          }
-
-          if (
-            status.status === 'idle' &&
-            !sawNewResponse &&
-            status.response &&
-            !preSendState.lastProseText
-          ) {
-            return textResult(status.response)
-          }
-        }
-
-        // Mark timed out to prevent any further polling
-        timedOut = true
-
-        // Timeout
-        const timeoutParts: string[] = ['Agent is still working. Use comet_poll to check status.']
-        if (collectedSteps.length > 0) {
-          timeoutParts.push(`\nSteps so far:\n${collectedSteps.map((s) => `  - ${s}`).join('\n')}`)
-        }
-        if (lastResponse) timeoutParts.push(`\nPartial response:\n${lastResponse}`)
-        return textResult(timeoutParts.join('\n'))
+        return textResult('Prompt submitted successfully. Use comet_poll to track status or comet_wait to block until completion.')
       } catch (err) {
         return toMcpError(err)
       }
