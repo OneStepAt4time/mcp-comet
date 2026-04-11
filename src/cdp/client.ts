@@ -239,11 +239,12 @@ export class CDPClient {
       const result = await Promise.race([
         this.evaluate('1+1'),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('health check timeout')), 3000),
+          setTimeout(() => reject(new Error('health check timeout')), 10000),
         ),
       ])
       return result.result?.value === 2
-    } catch {
+    } catch (err) {
+      this.logger.debug(`Health check failed: ${err instanceof Error ? err.message : String(err)}`)
       this.state.connected = false
       return false
     }
