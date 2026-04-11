@@ -49,10 +49,8 @@ export function buildGetAgentStatusScript(selectors?: SelectorSet): string {
     }
 
     if (hasStopButton || hasLoadingSpinner) status = "working";
-    else if (bodyText.indexOf('Steps completed') !== -1 || (bodyText.indexOf('Finished') !== -1 && !hasStopButton)) status = "completed";
-    else if (/Reviewed\\s+\\d+\\s+sources/.test(bodyText) && !hasWorkingText) status = "completed";
     else if (hasWorkingText) status = "working";
-    else if (bodyText.indexOf('Ask a follow-up') !== -1 && results.length > 0 && !hasStopButton) status = "completed";
+    else if (results.length > 0) status = "completed";
 
     return JSON.stringify({ status: status, steps: steps, currentStep: currentStep, response: response, hasStopButton: hasStopButton, hasLoadingSpinner: hasLoadingSpinner, proseCount: results.length });
   })()`
