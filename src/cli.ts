@@ -29,6 +29,7 @@ TOOL CALL:
   asteria call comet_list_tabs
   asteria call comet_mode '{"mode": "deep-research"}'
   asteria call comet_get_sources
+  asteria call comet_wait
   asteria comet_stop`)
 }
 
@@ -93,6 +94,7 @@ const TOOLS = [
   'comet_list_conversations',
   'comet_open_conversation',
   'comet_get_page_content',
+  'comet_wait',
 ] as const
 
 /**
