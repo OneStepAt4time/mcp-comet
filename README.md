@@ -1,23 +1,45 @@
 <!-- markdownlint-disable MD033 MD041 -->
 <div align="center">
-  <h1>MCP Comet</h1>
-  <p>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light.svg">
     <img src="docs/assets/banner.svg" alt="MCP Comet banner" width="100%" />
-  </p>
-  <h2>Turn Perplexity Comet into a production-grade MCP research engine</h2>
+  </picture>
+  <h1>MCP Comet</h1>
+  <h3>Turn Perplexity Comet into a production-grade MCP research engine</h3>
   <p>
-    <a href="https://www.npmjs.com/package/@onestepat4time/mcp-comet"><img src="https://img.shields.io/npm/v/@onestepat4time/mcp-comet?style=flat-square&amp;color=0F766E" alt="npm" /></a>
+    <a href="https://www.npmjs.com/package/@onestepat4time/mcp-comet"><img src="https://img.shields.io/npm/v/@onestepat4time/mcp-comet?style=flat-square&color=0F766E" alt="npm" /></a>
+    <a href="https://www.npmjs.com/package/@onestepat4time/mcp-comet"><img src="https://img.shields.io/npm/dm/@onestepat4time/mcp-comet?style=flat-square&color=0F766E" alt="downloads" /></a>
     <a href="https://github.com/OneStepAt4time/mcp-comet/actions"><img src="https://img.shields.io/github/actions/workflow/status/OneStepAt4time/mcp-comet/ci.yml?style=flat-square" alt="build" /></a>
+    <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="typescript" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/OneStepAt4time/mcp-comet?style=flat-square" alt="license" /></a>
   </p>
   <p><strong>7 modes</strong> · <strong>13 tools</strong> · zero-friction setup · full browser control</p>
   <p>
     <a href="#quick-start">Quick Start</a> ·
     <a href="docs/tools.md">Tool Reference</a> ·
-    <a href="docs/architecture.md">Architecture</a>
+    <a href="docs/architecture.md">Architecture</a> ·
+    <a href="https://github.com/OneStepAt4time/mcp-comet/issues">Issues</a>
   </p>
 </div>
 <!-- markdownlint-enable MD033 MD041 -->
+
+---
+
+## Table of Contents
+
+- [Why MCP Comet](#why-mcp-comet)
+- [Demo](#demo)
+- [Quick Start](#quick-start)
+- [Research Modes](#research-modes)
+- [Toolset at a Glance](#toolset-at-a-glance)
+- [Agent Workflows](#agent-workflows)
+- [CLI Power Ops](#cli-power-ops)
+- [Architecture](#architecture)
+- [Configuration](#configuration)
+- [Compatibility](#compatibility)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
