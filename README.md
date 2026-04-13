@@ -56,6 +56,23 @@ If your workflow is "ask, verify, cite, and iterate", this is the server built f
 
 ---
 
+## Demo
+
+<p align="center">
+  <!-- TODO: Record a 10-20s GIF showing deep-research mode in action -->
+  <!--   1. comet_mode(deep-research) -->
+  <!--   2. comet_ask with a research query -->
+  <!--   3. Wait for progress -->
+  <!--   4. comet_wait for full response -->
+  <!--   5. comet_get_sources for citations -->
+  <!-- Keep under 5MB. Use ScreenToGif (Windows) or Gifski. -->
+  <!-- Save as docs/assets/demo.gif (theme-neutral background recommended) -->
+  <!-- Then replace the placeholder below: -->
+  <img src="https://img.shields.io/badge/DEMO-COMING_SOON-0F766E?style=for-the-badge" alt="Demo coming soon" />
+</p>
+
+---
+
 ## Quick Start
 
 ## Installation
