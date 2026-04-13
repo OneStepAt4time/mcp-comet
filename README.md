@@ -52,7 +52,8 @@ MCP Comet gives your agent more than a chat box. It gives your agent a complete 
 - Pull sources, screenshots, conversations, tabs, and full page content.
 - Stay resilient with auto-connect, reconnect logic, and selector fallback strategies.
 
-If your workflow is "ask, verify, cite, and iterate", this is the server built for it.
+> [!NOTE]
+> If your workflow is "ask, verify, cite, and iterate", this is the server built for it.
 
 ---
 
@@ -268,6 +269,9 @@ Deep dive: [docs/architecture.md](docs/architecture.md)
 
 ---
 
+<details>
+<summary>Configuration</summary>
+
 ## Configuration Essentials
 
 Most teams only tune these three:
@@ -289,7 +293,12 @@ Config file (`mcp-comet.config.json`) example:
 
 More options and full env var reference: [docs/configuration.md](docs/configuration.md)
 
+</details>
+
 ---
+
+<details>
+<summary>Compatibility</summary>
 
 ## Compatibility
 
@@ -300,6 +309,8 @@ More options and full env var reference: [docs/configuration.md](docs/configurat
 Unknown versions fall back to the latest known selector set.
 
 Details and upgrade flow: [docs/comet-compatibility.md](docs/comet-compatibility.md)
+
+</details>
 
 ---
 
