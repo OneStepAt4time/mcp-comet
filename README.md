@@ -75,21 +75,29 @@ If your workflow is "ask, verify, cite, and iterate", this is the server built f
 
 ## Quick Start
 
-## Installation
+### Prerequisites
 
-### Option 1: Global install (recommended)
+- Node.js >= 18
+- [Perplexity Comet](https://comet.perplexity.ai/) installed
+
+> [!TIP]
+> Run `mcp-comet detect` to verify your setup before configuring.
+
+### Install
+
+**Option 1: Global install (recommended)**
 
 ```bash
 npm install -g @onestepat4time/mcp-comet
 ```
 
-### Option 2: Run without install
+**Option 2: Run without install**
 
 ```bash
 npx -y @onestepat4time/mcp-comet
 ```
 
-### Option 3: Local development
+**Option 3: Local development**
 
 ```bash
 git clone https://github.com/OneStepAt4time/mcp-comet.git
@@ -98,24 +106,11 @@ npm ci
 npm run build
 ```
 
----
+### Configure
 
-### 1. Prerequisites
+Add MCP Comet to your MCP client config.
 
-- Node.js >= 18
-- [Perplexity Comet](https://comet.perplexity.ai/) installed
-
-Optional pre-flight check:
-
-```bash
-mcp-comet detect
-```
-
-### 2. Add MCP Comet to MCP
-
-Use one of these configs.
-
-Claude Desktop (`~/.claude/claude_desktop_config.json`):
+**Claude Desktop** (`~/.claude/claude_desktop_config.json`):
 
 ```json
 {
@@ -129,7 +124,7 @@ Claude Desktop (`~/.claude/claude_desktop_config.json`):
 }
 ```
 
-Cursor (`~/.cursor/mcp.json`):
+**Cursor** (`~/.cursor/mcp.json`):
 
 ```json
 {
@@ -143,7 +138,7 @@ Cursor (`~/.cursor/mcp.json`):
 }
 ```
 
-### 3. Give your agent a mission
+### First Query
 
 Prompt your agent with something like:
 
