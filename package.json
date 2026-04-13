@@ -1,19 +1,18 @@
 {
-  "name": "@onestepat4time/asteria",
-  "version": "1.1.3",
-  "description": "MCP server for Perplexity Comet browser management",
+  "name": "@onestepat4time/mcp-comet",
+  "version": "1.1.4",
+  "description": "The definitive MCP server for Perplexity Comet browser management",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "asteria": "./dist/cli.js",
-    "asteria-comet": "./dist/cli.js"
+    "mcp-comet": "./dist/cli.js"
   },
   "files": [
     "dist/",
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
-    "asteria.config.example.json"
+    "mcp-comet.config.example.json"
   ],
   "keywords": [
     "mcp",
@@ -27,7 +26,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OneStepAt4time/asteria.git"
+    "url": "git+https://github.com/OneStepAt4time/mcp-comet.git"
   },
   "license": "MIT",
   "scripts": {

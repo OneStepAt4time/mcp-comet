@@ -1,11 +1,31 @@
+# Local configuration and state
+mcp-comet.config.json
+.mcp.json
+.claude/settings.local.json
+.claude/plans
+
+tools/
+# Internal Documentation & Plans (local only)
+docs/claude-code-guide/
+docs/plans/
+docs/uat/
+docs/uat-checklist.md
+docs/superpowers/
+
+# Temporary Assets
+mcp-comet-screenshot-*.jpg
+mcp-comet-screenshot-*.png
+
+# Dependencies and Build
 node_modules/
 dist/
 coverage/
 *.js.map
 *.d.ts.map
-asteria.config.json
 .DS_Store
-.claude/settings.local.json
-.claude/plans
-.mcp.json
-docs/superpowers
+.crush/
+# Remotion video project
+video/
+.playwright-mcp/
+# worktrees
+.worktrees/*
