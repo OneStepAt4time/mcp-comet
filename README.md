@@ -1,23 +1,41 @@
 <!-- markdownlint-disable MD033 MD041 -->
 <div align="center">
+  <img src="docs/assets/banner.svg" alt="MCP Comet banner" width="100%" />
   <h1>MCP Comet</h1>
+  <h3>Turn Perplexity Comet into a production-grade MCP research engine</h3>
   <p>
-    <img src="docs/assets/banner.svg" alt="MCP Comet banner" width="100%" />
-  </p>
-  <h2>Turn Perplexity Comet into a production-grade MCP research engine</h2>
-  <p>
-    <a href="https://www.npmjs.com/package/@onestepat4time/mcp-comet"><img src="https://img.shields.io/npm/v/@onestepat4time/mcp-comet?style=flat-square&amp;color=0F766E" alt="npm" /></a>
+    <a href="https://www.npmjs.com/package/@onestepat4time/mcp-comet"><img src="https://img.shields.io/npm/v/@onestepat4time/mcp-comet?style=flat-square&color=0F766E" alt="npm" /></a>
+    <a href="https://www.npmjs.com/package/@onestepat4time/mcp-comet"><img src="https://img.shields.io/npm/dm/@onestepat4time/mcp-comet?style=flat-square&color=0F766E" alt="downloads" /></a>
     <a href="https://github.com/OneStepAt4time/mcp-comet/actions"><img src="https://img.shields.io/github/actions/workflow/status/OneStepAt4time/mcp-comet/ci.yml?style=flat-square" alt="build" /></a>
+    <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="typescript" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/OneStepAt4time/mcp-comet?style=flat-square" alt="license" /></a>
   </p>
   <p><strong>7 modes</strong> · <strong>13 tools</strong> · zero-friction setup · full browser control</p>
   <p>
     <a href="#quick-start">Quick Start</a> ·
     <a href="docs/tools.md">Tool Reference</a> ·
-    <a href="docs/architecture.md">Architecture</a>
+    <a href="docs/architecture.md">Architecture</a> ·
+    <a href="https://github.com/OneStepAt4time/mcp-comet/issues">Issues</a>
   </p>
 </div>
 <!-- markdownlint-enable MD033 MD041 -->
+
+---
+
+## Table of Contents
+
+- [Why MCP Comet](#why-mcp-comet)
+- [Demo](#demo)
+- [Quick Start](#quick-start)
+- [Research Modes](#research-modes)
+- [Toolset at a Glance](#toolset-at-a-glance)
+- [Agent Workflows](#agent-workflows)
+- [CLI Power Ops](#cli-power-ops)
+- [Architecture](#architecture)
+- [Configuration](#configuration)
+- [Compatibility](#compatibility)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -30,27 +48,44 @@ MCP Comet gives your agent more than a chat box. It gives your agent a complete 
 - Pull sources, screenshots, conversations, tabs, and full page content.
 - Stay resilient with auto-connect, reconnect logic, and selector fallback strategies.
 
-If your workflow is "ask, verify, cite, and iterate", this is the server built for it.
+> [!NOTE]
+> If your workflow is "ask, verify, cite, and iterate", this is the server built for it.
+
+---
+
+## Demo
+
+<p align="center">
+  <img src="docs/assets/demo.gif" alt="MCP Comet deep-research demo" width="100%" />
+</p>
 
 ---
 
 ## Quick Start
 
-## Installation
+### Prerequisites
 
-### Option 1: Global install (recommended)
+- Node.js >= 18
+- [Perplexity Comet](https://comet.perplexity.ai/) installed
+
+> [!TIP]
+> Run `mcp-comet detect` to verify your setup before configuring.
+
+### Install
+
+**Option 1: Global install (recommended)**
 
 ```bash
 npm install -g @onestepat4time/mcp-comet
 ```
 
-### Option 2: Run without install
+**Option 2: Run without install**
 
 ```bash
 npx -y @onestepat4time/mcp-comet
 ```
 
-### Option 3: Local development
+**Option 3: Local development**
 
 ```bash
 git clone https://github.com/OneStepAt4time/mcp-comet.git
@@ -59,24 +94,11 @@ npm ci
 npm run build
 ```
 
----
+### Configure
 
-### 1. Prerequisites
+Add MCP Comet to your MCP client config.
 
-- Node.js >= 18
-- [Perplexity Comet](https://comet.perplexity.ai/) installed
-
-Optional pre-flight check:
-
-```bash
-mcp-comet detect
-```
-
-### 2. Add MCP Comet to MCP
-
-Use one of these configs.
-
-Claude Desktop (`~/.claude/claude_desktop_config.json`):
+**Claude Desktop** (`~/.claude/claude_desktop_config.json`):
 
 ```json
 {
@@ -90,7 +112,7 @@ Claude Desktop (`~/.claude/claude_desktop_config.json`):
 }
 ```
 
-Cursor (`~/.cursor/mcp.json`):
+**Cursor** (`~/.cursor/mcp.json`):
 
 ```json
 {
@@ -104,7 +126,7 @@ Cursor (`~/.cursor/mcp.json`):
 }
 ```
 
-### 3. Give your agent a mission
+### First Query
 
 Prompt your agent with something like:
 
@@ -118,13 +140,15 @@ Your agent can chain `comet_mode`, `comet_ask`, `comet_wait`, and `comet_get_sou
 
 Choose the mode that matches the job.
 
-- `standard`: fast factual lookups. Example: "What is the latest CPI reading for Canada?"
-- `deep-research`: multi-source investigations. Example: "Map the 2026 AI chip supply chain and major risks."
-- `model-council`: multi-perspective reasoning. Example: "Debate arguments for and against UBI with tradeoffs."
-- `create`: drafting and ideation. Example: "Draft a technical explainer on WebAssembly in edge runtimes."
-- `learn`: guided teaching. Example: "Teach me B-trees step by step with examples."
-- `review`: critical analysis. Example: "Review this API design for security and reliability gaps."
-- `computer`: browser-interactive tasks. Example: "Open arXiv and find the newest papers on retrieval augmentation."
+| Mode | Description | Example |
+| --- | --- | --- |
+| `standard` | Fast factual lookups | "What is the latest CPI reading for Canada?" |
+| `deep-research` | Multi-source investigations | "Map the 2026 AI chip supply chain and major risks." |
+| `model-council` | Multi-perspective reasoning | "Debate arguments for and against UBI with tradeoffs." |
+| `create` | Drafting and ideation | "Draft a technical explainer on WebAssembly in edge runtimes." |
+| `learn` | Guided teaching | "Teach me B-trees step by step with examples." |
+| `review` | Critical analysis | "Review this API design for security and reliability gaps." |
+| `computer` | Browser-interactive tasks | "Open arXiv and find the newest papers on retrieval augmentation." |
 
 CLI example:
 
@@ -141,10 +165,12 @@ mcp-comet call comet_get_sources
 
 ### Session
 
-- `comet_connect`: connects to Comet or launches it.
-- `comet_poll`: returns live status and partial progress.
-- `comet_wait`: waits for completion and returns the full response.
-- `comet_stop`: stops a running task.
+| Tool | Description |
+| --- | --- |
+| `comet_connect` | Connects to Comet or launches it |
+| `comet_poll` | Returns live status and partial progress |
+| `comet_wait` | Waits for completion and returns the full response |
+| `comet_stop` | Stops a running task |
 
 ### Query
 
@@ -225,6 +251,12 @@ MCP Tools
          -> Perplexity Comet
 ```
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Chrome_CDP-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome CDP" />
+</p>
+
 - Ordered selector strategies tolerate Comet UI changes.
 - Automatic version detection selects the correct selector set.
 - Auto-reconnect includes health checks with retry backoff.
@@ -233,6 +265,9 @@ MCP Tools
 Deep dive: [docs/architecture.md](docs/architecture.md)
 
 ---
+
+<details>
+<summary>Configuration</summary>
 
 ## Configuration Essentials
 
@@ -255,7 +290,12 @@ Config file (`mcp-comet.config.json`) example:
 
 More options and full env var reference: [docs/configuration.md](docs/configuration.md)
 
+</details>
+
 ---
+
+<details>
+<summary>Compatibility</summary>
 
 ## Compatibility
 
@@ -267,24 +307,26 @@ Unknown versions fall back to the latest known selector set.
 
 Details and upgrade flow: [docs/comet-compatibility.md](docs/comet-compatibility.md)
 
+</details>
+
 ---
 
 ## Contributing
 
-PRs are welcome. Before opening one:
+PRs welcome. For non-trivial changes, please open an issue first to discuss what you'd like to change.
 
 ```bash
 npm run lint && npm test
 ```
 
-Guide: [docs/contributing.md](docs/contributing.md)
-
-## Feedback
-
-- Issues: <https://github.com/OneStepAt4time/mcp-comet/issues>
+Full guide: [docs/contributing.md](docs/contributing.md)
 
 ## License
 
 [MIT](LICENSE)
 
-Built by [OneStepAt4time](https://github.com/OneStepAt4time)
+---
+
+<div align="center">
+  <sub>Built with dedication by <a href="https://github.com/OneStepAt4time">OneStepAt4time</a></sub>
+</div>
