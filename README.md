@@ -36,6 +36,31 @@ If your workflow is "ask, verify, cite, and iterate", this is the server built f
 
 ## Quick Start
 
+## Installation
+
+### Option 1: Global install (recommended)
+
+```bash
+npm install -g @onestepat4time/mcp-comet
+```
+
+### Option 2: Run without install
+
+```bash
+npx -y @onestepat4time/mcp-comet
+```
+
+### Option 3: Local development
+
+```bash
+git clone https://github.com/OneStepAt4time/mcp-comet.git
+cd mcp-comet
+npm ci
+npm run build
+```
+
+---
+
 ### 1. Prerequisites
 
 - Node.js >= 18
