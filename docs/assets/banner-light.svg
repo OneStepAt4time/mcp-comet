@@ -1,0 +1,244 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400" role="img" aria-labelledby="title desc">
+  <title id="title">MCP Comet banner</title>
+  <desc id="desc">Animated banner for MCP Comet with a light backdrop, glowing title, orbital accents, and a moving comet trail.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0f4ff" />
+      <stop offset="45%" stop-color="#e8edf8" />
+      <stop offset="100%" stop-color="#f5f7ff" />
+    </linearGradient>
+
+    <radialGradient id="halo" cx="50%" cy="38%" r="42%">
+      <stop offset="0%" stop-color="#0F766E" stop-opacity="0.12" />
+      <stop offset="55%" stop-color="#0F766E" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#f0f4ff" stop-opacity="0" />
+    </radialGradient>
+
+    <linearGradient id="titleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="45%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5eead4" stop-opacity="0" />
+      <stop offset="20%" stop-color="#5eead4" stop-opacity="0.28" />
+      <stop offset="50%" stop-color="#0F766E" stop-opacity="0.95" />
+      <stop offset="80%" stop-color="#5eead4" stop-opacity="0.28" />
+      <stop offset="100%" stop-color="#5eead4" stop-opacity="0" />
+    </linearGradient>
+
+    <linearGradient id="cometTrail" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#14b8a6" stop-opacity="0" />
+      <stop offset="50%" stop-color="#2dd4bf" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#0F766E" stop-opacity="0.95" />
+    </linearGradient>
+
+    <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" />
+    </filter>
+
+    <filter id="titleGlow" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur stdDeviation="14" result="blur" />
+      <feColorMatrix
+        in="blur"
+        type="matrix"
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 0.7 0"
+      />
+    </filter>
+
+    <filter id="starGlow" x="-300%" y="-300%" width="700%" height="700%">
+      <feGaussianBlur stdDeviation="1.8" />
+    </filter>
+
+    <style>
+      .twinkle-fast {
+        animation: twinkle 3.2s ease-in-out infinite;
+      }
+
+      .twinkle-slow {
+        animation: twinkle 5.4s ease-in-out infinite;
+      }
+
+      .drift-a {
+        animation: driftA 18s ease-in-out infinite alternate;
+      }
+
+      .drift-b {
+        animation: driftB 24s ease-in-out infinite alternate;
+      }
+
+      .pulse {
+        animation: pulse 7s ease-in-out infinite;
+      }
+
+      .scan {
+        animation: scan 8s ease-in-out infinite;
+      }
+
+      .orbit-a {
+        animation: orbitA 20s linear infinite;
+        transform-origin: 600px 158px;
+      }
+
+      .orbit-b {
+        animation: orbitB 28s linear infinite;
+        transform-origin: 600px 158px;
+      }
+
+      .title-flicker {
+        animation: titleGlowPulse 6s ease-in-out infinite;
+      }
+
+      .fade-title {
+        animation: fadeTitle 8s ease-in-out infinite;
+      }
+
+      .fade-subtitle {
+        animation: fadeSubtitle 8s ease-in-out infinite;
+      }
+
+      .fade-tagline {
+        animation: fadeTagline 8s ease-in-out infinite;
+      }
+
+      @keyframes twinkle {
+        0%, 100% { opacity: 0.3; transform: scale(0.92); }
+        50% { opacity: 1; transform: scale(1.22); }
+      }
+
+      @keyframes driftA {
+        from { transform: translateY(0px); }
+        to { transform: translateY(-8px); }
+      }
+
+      @keyframes driftB {
+        from { transform: translateX(0px) translateY(0px); }
+        to { transform: translateX(10px) translateY(-6px); }
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 0.72; transform: scale(0.98); }
+        50% { opacity: 1; transform: scale(1.04); }
+      }
+
+      @keyframes scan {
+        0%, 100% { opacity: 0.55; }
+        50% { opacity: 1; }
+      }
+
+      @keyframes orbitA {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      @keyframes orbitB {
+        from { transform: rotate(360deg); }
+        to { transform: rotate(0deg); }
+      }
+
+      @keyframes titleGlowPulse {
+        0%, 100% { opacity: 0.55; }
+        50% { opacity: 0.95; }
+      }
+
+      @keyframes fadeTitle {
+        0%, 12% { opacity: 0; transform: translateY(10px); }
+        24%, 58% { opacity: 1; transform: translateY(0px); }
+        72%, 100% { opacity: 0.16; transform: translateY(-6px); }
+      }
+
+      @keyframes fadeSubtitle {
+        0%, 18% { opacity: 0; transform: translateY(14px); }
+        30%, 64% { opacity: 1; transform: translateY(0px); }
+        78%, 100% { opacity: 0.12; transform: translateY(-4px); }
+      }
+
+      @keyframes fadeTagline {
+        0%, 24% { opacity: 0; transform: translateY(12px); }
+        36%, 70% { opacity: 1; transform: translateY(0px); }
+        84%, 100% { opacity: 0.1; transform: translateY(-3px); }
+      }
+    </style>
+  </defs>
+
+  <rect width="1200" height="400" fill="url(#bg)" />
+
+  <g class="pulse">
+    <ellipse cx="600" cy="148" rx="360" ry="138" fill="url(#halo)" />
+  </g>
+
+  <g opacity="0.16">
+    <path d="M0 340 C220 300, 360 360, 580 328 S970 300, 1200 344" fill="none" stroke="#99f6e4" stroke-width="1" />
+    <path d="M0 358 C240 330, 430 388, 650 352 S980 334, 1200 368" fill="none" stroke="#5eead4" stroke-width="1" />
+  </g>
+
+  <g opacity="0.26">
+    <ellipse cx="600" cy="158" rx="245" ry="76" fill="none" stroke="#99f6e4" stroke-width="1.2" />
+    <ellipse cx="600" cy="158" rx="318" ry="104" fill="none" stroke="#5eead4" stroke-width="0.8" opacity="0.45" />
+  </g>
+
+  <g class="orbit-a" opacity="0.72">
+    <circle cx="845" cy="158" r="2.8" fill="#0d9488" filter="url(#starGlow)" />
+  </g>
+
+  <g class="orbit-b" opacity="0.58">
+    <circle cx="282" cy="158" r="2.2" fill="#0F766E" filter="url(#starGlow)" />
+  </g>
+
+  <g class="drift-a">
+    <path d="M144 94 L220 128" stroke="url(#cometTrail)" stroke-width="4" stroke-linecap="round" opacity="0.75" filter="url(#softBlur)" />
+    <path d="M158 96 L220 128" stroke="url(#cometTrail)" stroke-width="2.2" stroke-linecap="round" opacity="0.9" />
+    <circle cx="220" cy="128" r="4.5" fill="#0F766E" opacity="0.95" filter="url(#starGlow)" />
+    <animateTransform attributeName="transform" type="translate" values="0 0; 18 -10; 0 0" dur="9s" repeatCount="indefinite" />
+  </g>
+
+  <g class="scan">
+    <rect x="118" y="229" width="964" height="1.5" rx="1" fill="url(#accentLine)" />
+  </g>
+
+  <g class="title-flicker fade-title" opacity="0.65" filter="url(#titleGlow)">
+    <text x="600" y="177" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="80" font-weight="800" letter-spacing="10" fill="#0f4f5c">
+      MCP COMET
+    </text>
+  </g>
+
+  <text class="fade-title" x="600" y="177" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="80" font-weight="800" letter-spacing="10" fill="url(#titleGradient)">
+    MCP COMET
+  </text>
+
+  <text class="fade-subtitle" x="600" y="260" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="500" letter-spacing="4" fill="#475569">
+    DEEP RESEARCH SUPERPOWERS FOR AI AGENTS
+  </text>
+
+  <text class="fade-tagline" x="600" y="303" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" letter-spacing="1.2" fill="#64748b">
+    Turn Perplexity Comet into a production-grade MCP research engine
+  </text>
+
+  <g class="drift-b">
+    <circle class="twinkle-fast" cx="80" cy="48" r="1.1" fill="#94a3b8" />
+    <circle class="twinkle-slow" cx="200" cy="118" r="1" fill="#94a3b8" />
+    <circle class="twinkle-fast" cx="348" cy="45" r="1.4" fill="#94a3b8" />
+    <circle class="twinkle-slow" cx="498" cy="78" r="0.9" fill="#94a3b8" />
+    <circle class="twinkle-fast" cx="645" cy="44" r="1.2" fill="#94a3b8" />
+    <circle class="twinkle-slow" cx="777" cy="108" r="1" fill="#94a3b8" />
+    <circle class="twinkle-fast" cx="901" cy="24" r="1.3" fill="#94a3b8" />
+    <circle class="twinkle-slow" cx="1047" cy="79" r="0.9" fill="#94a3b8" />
+    <circle class="twinkle-fast" cx="1146" cy="56" r="1.1" fill="#94a3b8" />
+    <circle class="twinkle-slow" cx="126" cy="222" r="1" fill="#94a3b8" />
+    <circle class="twinkle-fast" cx="286" cy="250" r="1.2" fill="#94a3b8" />
+    <circle class="twinkle-slow" cx="464" cy="322" r="0.9" fill="#94a3b8" />
+    <circle class="twinkle-fast" cx="722" cy="326" r="1.1" fill="#94a3b8" />
+    <circle class="twinkle-slow" cx="954" cy="282" r="0.95" fill="#94a3b8" />
+    <circle class="twinkle-fast" cx="1098" cy="318" r="1.2" fill="#94a3b8" />
+  </g>
+
+  <g opacity="0.08">
+    <circle cx="600" cy="158" r="12" fill="#0F766E" />
+    <circle cx="600" cy="158" r="6" fill="#14b8a6" />
+  </g>
+</svg>
