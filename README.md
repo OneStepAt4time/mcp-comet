@@ -165,10 +165,12 @@ mcp-comet call comet_get_sources
 
 ### Session
 
-- `comet_connect`: connects to Comet or launches it.
-- `comet_poll`: returns live status and partial progress.
-- `comet_wait`: waits for completion and returns the full response.
-- `comet_stop`: stops a running task.
+| Tool | Description |
+| --- | --- |
+| `comet_connect` | Connects to Comet or launches it |
+| `comet_poll` | Returns live status and partial progress |
+| `comet_wait` | Waits for completion and returns the full response |
+| `comet_stop` | Stops a running task |
 
 ### Query
 
