@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(uv *)",
+      "Bash(uv run *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(pnpm *)",
+      "Bash(pytest *)",
+      "Bash(python *)",
+      "Bash(node *)",
+      "Bash(docker *)",
+      "Bash(docker-compose *)",
+      "Bash(gh *)",
+      "Bash(make *)",
+      "Bash(cat *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(rg *)",
+      "Bash(sort *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(echo *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(pwd)",
+      "Bash(which *)",
+      "Bash(black *)",
+      "Bash(ruff *)",
+      "Bash(mypy *)",
+      "Bash(eslint *)",
+      "Bash(tsc *)",
+      "Bash(tsc --noEmit *)",
+      "Read",
+      "Edit",
+      "Write",
+      "WebSearch"
+    ],
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf .)",
+      "Bash(git push * master)",
+      "Bash(git push * main)",
+      "Bash(git push --no-verify *)",
+      "Bash(git checkout master)",
+      "Bash(git checkout main)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./infra/credentials.md)"
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true
+  },
+  "plansDirectory": ".claude/plans",
+  "statusLine": {
+    "type": "command",
+    "command": "bash D:/mcp-comet/.claude/statusline-command.sh"
+  }
+}
