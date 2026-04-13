@@ -260,6 +260,12 @@ MCP Tools
          -> Perplexity Comet
 ```
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Chrome_CDP-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome CDP" />
+</p>
+
 - Ordered selector strategies tolerate Comet UI changes.
 - Automatic version detection selects the correct selector set.
 - Auto-reconnect includes health checks with retry backoff.
@@ -316,20 +322,20 @@ Details and upgrade flow: [docs/comet-compatibility.md](docs/comet-compatibility
 
 ## Contributing
 
-PRs are welcome. Before opening one:
+PRs welcome. For non-trivial changes, please open an issue first to discuss what you'd like to change.
 
 ```bash
 npm run lint && npm test
 ```
 
-Guide: [docs/contributing.md](docs/contributing.md)
-
-## Feedback
-
-- Issues: <https://github.com/OneStepAt4time/mcp-comet/issues>
+Full guide: [docs/contributing.md](docs/contributing.md)
 
 ## License
 
 [MIT](LICENSE)
 
-Built by [OneStepAt4time](https://github.com/OneStepAt4time)
+---
+
+<div align="center">
+  <sub>Built with dedication by <a href="https://github.com/OneStepAt4time">OneStepAt4time</a></sub>
+</div>
