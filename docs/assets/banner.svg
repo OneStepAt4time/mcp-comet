@@ -1,67 +1,244 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400" role="img" aria-labelledby="title desc">
+  <title id="title">MCP Comet banner</title>
+  <desc id="desc">Animated banner for MCP Comet with a dark space backdrop, glowing title, orbital accents, and a moving comet trail.</desc>
+
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0a0e1a;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#0f1629;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0a0e1a;stop-opacity:1" />
+      <stop offset="0%" stop-color="#050816" />
+      <stop offset="45%" stop-color="#0d1530" />
+      <stop offset="100%" stop-color="#040712" />
     </linearGradient>
-    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:0" />
-      <stop offset="50%" style="stop-color:#818cf8;stop-opacity:0.8" />
-      <stop offset="100%" style="stop-color:#6366f1;stop-opacity:0" />
-    </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="40%" r="40%">
-      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:0.15" />
-      <stop offset="100%" style="stop-color:#6366f1;stop-opacity:0" />
+
+    <radialGradient id="halo" cx="50%" cy="38%" r="42%">
+      <stop offset="0%" stop-color="#6ea8ff" stop-opacity="0.22" />
+      <stop offset="55%" stop-color="#7c5cff" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
     </radialGradient>
-    <filter id="blur">
-      <feGaussianBlur stdDeviation="2" />
+
+    <linearGradient id="titleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#eef4ff" />
+      <stop offset="45%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#d7e6ff" />
+    </linearGradient>
+
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#58c6ff" stop-opacity="0" />
+      <stop offset="20%" stop-color="#58c6ff" stop-opacity="0.28" />
+      <stop offset="50%" stop-color="#8d7dff" stop-opacity="0.95" />
+      <stop offset="80%" stop-color="#58c6ff" stop-opacity="0.28" />
+      <stop offset="100%" stop-color="#58c6ff" stop-opacity="0" />
+    </linearGradient>
+
+    <linearGradient id="cometTrail" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#70b8ff" stop-opacity="0" />
+      <stop offset="50%" stop-color="#88b7ff" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.95" />
+    </linearGradient>
+
+    <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" />
     </filter>
+
+    <filter id="titleGlow" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur stdDeviation="14" result="blur" />
+      <feColorMatrix
+        in="blur"
+        type="matrix"
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 0.7 0"
+      />
+    </filter>
+
+    <filter id="starGlow" x="-300%" y="-300%" width="700%" height="700%">
+      <feGaussianBlur stdDeviation="1.8" />
+    </filter>
+
+    <style>
+      .twinkle-fast {
+        animation: twinkle 3.2s ease-in-out infinite;
+      }
+
+      .twinkle-slow {
+        animation: twinkle 5.4s ease-in-out infinite;
+      }
+
+      .drift-a {
+        animation: driftA 18s ease-in-out infinite alternate;
+      }
+
+      .drift-b {
+        animation: driftB 24s ease-in-out infinite alternate;
+      }
+
+      .pulse {
+        animation: pulse 7s ease-in-out infinite;
+      }
+
+      .scan {
+        animation: scan 8s ease-in-out infinite;
+      }
+
+      .orbit-a {
+        animation: orbitA 20s linear infinite;
+        transform-origin: 600px 158px;
+      }
+
+      .orbit-b {
+        animation: orbitB 28s linear infinite;
+        transform-origin: 600px 158px;
+      }
+
+      .title-flicker {
+        animation: titleGlowPulse 6s ease-in-out infinite;
+      }
+
+      .fade-title {
+        animation: fadeTitle 8s ease-in-out infinite;
+      }
+
+      .fade-subtitle {
+        animation: fadeSubtitle 8s ease-in-out infinite;
+      }
+
+      .fade-tagline {
+        animation: fadeTagline 8s ease-in-out infinite;
+      }
+
+      @keyframes twinkle {
+        0%, 100% { opacity: 0.3; transform: scale(0.92); }
+        50% { opacity: 1; transform: scale(1.22); }
+      }
+
+      @keyframes driftA {
+        from { transform: translateY(0px); }
+        to { transform: translateY(-8px); }
+      }
+
+      @keyframes driftB {
+        from { transform: translateX(0px) translateY(0px); }
+        to { transform: translateX(10px) translateY(-6px); }
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 0.72; transform: scale(0.98); }
+        50% { opacity: 1; transform: scale(1.04); }
+      }
+
+      @keyframes scan {
+        0%, 100% { opacity: 0.55; }
+        50% { opacity: 1; }
+      }
+
+      @keyframes orbitA {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      @keyframes orbitB {
+        from { transform: rotate(360deg); }
+        to { transform: rotate(0deg); }
+      }
+
+      @keyframes titleGlowPulse {
+        0%, 100% { opacity: 0.55; }
+        50% { opacity: 0.95; }
+      }
+
+      @keyframes fadeTitle {
+        0%, 12% { opacity: 0; transform: translateY(10px); }
+        24%, 58% { opacity: 1; transform: translateY(0px); }
+        72%, 100% { opacity: 0.16; transform: translateY(-6px); }
+      }
+
+      @keyframes fadeSubtitle {
+        0%, 18% { opacity: 0; transform: translateY(14px); }
+        30%, 64% { opacity: 1; transform: translateY(0px); }
+        78%, 100% { opacity: 0.12; transform: translateY(-4px); }
+      }
+
+      @keyframes fadeTagline {
+        0%, 24% { opacity: 0; transform: translateY(12px); }
+        36%, 70% { opacity: 1; transform: translateY(0px); }
+        84%, 100% { opacity: 0.1; transform: translateY(-3px); }
+      }
+    </style>
   </defs>
 
-  <!-- Background -->
   <rect width="1200" height="400" fill="url(#bg)" />
-  <rect width="1200" height="400" fill="url(#glow)" />
 
-  <!-- Stars -->
-  <circle cx="80" cy="50" r="1" fill="#fff" opacity="0.6" />
-  <circle cx="200" cy="120" r="0.8" fill="#fff" opacity="0.4" />
-  <circle cx="350" cy="30" r="1.2" fill="#fff" opacity="0.5" />
-  <circle cx="500" cy="90" r="0.7" fill="#fff" opacity="0.3" />
-  <circle cx="650" cy="45" r="1" fill="#fff" opacity="0.5" />
-  <circle cx="780" cy="110" r="0.9" fill="#fff" opacity="0.4" />
-  <circle cx="900" cy="25" r="1.1" fill="#fff" opacity="0.6" />
-  <circle cx="1050" cy="80" r="0.8" fill="#fff" opacity="0.3" />
-  <circle cx="1150" cy="50" r="1" fill="#fff" opacity="0.5" />
-  <circle cx="150" cy="200" r="0.6" fill="#fff" opacity="0.3" />
-  <circle cx="300" cy="250" r="0.9" fill="#fff" opacity="0.4" />
-  <circle cx="450" cy="300" r="0.7" fill="#fff" opacity="0.3" />
-  <circle cx="600" cy="280" r="1" fill="#fff" opacity="0.4" />
-  <circle cx="750" cy="320" r="0.8" fill="#fff" opacity="0.3" />
-  <circle cx="950" cy="260" r="0.7" fill="#fff" opacity="0.4" />
-  <circle cx="1100" cy="300" r="1" fill="#fff" opacity="0.5" />
-  <circle cx="100" cy="350" r="0.8" fill="#fff" opacity="0.3" />
-  <circle cx="850" cy="180" r="0.6" fill="#fff" opacity="0.4" />
+  <g class="pulse">
+    <ellipse cx="600" cy="148" rx="360" ry="138" fill="url(#halo)" />
+  </g>
 
-  <!-- Shooting star (meteor) -->
-  <line x1="320" y1="60" x2="380" y2="90" stroke="url(#accent)" stroke-width="2" filter="url(#blur)" />
-  <circle cx="380" cy="90" r="2" fill="#818cf8" opacity="0.8" filter="url(#blur)" />
+  <g opacity="0.16">
+    <path d="M0 340 C220 300, 360 360, 580 328 S970 300, 1200 344" fill="none" stroke="#6a7dff" stroke-width="1" />
+    <path d="M0 358 C240 330, 430 388, 650 352 S980 334, 1200 368" fill="none" stroke="#4baeff" stroke-width="1" />
+  </g>
 
-  <!-- Accent line -->
-  <rect x="100" y="230" width="1000" height="1" fill="url(#accent)" />
+  <g opacity="0.26">
+    <ellipse cx="600" cy="158" rx="245" ry="76" fill="none" stroke="#6e73ff" stroke-width="1.2" />
+    <ellipse cx="600" cy="158" rx="318" ry="104" fill="none" stroke="#49b8ff" stroke-width="0.8" opacity="0.45" />
+  </g>
 
-  <!-- Title -->
-  <text x="600" y="180" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" fill="#e2e8f0" text-anchor="middle" letter-spacing="8">
-    ASTERIA
+  <g class="orbit-a" opacity="0.72">
+    <circle cx="845" cy="158" r="2.8" fill="#8ac7ff" filter="url(#starGlow)" />
+  </g>
+
+  <g class="orbit-b" opacity="0.58">
+    <circle cx="282" cy="158" r="2.2" fill="#8f83ff" filter="url(#starGlow)" />
+  </g>
+
+  <g class="drift-a">
+    <path d="M144 94 L220 128" stroke="url(#cometTrail)" stroke-width="4" stroke-linecap="round" opacity="0.75" filter="url(#softBlur)" />
+    <path d="M158 96 L220 128" stroke="url(#cometTrail)" stroke-width="2.2" stroke-linecap="round" opacity="0.9" />
+    <circle cx="220" cy="128" r="4.5" fill="#ffffff" opacity="0.95" filter="url(#starGlow)" />
+    <animateTransform attributeName="transform" type="translate" values="0 0; 18 -10; 0 0" dur="9s" repeatCount="indefinite" />
+  </g>
+
+  <g class="scan">
+    <rect x="118" y="229" width="964" height="1.5" rx="1" fill="url(#accentLine)" />
+  </g>
+
+  <g class="title-flicker fade-title" opacity="0.65" filter="url(#titleGlow)">
+    <text x="600" y="177" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="80" font-weight="800" letter-spacing="10" fill="#c2d8ff">
+      MCP COMET
+    </text>
+  </g>
+
+  <text class="fade-title" x="600" y="177" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="80" font-weight="800" letter-spacing="10" fill="url(#titleGradient)">
+    MCP COMET
   </text>
 
-  <!-- Subtitle -->
-  <text x="600" y="260" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="20" fill="#94a3b8" text-anchor="middle" letter-spacing="3">
-    MCP SERVER FOR PERPLEXITY COMET
+  <text class="fade-subtitle" x="600" y="260" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="500" letter-spacing="4" fill="#b3c0da">
+    DEEP RESEARCH SUPERPOWERS FOR AI AGENTS
   </text>
 
-  <!-- Tagline -->
-  <text x="600" y="300" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="14" fill="#64748b" text-anchor="middle" letter-spacing="1">
-    Control Comet's agentic browser from any AI assistant via Chrome DevTools Protocol
+  <text class="fade-tagline" x="600" y="303" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" letter-spacing="1.2" fill="#7f8aa8">
+    Turn Perplexity Comet into a production-grade MCP research engine
   </text>
+
+  <g class="drift-b">
+    <circle class="twinkle-fast" cx="80" cy="48" r="1.1" fill="#ffffff" />
+    <circle class="twinkle-slow" cx="200" cy="118" r="1" fill="#ffffff" />
+    <circle class="twinkle-fast" cx="348" cy="45" r="1.4" fill="#e1ecff" />
+    <circle class="twinkle-slow" cx="498" cy="78" r="0.9" fill="#ffffff" />
+    <circle class="twinkle-fast" cx="645" cy="44" r="1.2" fill="#dbe8ff" />
+    <circle class="twinkle-slow" cx="777" cy="108" r="1" fill="#ffffff" />
+    <circle class="twinkle-fast" cx="901" cy="24" r="1.3" fill="#ffffff" />
+    <circle class="twinkle-slow" cx="1047" cy="79" r="0.9" fill="#ffffff" />
+    <circle class="twinkle-fast" cx="1146" cy="56" r="1.1" fill="#dce8ff" />
+    <circle class="twinkle-slow" cx="126" cy="222" r="1" fill="#ffffff" />
+    <circle class="twinkle-fast" cx="286" cy="250" r="1.2" fill="#ffffff" />
+    <circle class="twinkle-slow" cx="464" cy="322" r="0.9" fill="#dce8ff" />
+    <circle class="twinkle-fast" cx="722" cy="326" r="1.1" fill="#ffffff" />
+    <circle class="twinkle-slow" cx="954" cy="282" r="0.95" fill="#ffffff" />
+    <circle class="twinkle-fast" cx="1098" cy="318" r="1.2" fill="#ffffff" />
+  </g>
+
+  <g opacity="0.12">
+    <circle cx="600" cy="158" r="12" fill="#ffffff" />
+    <circle cx="600" cy="158" r="6" fill="#7fb6ff" />
+  </g>
 </svg>

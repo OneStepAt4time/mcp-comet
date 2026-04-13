@@ -1,6 +1,6 @@
 # Architecture
 
-Asteria uses a four-layer architecture:
+MCP Comet uses a four-layer architecture:
 
 ```
 MCP Tools (13 tools)
@@ -14,7 +14,7 @@ Perplexity Comet Browser (Chromium)
 
 ## MCP Layer
 
-Asteria exposes 13 MCP tools grouped by function:
+MCP Comet exposes 13 MCP tools grouped by function:
 
 **Session**
 
@@ -57,7 +57,7 @@ Selectors are ordered arrays of CSS selectors. Each strategy tries selectors in 
 
 ### Typeahead Mode Detection
 
-When switching modes via `comet_mode`, Asteria reads the SVG icon `href` from typeahead menu items with the `.bg-subtle` class. Icon IDs map to mode names:
+When switching modes via `comet_mode`, MCP Comet reads the SVG icon `href` from typeahead menu items with the `.bg-subtle` class. Icon IDs map to mode names:
 
 | Icon ID | Mode |
 |---------|------|
@@ -72,7 +72,7 @@ If icon detection fails, the system falls back to URL-based mode detection.
 
 ### Collapsed Citation Expansion
 
-Sources with collapsed citation text (matching the pattern `^\w+\+\d+$`, such as "arXiv+3") do not expose a URL directly. Asteria clicks these elements to reveal the full source URL, then re-extracts sources in a second pass. This two-pass strategy ensures complete source collection.
+Sources with collapsed citation text (matching the pattern `^\w+\+\d+$`, such as "arXiv+3") do not expose a URL directly. MCP Comet clicks these elements to reveal the full source URL, then re-extracts sources in a second pass. This two-pass strategy ensures complete source collection.
 
 ### Prompt Injection
 
@@ -84,7 +84,7 @@ The prompt text is embedded via `JSON.stringify()` before injection. This preven
 
 ### Version Detection
 
-On connect, Asteria queries the `/json/version` endpoint to retrieve the Chrome major version number. This version determines which selector set to use from the registry. Unknown versions fall back to the latest known selector set.
+On connect, MCP Comet queries the `/json/version` endpoint to retrieve the Chrome major version number. This version determines which selector set to use from the registry. Unknown versions fall back to the latest known selector set.
 
 ### Connection Management
 
@@ -96,7 +96,7 @@ Connection health is verified by evaluating `1+1` via CDP with a 3-second timeou
 
 ## Error Handling
 
-Asteria defines 9 error subclasses, all extending the base `AsteriaError`. Each carries a string code, a context object, and an optional cause.
+MCP Comet defines 9 error subclasses, all extending the base `CometError`. Each carries a string code, a context object, and an optional cause.
 
 | Code | Class |
 |------|-------|
@@ -121,7 +121,7 @@ Errors are formatted as `[CODE] message` when converted to MCP responses via `to
 2. Pre-send state capture   -- snapshot proseCount and lastProseText
 3. Type prompt              -- execCommand('insertText') via JSON.stringify
 4. Submit                   -- Enter key via CDP
-5. Polling loop             -- check status every ASTERIA_POLL_INTERVAL ms
+5. Polling loop             -- check status every COMET_POLL_INTERVAL ms
    - Detect new response via proseCount growth
    - Stall detection: 10 polls without growth -> break
 6. Response settle          -- 5 x 1s polls to ensure complete text
@@ -131,3 +131,4 @@ Errors are formatted as `[CODE] message` when converted to MCP responses via `to
 ### comet_wait lifecycle
 
 `comet_wait` is `comet_ask`'s polling loop without the prompt submission steps (3-4). It polls until the agent finishes or stalls, using the same settle logic (5 x 1s polls) to ensure the response is complete before returning.
+

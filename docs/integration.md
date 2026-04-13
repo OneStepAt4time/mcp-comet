@@ -1,14 +1,14 @@
 # Integration Guide
 
-This guide explains how to integrate Asteria with MCP clients, use it from the command line, and embed it in Node.js applications.
+This guide explains how to integrate MCP Comet with MCP clients, use it from the command line, and embed it in Node.js applications.
 
 ---
 
 ## 1. Overview
 
-Asteria communicates via the MCP stdio transport. The MCP client spawns `asteria start` as a subprocess and exchanges JSON-RPC 2.0 messages over stdin/stdout. There is no HTTP server and no port to configure for the MCP layer itself -- the stdio pipe is the transport.
+MCP Comet communicates via the MCP stdio transport. The MCP client spawns `mcp-comet start` as a subprocess and exchanges JSON-RPC 2.0 messages over stdin/stdout. There is no HTTP server and no port to configure for the MCP layer itself -- the stdio pipe is the transport.
 
-Under the hood, Asteria connects to the Perplexity Comet browser over Chrome DevTools Protocol (CDP) on port 9222. From the MCP client's perspective, all of that is invisible: you invoke tools and receive results.
+Under the hood, MCP Comet connects to the Perplexity Comet browser over Chrome DevTools Protocol (CDP) on port 9222. From the MCP client's perspective, all of that is invisible: you invoke tools and receive results.
 
 ---
 
@@ -18,40 +18,40 @@ Before configuring any MCP client, verify the following:
 
 - **Node.js >= 18** is installed. Run `node --version` to confirm.
 - **Perplexity Comet** is installed from [https://comet.perplexity.ai/](https://comet.perplexity.ai/).
-- **Comet is running**. Asteria auto-detects it on port 9222. If Comet is not running, `comet_connect` will attempt to launch it automatically.
-- **Asteria is installed globally**:
+- **Comet is running**. MCP Comet auto-detects it on port 9222. If Comet is not running, `comet_connect` will attempt to launch it automatically.
+- **MCP Comet is installed globally**:
 
   ```bash
-  npm install -g @onestepat4time/asteria
+  npm install -g @onestepat4time/mcp-comet
   ```
 
 **Verify the setup:**
 
 ```bash
-asteria detect
+mcp-comet detect
 ```
 
-This should report that Comet is running and the debug port is active. If it reports that Comet was not found, start Comet manually and run `asteria detect` again.
+This should report that Comet is running and the debug port is active. If it reports that Comet was not found, start Comet manually and run `mcp-comet detect` again.
 
 ---
 
 ## 3. Claude Code
 
-Claude Code reads MCP server configuration from `~/.claude/claude_desktop_config.json`. Add Asteria as a stdio server:
+Claude Code reads MCP server configuration from `~/.claude/claude_desktop_config.json`. Add MCP Comet as a stdio server:
 
 ```json
 {
   "mcpServers": {
-    "asteria": {
+    "mcp-comet": {
       "type": "stdio",
-      "command": "asteria",
+      "command": "mcp-comet",
       "args": ["start"]
     }
   }
 }
 ```
 
-After updating the configuration file, restart Claude Code. Asteria will appear as an MCP server exposing 13 tools.
+After updating the configuration file, restart Claude Code. MCP Comet will appear as an MCP server exposing 13 tools.
 
 **Verify:** Ask Claude "What MCP tools do you have available?" The list should include `comet_connect`, `comet_ask`, `comet_wait`, and the other tools documented in [tools.md](tools.md).
 
@@ -68,31 +68,31 @@ Claude: [calls comet_connect, then comet_ask with the prompt]
 
 ## 4. Cursor
 
-Cursor reads MCP server configuration from `~/.cursor/mcp.json`. Add Asteria with the same stdio configuration:
+Cursor reads MCP server configuration from `~/.cursor/mcp.json`. Add MCP Comet with the same stdio configuration:
 
 ```json
 {
   "mcpServers": {
-    "asteria": {
+    "mcp-comet": {
       "type": "stdio",
-      "command": "asteria",
+      "command": "mcp-comet",
       "args": ["start"]
     }
   }
 }
 ```
 
-After updating the configuration file, restart Cursor. Open **Settings > MCP** to confirm that `asteria` appears in the server list with an active status.
+After updating the configuration file, restart Cursor. Open **Settings > MCP** to confirm that `mcp-comet` appears in the server list with an active status.
 
 ---
 
 ## 5. Other MCP Clients (Generic)
 
-Any MCP-compatible client that supports the stdio transport can use Asteria. The configuration pattern is always the same:
+Any MCP-compatible client that supports the stdio transport can use MCP Comet. The configuration pattern is always the same:
 
 | Field      | Value         |
 |------------|---------------|
-| Command    | `asteria`     |
+| Command    | `mcp-comet`     |
 | Args       | `["start"]`   |
 | Transport  | `stdio`       |
 
@@ -102,47 +102,47 @@ Consult your client's documentation for where to place MCP server definitions. S
 
 ## 6. CLI Usage
 
-Asteria provides a `call` subcommand for invoking tools directly from the terminal, outside of any MCP client. This is useful for debugging, scripting, and manual testing.
+MCP Comet provides a `call` subcommand for invoking tools directly from the terminal, outside of any MCP client. This is useful for debugging, scripting, and manual testing.
 
 ```bash
 # Connect to Comet
-asteria call comet_connect
+mcp-comet call comet_connect
 
 # Ask a question
-asteria call comet_ask '{"prompt": "What is 2+2?"}'
+mcp-comet call comet_ask '{"prompt": "What is 2+2?"}'
 
 # Wait for completion after a timeout
-asteria call comet_wait
+mcp-comet call comet_wait
 
 # Check the current status
-asteria call comet_poll
+mcp-comet call comet_poll
 
 # Take a screenshot
-asteria call comet_screenshot '{"format": "jpeg"}'
+mcp-comet call comet_screenshot '{"format": "jpeg"}'
 
 # Switch mode
-asteria call comet_mode '{"mode": "deep-research"}'
+mcp-comet call comet_mode '{"mode": "deep-research"}'
 
 # Get sources from the current response
-asteria call comet_get_sources
+mcp-comet call comet_get_sources
 
 # List open browser tabs
-asteria call comet_list_tabs
+mcp-comet call comet_list_tabs
 
 # Switch to a specific tab
-asteria call comet_switch_tab '{"tabId": "ABC123"}'
+mcp-comet call comet_switch_tab '{"tabId": "ABC123"}'
 
 # Stop the current Comet operation
-asteria call comet_stop
+mcp-comet call comet_stop
 
 # Get page content
-asteria call comet_get_page_content '{"maxLength": 5000}'
+mcp-comet call comet_get_page_content '{"maxLength": 5000}'
 
 # List conversations
-asteria call comet_list_conversations
+mcp-comet call comet_list_conversations
 
 # Open a conversation by URL
-asteria call comet_open_conversation '{"url": "https://www.perplexity.ai/search/abc123"}'
+mcp-comet call comet_open_conversation '{"url": "https://www.perplexity.ai/search/abc123"}'
 ```
 
 The `call` command sends a single JSON-RPC request over stdio and prints the response to stdout. Arguments are parsed as JSON; omit them for tools that take no parameters.
@@ -151,12 +151,12 @@ The `call` command sends a single JSON-RPC request over stdio and prints the res
 
 ## 7. Programmatic Usage (Node.js)
 
-You can spawn Asteria from a Node.js application and communicate via JSON-RPC over stdio. This is useful when you want to embed Perplexity Comet access in your own tooling without relying on an external MCP client.
+You can spawn MCP Comet from a Node.js application and communicate via JSON-RPC over stdio. This is useful when you want to embed Perplexity Comet access in your own tooling without relying on an external MCP client.
 
 ```javascript
 import { spawn } from 'node:child_process'
 
-const child = spawn('asteria', ['start'], {
+const child = spawn('mcp-comet', ['start'], {
   stdio: ['pipe', 'pipe', 'pipe'],
 })
 
@@ -214,7 +214,7 @@ child.stdout.on('data', (chunk) => {
 })
 
 child.stderr.on('data', (chunk) => {
-  // Asteria logs go to stderr
+  // MCP Comet logs go to stderr
   process.stderr.write(chunk)
 })
 ```
@@ -223,5 +223,6 @@ Key points:
 
 - Each JSON-RPC message must be a single line terminated with `\n`.
 - After sending `initialize`, you must send a `notifications/initialized` notification before making tool calls.
-- Asteria writes diagnostic logs to stderr, so stdout remains clean JSON-RPC traffic.
-- The `protocolVersion` must be `2024-11-05`, which is the version Asteria implements.
+- MCP Comet writes diagnostic logs to stderr, so stdout remains clean JSON-RPC traffic.
+- The `protocolVersion` must be `2024-11-05`, which is the version MCP Comet implements.
+

@@ -1,6 +1,6 @@
 # Tool Reference
 
-This document provides a complete reference for all 13 MCP tools exposed by the Asteria server. Each tool entry includes a description, parameter table, response format, CLI example, and implementation notes.
+This document provides a complete reference for all 13 MCP tools exposed by the MCP Comet server. Each tool entry includes a description, parameter table, response format, CLI example, and implementation notes.
 
 Tools are consumed via the Model Context Protocol (MCP) stdio transport. All tools automatically connect to or launch the Comet browser if no active session exists (see [Connection Lifecycle](#connection-lifecycle)).
 
@@ -64,7 +64,7 @@ Connected to Comet on port {port} (Chrome/{version}), target {targetId}
 - Closes extra tabs (sidecar, agent-browsing) after connecting.
 - Detects the Chrome major version and loads version-appropriate DOM selectors.
 - If the active tab is a sidecar or non-Perplexity page, it navigates to `https://www.perplexity.ai`.
-- The port defaults to the value of `ASTERIA_PORT` (default `9222`) when not provided.
+- The port defaults to the value of `COMET_PORT` (default `9222`) when not provided.
 
 ---
 
@@ -80,7 +80,7 @@ This is the primary interaction tool. It types the prompt into the Comet input f
 |-----------|---------|----------|----------------------------------|--------------------------------------------------|
 | `prompt`  | string  | Yes      |                                  | The question or instruction to send              |
 | `newChat` | boolean | No       | `false`                          | Start a fresh chat before sending the prompt     |
-| `timeout` | number  | No       | `180000` (`ASTERIA_RESPONSE_TIMEOUT`) | Maximum wait time in ms for the agent response |
+| `timeout` | number  | No       | `180000` (`COMET_RESPONSE_TIMEOUT`) | Maximum wait time in ms for the agent response |
 
 ### Response
 
@@ -275,7 +275,7 @@ Captures a screenshot of the active browser tab and returns it as a base64-encod
 
 ### Parameters
 
-| Parameter | Type | Required | Default (`ASTERIA_SCREENSHOT_FORMAT`) | Description                    |
+| Parameter | Type | Required | Default (`COMET_SCREENSHOT_FORMAT`) | Description                    |
 |-----------|------|----------|---------------------------------------|--------------------------------|
 | `format`  | enum | No       | `"png"`                               | Image format: `"png"` or `"jpeg"` |
 
@@ -308,8 +308,8 @@ The `mimeType` is `"image/png"` for PNG format and `"image/jpeg"` for JPEG forma
 
 ### Notes
 
-- The default format can be overridden via the `ASTERIA_SCREENSHOT_FORMAT` environment variable.
-- JPEG quality is controlled by `ASTERIA_SCREENSHOT_QUALITY` (default `80`, range 0-100).
+- The default format can be overridden via the `COMET_SCREENSHOT_FORMAT` environment variable.
+- JPEG quality is controlled by `COMET_SCREENSHOT_QUALITY` (default `80`, range 0-100).
 - Returns the image as an MCP image content block, not as text.
 
 ---
@@ -739,7 +739,7 @@ All tools use a consistent error response format:
 | `AGENT_ERROR`           | General agent execution error                                      |
 | `CONFIG_ERROR`          | Configuration validation error                                     |
 
-Non-Asteria errors (e.g., unexpected exceptions) return:
+Non-MCP Comet errors (e.g., unexpected exceptions) return:
 
 ```json
 {
@@ -775,9 +775,10 @@ Connection behavior is controlled by these configuration values (see [Configurat
 
 | Setting                  | Default  | Description                                  |
 |--------------------------|----------|----------------------------------------------|
-| `ASTERIA_PORT`           | `9222`   | CDP debug port                               |
+| `COMET_PORT`           | `9222`   | CDP debug port                               |
 | `COMET_PATH`             | auto     | Path to Comet executable                     |
-| `ASTERIA_TIMEOUT`        | `30000`  | Comet launch timeout in ms                   |
-| `ASTERIA_POLL_INTERVAL`  | `1000`   | Status poll interval in ms                   |
-| `ASTERIA_MAX_RECONNECT`  | `5`      | Maximum reconnection attempts                |
-| `ASTERIA_RECONNECT_DELAY`| `5000`   | Maximum reconnection backoff delay in ms     |
+| `COMET_TIMEOUT`        | `30000`  | Comet launch timeout in ms                   |
+| `COMET_POLL_INTERVAL`  | `1000`   | Status poll interval in ms                   |
+| `COMET_MAX_RECONNECT`  | `5`      | Maximum reconnection attempts                |
+| `COMET_RECONNECT_DELAY`| `5000`   | Maximum reconnection backoff delay in ms     |
+
