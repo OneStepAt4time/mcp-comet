@@ -140,13 +140,15 @@ Your agent can chain `comet_mode`, `comet_ask`, `comet_wait`, and `comet_get_sou
 
 Choose the mode that matches the job.
 
-- `standard`: fast factual lookups. Example: "What is the latest CPI reading for Canada?"
-- `deep-research`: multi-source investigations. Example: "Map the 2026 AI chip supply chain and major risks."
-- `model-council`: multi-perspective reasoning. Example: "Debate arguments for and against UBI with tradeoffs."
-- `create`: drafting and ideation. Example: "Draft a technical explainer on WebAssembly in edge runtimes."
-- `learn`: guided teaching. Example: "Teach me B-trees step by step with examples."
-- `review`: critical analysis. Example: "Review this API design for security and reliability gaps."
-- `computer`: browser-interactive tasks. Example: "Open arXiv and find the newest papers on retrieval augmentation."
+| Mode | Description | Example |
+| --- | --- | --- |
+| `standard` | Fast factual lookups | "What is the latest CPI reading for Canada?" |
+| `deep-research` | Multi-source investigations | "Map the 2026 AI chip supply chain and major risks." |
+| `model-council` | Multi-perspective reasoning | "Debate arguments for and against UBI with tradeoffs." |
+| `create` | Drafting and ideation | "Draft a technical explainer on WebAssembly in edge runtimes." |
+| `learn` | Guided teaching | "Teach me B-trees step by step with examples." |
+| `review` | Critical analysis | "Review this API design for security and reliability gaps." |
+| `computer` | Browser-interactive tasks | "Open arXiv and find the newest papers on retrieval augmentation." |
 
 CLI example:
 
