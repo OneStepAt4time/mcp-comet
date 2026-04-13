@@ -1,4 +1,4 @@
-# Asteria UAT Test Plan
+# MCP Comet UAT Test Plan
 
 Version: 0.1.0 | Date: 2026-04-07
 
@@ -7,7 +7,7 @@ Version: 0.1.0 | Date: 2026-04-07
 ## Prerequisites
 
 - Perplexity Comet installed and running
-- MCP client configured with asteria server
+- MCP client configured with mcp-comet server
 - Node.js >= 18
 - Test environment has network access
 
@@ -288,7 +288,7 @@ Full tool-by-tool validation.
 - **Tool:** `comet_ask`
 - **Preconditions:** No active connection to Comet (server just started or disconnected)
 - **Steps:**
-  1. Restart Asteria server or ensure no connection
+  1. Restart MCP Comet server or ensure no connection
   2. Call `comet_ask` with any prompt
 - **Expected:** Response is an error indicating connection is required, OR server auto-connects and succeeds
 - **Actual:** ___
@@ -420,15 +420,15 @@ Full tool-by-tool validation.
 
 ## Summary
 
-| Category | Total | Pass | Fail |
-|----------|-------|------|------|
-| Smoke | 4 | | |
-| Functional | 14 | | |
-| Error Recovery | 4 | | |
-| Mode Switching | 4 | | |
-| Cross-Session | 3 | | |
-| Tab Management Edge Cases | 2 | | |
-| **Total** | **31** | | |
+| Category                  | Total  | Pass | Fail |
+| ------------------------- | ------ | ---- | ---- |
+| Smoke                     | 4      |      |      |
+| Functional                | 14     |      |      |
+| Error Recovery            | 4      |      |      |
+| Mode Switching            | 4      |      |      |
+| Cross-Session             | 3      |      |      |
+| Tab Management Edge Cases | 2      |      |      |
+| **Total**                 | **31** |      |      |
 
 ---
 
@@ -446,5 +446,5 @@ Full tool-by-tool validation.
 ## Issue Tracking
 
 | Issue # | Test ID | Description | Severity | Status |
-|---------|---------|-------------|----------|--------|
-| | | | | |
+| ------- | ------- | ----------- | -------- | ------ |
+|         |         |             |          |        |
