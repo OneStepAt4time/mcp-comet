@@ -21,7 +21,7 @@ describe('Logger', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const logger = createLogger('debug')
     logger.debug('visible')
-    expect(spy).toHaveBeenCalledWith('[asteria:debug]', 'visible')
+    expect(spy).toHaveBeenCalledWith('[mcp-comet:debug]', 'visible')
     spy.mockRestore()
   })
 
@@ -30,7 +30,7 @@ describe('Logger', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const logger = createLogger('info')
     logger.info('info msg')
-    expect(spy).toHaveBeenCalledWith('[asteria:info]', 'info msg')
+    expect(spy).toHaveBeenCalledWith('[mcp-comet:info]', 'info msg')
     spy.mockRestore()
   })
 
@@ -39,7 +39,7 @@ describe('Logger', () => {
     const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const logger = createLogger('warn')
     logger.warn('warning')
-    expect(spy).toHaveBeenCalledWith('[asteria:warn]', 'warning')
+    expect(spy).toHaveBeenCalledWith('[mcp-comet:warn]', 'warning')
     spy.mockRestore()
   })
 
@@ -48,7 +48,7 @@ describe('Logger', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const logger = createLogger('error')
     logger.error('err')
-    expect(spy).toHaveBeenCalledWith('[asteria:error]', 'err')
+    expect(spy).toHaveBeenCalledWith('[mcp-comet:error]', 'err')
     spy.mockRestore()
   })
 })

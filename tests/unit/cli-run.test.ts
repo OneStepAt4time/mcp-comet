@@ -163,7 +163,7 @@ describe('CLI runCall', () => {
 
     expect(exitCode).toBe(1)
     const output = consoleOutput.join('\n')
-    expect(output).toContain('Usage: asteria call')
+    expect(output).toContain('Usage: mcp-comet call')
   })
 
   it('unknown tool shows error and exits', async () => {

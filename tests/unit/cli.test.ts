@@ -18,25 +18,25 @@ function runCli(args: string): { stdout: string; stderr: string; status: number 
 describe('CLI', () => {
   it('--help prints usage', () => {
     const { stderr } = runCli('--help')
-    expect(stderr).toContain('asteria')
+    expect(stderr).toContain('mcp-comet')
     expect(stderr).toContain('USAGE')
     expect(stderr).toContain('COMMANDS')
   })
 
   it('-h prints usage (short form)', () => {
     const { stderr } = runCli('-h')
-    expect(stderr).toContain('asteria')
+    expect(stderr).toContain('mcp-comet')
     expect(stderr).toContain('USAGE')
   })
 
   it('--version prints version', () => {
     const { stderr } = runCli('--version')
-    expect(stderr).toMatch(/asteria v\d+\.\d+\.\d+/)
+    expect(stderr).toMatch(/mcp-comet v\d+\.\d+\.\d+/)
   })
 
   it('-v prints version (short form)', () => {
     const { stderr } = runCli('-v')
-    expect(stderr).toMatch(/asteria v\d+\.\d+\.\d+/)
+    expect(stderr).toMatch(/mcp-comet v\d+\.\d+\.\d+/)
   })
 
   it('unknown command exits with error', () => {
@@ -48,7 +48,7 @@ describe('CLI', () => {
   it('call without tool name shows usage', () => {
     const { stderr, status } = runCli('call')
     expect(status).toBe(1)
-    expect(stderr).toContain('Usage: asteria call')
+    expect(stderr).toContain('Usage: mcp-comet call')
   })
 
   it('call with unknown tool shows error', () => {

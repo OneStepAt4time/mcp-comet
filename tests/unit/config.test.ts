@@ -2,7 +2,7 @@ import { existsSync, rmSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const configPath = resolve(process.cwd(), 'asteria.config.json')
+const configPath = resolve(process.cwd(), 'mcp-comet.config.json')
 
 describe('loadConfig', () => {
   beforeEach(() => {
@@ -35,10 +35,10 @@ describe('loadConfig', () => {
   })
 
   it('env vars override defaults', async () => {
-    vi.stubEnv('ASTERIA_PORT', '9223')
-    vi.stubEnv('ASTERIA_TIMEOUT', '60000')
+    vi.stubEnv('COMET_PORT', '9223')
+    vi.stubEnv('COMET_TIMEOUT', '60000')
     vi.stubEnv('COMET_PATH', '/custom/comet')
-    vi.stubEnv('ASTERIA_LOG_LEVEL', 'debug')
+    vi.stubEnv('COMET_LOG_LEVEL', 'debug')
     const { loadConfig } = await import('../../src/config.js')
     const config = loadConfig()
     expect(config.port).toBe(9223)
@@ -48,7 +48,7 @@ describe('loadConfig', () => {
   })
 
   it('overrides take precedence over env vars', async () => {
-    vi.stubEnv('ASTERIA_PORT', '9223')
+    vi.stubEnv('COMET_PORT', '9223')
     const { loadConfig } = await import('../../src/config.js')
     const config = loadConfig({ port: 9224, logLevel: 'warn' })
     expect(config.port).toBe(9224)
@@ -65,7 +65,7 @@ describe('loadConfig', () => {
   })
 
   it('falls back to default for invalid env var number values', async () => {
-    vi.stubEnv('ASTERIA_PORT', 'not-a-number')
+    vi.stubEnv('COMET_PORT', 'not-a-number')
     const { loadConfig } = await import('../../src/config.js')
     const config = loadConfig()
     expect(config.port).toBe(9222) // Falls back to default
@@ -78,7 +78,7 @@ describe('loadConfig', () => {
   })
 
   it('overrides parameter takes precedence over env vars', async () => {
-    vi.stubEnv('ASTERIA_PORT', '8080')
+    vi.stubEnv('COMET_PORT', '8080')
     const { loadConfig } = await import('../../src/config.js')
     const config = loadConfig({ port: 9999 })
     expect(config.port).toBe(9999) // Override wins over env var
@@ -142,64 +142,64 @@ describe('loadConfig', () => {
     })
 
     it('falls back to default for invalid logLevel env var', async () => {
-      vi.stubEnv('ASTERIA_LOG_LEVEL', 'verbose')
+      vi.stubEnv('COMET_LOG_LEVEL', 'verbose')
       const { loadConfig } = await import('../../src/config.js')
       const cfg = loadConfig()
       expect(cfg.logLevel).toBe('info')
     })
 
     it('falls back to default for invalid screenshotFormat env var', async () => {
-      vi.stubEnv('ASTERIA_SCREENSHOT_FORMAT', 'gif')
+      vi.stubEnv('COMET_SCREENSHOT_FORMAT', 'gif')
       const { loadConfig } = await import('../../src/config.js')
       const cfg = loadConfig()
       expect(cfg.screenshotFormat).toBe('png')
     })
   })
 
-  describe('env var branches — each ASTERIA_* env var', () => {
+  describe('env var branches — each COMET_* env var', () => {
     const envVars = [
-      { name: 'ASTERIA_PORT', key: 'port' as const, value: '9999', expected: 9999 },
-      { name: 'ASTERIA_TIMEOUT', key: 'timeout' as const, value: '10000', expected: 10000 },
+      { name: 'COMET_PORT', key: 'port' as const, value: '9999', expected: 9999 },
+      { name: 'COMET_TIMEOUT', key: 'timeout' as const, value: '10000', expected: 10000 },
       {
-        name: 'ASTERIA_RESPONSE_TIMEOUT',
+        name: 'COMET_RESPONSE_TIMEOUT',
         key: 'responseTimeout' as const,
         value: '60000',
         expected: 60000,
       },
       {
-        name: 'ASTERIA_SCREENSHOT_FORMAT',
+        name: 'COMET_SCREENSHOT_FORMAT',
         key: 'screenshotFormat' as const,
         value: 'jpeg',
         expected: 'jpeg',
       },
       {
-        name: 'ASTERIA_SCREENSHOT_QUALITY',
+        name: 'COMET_SCREENSHOT_QUALITY',
         key: 'screenshotQuality' as const,
         value: '90',
         expected: 90,
       },
-      { name: 'ASTERIA_WINDOW_WIDTH', key: 'windowWidth' as const, value: '1920', expected: 1920 },
+      { name: 'COMET_WINDOW_WIDTH', key: 'windowWidth' as const, value: '1920', expected: 1920 },
       {
-        name: 'ASTERIA_WINDOW_HEIGHT',
+        name: 'COMET_WINDOW_HEIGHT',
         key: 'windowHeight' as const,
         value: '1080',
         expected: 1080,
       },
       {
-        name: 'ASTERIA_MAX_RECONNECT',
+        name: 'COMET_MAX_RECONNECT',
         key: 'maxReconnectAttempts' as const,
         value: '10',
         expected: 10,
       },
       {
-        name: 'ASTERIA_RECONNECT_DELAY',
+        name: 'COMET_RECONNECT_DELAY',
         key: 'maxReconnectDelay' as const,
         value: '10000',
         expected: 10000,
       },
-      { name: 'ASTERIA_POLL_INTERVAL', key: 'pollInterval' as const, value: '500', expected: 500 },
+      { name: 'COMET_POLL_INTERVAL', key: 'pollInterval' as const, value: '500', expected: 500 },
       {
-        name: 'ASTERIA_USER_DATA_DIR',
+        name: 'COMET_USER_DATA_DIR',
         key: 'userDataDir' as const,
         value: '/tmp/comet-profile',
         expected: '/tmp/comet-profile',
@@ -216,7 +216,7 @@ describe('loadConfig', () => {
     }
 
     it('falls back to default for invalid number env var', async () => {
-      vi.stubEnv('ASTERIA_PORT', 'not-a-number')
+      vi.stubEnv('COMET_PORT', 'not-a-number')
       const { loadConfig } = await import('../../src/config.js')
       const config = loadConfig()
       expect(config.port).toBe(9222)
