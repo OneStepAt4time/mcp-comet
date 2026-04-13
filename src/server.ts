@@ -292,20 +292,15 @@ function formatTabs(categorized: CategorizedTabs): string {
   return lines.length > 0 ? lines.join('\n') : 'No tabs found.'
 }
 
-/** Heuristic: does the status contain a substantial response? */
-function hasSubstantialResponse(status: RawAgentStatus): boolean {
-  return !!status.response && status.response.length > 50
-}
-
 // ---------------------------------------------------------------------------
 // Server setup & start
 // ---------------------------------------------------------------------------
 
 export async function startServer(): Promise<void> {
-  logger.info('Starting Asteria MCP server...')
+  logger.info('Starting MCP Comet server...')
 
   const server = new McpServer({
-    name: 'asteria',
+    name: 'mcp-comet',
     version: '0.1.0',
   })
 
@@ -357,12 +352,10 @@ export async function startServer(): Promise<void> {
     'comet_ask',
     'Send a prompt to Perplexity Comet and return immediately. Supports newChat to start fresh. Use comet_poll or comet_wait to get the response.',
     askShape,
-    async ({ prompt, newChat, timeout }) => {
+    async ({ prompt, newChat }) => {
       try {
         await ensureConnected()
         const normalizedPrompt = client.normalizePrompt(prompt)
-        const effectiveTimeout = timeout ?? config.responseTimeout
-
         // Handle newChat or tab management
         if (newChat) {
           await client.closeExtraTabs()
@@ -380,7 +373,7 @@ export async function startServer(): Promise<void> {
 
         // PRE-SEND STATE CAPTURE
         const preSendRaw = await client.safeEvaluate(buildPreSendStateScript())
-        const preSendState = JSON.parse(String(extractValue(preSendRaw))) as {
+        const _preSendState = JSON.parse(String(extractValue(preSendRaw))) as {
           proseCount: number
           lastProseText: string
         }
@@ -398,7 +391,9 @@ export async function startServer(): Promise<void> {
         const submitResult = await client.safeEvaluate(buildSubmitPromptScript())
         logger.debug('Submit result:', extractValue(submitResult))
 
-        return textResult('Prompt submitted successfully. Use comet_poll to track status or comet_wait to block until completion.')
+        return textResult(
+          'Prompt submitted successfully. Use comet_poll to track status or comet_wait to block until completion.',
+        )
       } catch (err) {
         return toMcpError(err)
       }
@@ -790,7 +785,7 @@ export async function startServer(): Promise<void> {
   // Connect via stdio
   const transport = new StdioServerTransport()
   await server.connect(transport)
-  logger.info('Asteria MCP server connected via stdio.')
+  logger.info('MCP Comet server connected via stdio.')
 
   // Signal handlers
   const shutdown = async () => {

@@ -1,246 +1,265 @@
-<p align="center">
-  <img src="docs/assets/banner.svg" alt="Asteria Banner" width="800">
-</p>
-
-<p align="center">
-  <a href="https://github.com/OneStepAt4time/asteria/releases"><img src="https://img.shields.io/github/v/release/OneStepAt4time/asteria?style=flat-square&color=6366f1&label=version" alt="version"></a>
-  <a href="https://github.com/OneStepAt4time/asteria/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/OneStepAt4time/asteria/ci.yml?branch=master&style=flat-square&label=CI" alt="CI"></a>
-  <a href="https://github.com/OneStepAt4time/asteria/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-6366f1?style=flat-square" alt="license"></a>
-  <img src="https://img.shields.io/badge/coverage-314%20tests-brightgreen?style=flat-square" alt="coverage">
-  <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square" alt="node">
-  <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-6366f1?style=flat-square" alt="MCP"></a>
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat-square" alt="platform">
-</p>
-
-<p align="center">
-  <strong>Give any AI agent direct control over <a href="https://comet.perplexity.ai/">Perplexity Comet</a> via the Model Context Protocol.</strong>
-</p>
-
----
-
-## How It Works
-
-Asteria is an [MCP server](https://modelcontextprotocol.io) that bridges AI assistants with [Perplexity Comet](https://comet.perplexity.ai/) — the agentic browser that researches, browses, and answers questions autonomously. Unlike simple search APIs, Comet navigates pages, follows links, and reasons over live web content. Asteria exposes all of that through 13 MCP tools via Chrome DevTools Protocol (CDP), with no Puppeteer or Playwright dependencies.
-
-```mermaid
-graph LR
-  A["AI Agent\n(Claude / GPT / Gemini)"] -->|"MCP stdio"| B["Asteria\nMCP Server"]
-  B -->|"CDP WebSocket"| C["Perplexity\nComet Browser"]
-  C -->|"HTTP requests"| D["Web Pages\n& Sources"]
-  D -->|"Response + Sources"| C
-  C -->|"Research results"| B
-  B -->|"Formatted response"| A
-```
-
-The agent sends a prompt through MCP. Asteria connects to Comet over CDP, submits the query, monitors Comet's agentic research cycle, and returns the full response with cited sources.
+<!-- markdownlint-disable MD033 MD041 -->
+<div align="center">
+  <h1>MCP Comet</h1>
+  <p>
+    <img src="docs/assets/banner.svg" alt="MCP Comet banner" width="100%" />
+  </p>
+  <h2>Turn Perplexity Comet into a production-grade MCP research engine</h2>
+  <p>
+    <a href="https://www.npmjs.com/package/@onestepat4time/mcp-comet"><img src="https://img.shields.io/npm/v/@onestepat4time/mcp-comet?style=flat-square&amp;color=0F766E" alt="npm" /></a>
+    <a href="https://github.com/OneStepAt4time/mcp-comet/actions"><img src="https://img.shields.io/github/actions/workflow/status/OneStepAt4time/mcp-comet/ci.yml?style=flat-square" alt="build" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/github/license/OneStepAt4time/mcp-comet?style=flat-square" alt="license" /></a>
+  </p>
+  <p><strong>7 modes</strong> · <strong>13 tools</strong> · zero-friction setup · full browser control</p>
+  <p>
+    <a href="#quick-start">Quick Start</a> ·
+    <a href="docs/tools.md">Tool Reference</a> ·
+    <a href="docs/architecture.md">Architecture</a>
+  </p>
+</div>
+<!-- markdownlint-enable MD033 MD041 -->
 
 ---
 
-## Features
+## Why MCP Comet
 
-| | Feature | Description |
-|---|---------|-------------|
-| 🔌 | **13 MCP tools** | Connect, ask, poll, wait, stop, screenshot, mode switch, tab management, source extraction, conversation history, page content |
-| ⚡ | **Non-blocking polling** | Submit a prompt and poll for completion — the agent keeps working while Comet researches |
-| ⏳ | **Blocking wait** | `comet_wait` blocks until Comet finishes, ideal when `comet_ask` times out mid-response |
-| 🔍 | **Auto-detect Comet** | Finds Comet on Windows, macOS, and Linux; launches it with the correct debug port |
-| 🔄 | **Auto-reconnect** | Exponential backoff with health checks — survives Comet restarts without dropping the session |
-| 🧠 | **Version-aware selectors** | Auto-detects Comet's Chrome version and routes to the correct CSS selectors |
-| 📑 | **Tab categorization** | Tracks main, sidecar, agent-browsing, and overlay tabs separately |
-| 🚫 | **Zero browser dependencies** | No Puppeteer or Playwright — uses CDP directly via `chrome-remote-interface` |
-| 🛠️ | **CLI included** | `asteria detect` to check installation, `asteria snapshot` to capture DOM structure |
+MCP Comet gives your agent more than a chat box. It gives your agent a complete research cockpit.
 
----
+- Run high-quality web research in Comet directly from MCP clients.
+- Switch between 7 purpose-built research modes instantly.
+- Pull sources, screenshots, conversations, tabs, and full page content.
+- Stay resilient with auto-connect, reconnect logic, and selector fallback strategies.
 
-## Requirements
-
-- **Node.js** >= 18
-- **[Perplexity Comet](https://comet.perplexity.ai/)** installed and running
-- **Windows**, **macOS**, or **Linux** (Linux requires setting `COMET_PATH`)
-
----
-
-## Installation
-
-```bash
-npm install -g @onestepat4time/asteria
-```
+If your workflow is "ask, verify, cite, and iterate", this is the server built for it.
 
 ---
 
 ## Quick Start
 
-### 1. Add to your MCP client config
+### 1. Prerequisites
 
-**Claude Code** (`~/.claude/claude_desktop_config.json`):
+- Node.js >= 18
+- [Perplexity Comet](https://comet.perplexity.ai/) installed
+
+Optional pre-flight check:
+
+```bash
+mcp-comet detect
+```
+
+### 2. Add MCP Comet to MCP
+
+Use one of these configs.
+
+Claude Desktop (`~/.claude/claude_desktop_config.json`):
+
 ```json
 {
   "mcpServers": {
-    "asteria": {
+    "mcp-comet": {
       "type": "stdio",
-      "command": "asteria",
+      "command": "mcp-comet",
       "args": ["start"]
     }
   }
 }
 ```
 
-**Cursor** (`~/.cursor/mcp.json`) — same format.
+Cursor (`~/.cursor/mcp.json`):
 
-### 2. Make sure Comet is running
-
-Open Perplexity Comet on your machine. Asteria auto-detects the running instance.
-
-### 3. Use in your agent
-
+```json
+{
+  "mcpServers": {
+    "mcp-comet": {
+      "type": "stdio",
+      "command": "mcp-comet",
+      "args": ["start"]
+    }
+  }
+}
 ```
-> Ask Perplexity what the latest AI research papers are this week
-```
 
-Asteria connects to Comet, sends the query, waits for the full research response, and returns it with cited sources to your assistant.
+### 3. Give your agent a mission
+
+Prompt your agent with something like:
+
+> Use Comet in deep-research mode to analyze the global battery supply chain in 2026. Return a structured summary with all cited sources.
+
+Your agent can chain `comet_mode`, `comet_ask`, `comet_wait`, and `comet_get_sources` automatically.
 
 ---
 
-## Tools
+## Research Modes
 
-| Tool | Description | Docs |
-|------|-------------|------|
-| `comet_connect` | Connect to or launch Perplexity Comet | [Reference](docs/tools.md) |
-| `comet_ask` | Send a prompt and start an agentic search | [Reference](docs/tools.md) |
-| `comet_poll` | Check current agent status, steps, and response content | [Reference](docs/tools.md) |
-| `comet_wait` | Block until the agent finishes responding; use after `comet_ask` times out | [Reference](docs/tools.md) |
-| `comet_stop` | Stop the currently running agent | [Reference](docs/tools.md) |
-| `comet_screenshot` | Capture a screenshot of the active tab | [Reference](docs/tools.md) |
-| `comet_mode` | Get or switch the search mode (standard, deep-research, model-council, etc.) | [Reference](docs/tools.md) |
-| `comet_list_tabs` | List all open tabs by category (main, sidecar, agent-browsing, overlay) | [Reference](docs/tools.md) |
-| `comet_switch_tab` | Switch focus to a specific tab by ID or title | [Reference](docs/tools.md) |
-| `comet_get_sources` | Extract cited sources from the current response | [Reference](docs/tools.md) |
-| `comet_list_conversations` | List recent conversation links visible on the page | [Reference](docs/tools.md) |
-| `comet_open_conversation` | Navigate to a specific conversation URL | [Reference](docs/tools.md) |
-| `comet_get_page_content` | Extract full text from the active page | [Reference](docs/tools.md) |
+Choose the mode that matches the job.
 
----
+- `standard`: fast factual lookups. Example: "What is the latest CPI reading for Canada?"
+- `deep-research`: multi-source investigations. Example: "Map the 2026 AI chip supply chain and major risks."
+- `model-council`: multi-perspective reasoning. Example: "Debate arguments for and against UBI with tradeoffs."
+- `create`: drafting and ideation. Example: "Draft a technical explainer on WebAssembly in edge runtimes."
+- `learn`: guided teaching. Example: "Teach me B-trees step by step with examples."
+- `review`: critical analysis. Example: "Review this API design for security and reliability gaps."
+- `computer`: browser-interactive tasks. Example: "Open arXiv and find the newest papers on retrieval augmentation."
 
-## CLI
+CLI example:
 
 ```bash
-asteria start      # Start MCP stdio server
-asteria detect     # Detect Comet installation path and debug port
-asteria --version  # Print version
-asteria --help     # Print help
+mcp-comet call comet_mode '{"mode":"deep-research"}'
+mcp-comet call comet_ask '{"prompt":"Analyze current fusion startups by funding and milestones"}'
+mcp-comet call comet_wait
+mcp-comet call comet_get_sources
 ```
 
 ---
 
-## Configuration
+## Toolset at a Glance
 
-All settings can be overridden via environment variables:
+### Session
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ASTERIA_PORT` | `9222` | CDP debug port |
-| `COMET_PATH` | auto-detect | Path to Comet executable |
-| `ASTERIA_LOG_LEVEL` | `info` | Log level: `debug` / `info` / `warn` / `error` |
-| `ASTERIA_TIMEOUT` | `30000` | Comet launch timeout (ms) |
-| `ASTERIA_RESPONSE_TIMEOUT` | `180000` | Max wait for response (ms) |
-| `ASTERIA_POLL_INTERVAL` | `1000` | Status poll interval (ms) |
-| `ASTERIA_SCREENSHOT_FORMAT` | `png` | Screenshot format: `png` / `jpeg` |
-| `ASTERIA_MAX_RECONNECT` | `5` | Max reconnection attempts |
-| `ASTERIA_RECONNECT_DELAY` | `5000` | Max reconnection backoff delay (ms) |
+- `comet_connect`: connects to Comet or launches it.
+- `comet_poll`: returns live status and partial progress.
+- `comet_wait`: waits for completion and returns the full response.
+- `comet_stop`: stops a running task.
 
-See [Configuration](docs/configuration.md) for the full reference.
+### Query
+
+| Tool         | What It Does                          |
+| ------------ | ------------------------------------- |
+| `comet_ask`  | Sends a prompt to Comet               |
+| `comet_mode` | Gets or switches active research mode |
+
+### Content
+
+| Tool                     | What It Does                                       |
+| ------------------------ | -------------------------------------------------- |
+| `comet_screenshot`       | Captures PNG/JPEG screenshots                      |
+| `comet_get_sources`      | Extracts references, including collapsed citations |
+| `comet_get_page_content` | Extracts page title and readable text              |
+
+### Navigation
+
+| Tool                       | What It Does                       |
+| -------------------------- | ---------------------------------- |
+| `comet_list_tabs`          | Lists tabs by category             |
+| `comet_switch_tab`         | Jumps to a tab by id or title      |
+| `comet_list_conversations` | Lists sidebar conversations        |
+| `comet_open_conversation`  | Opens a specific conversation      |
+
+Full reference: [docs/tools.md](docs/tools.md)
 
 ---
 
-## Guides
+## Agent Workflows
 
-| Guide | Description |
-|-------|-------------|
-| [Tool Reference](docs/tools.md) | All 13 tools with parameters, return values, and examples |
-| [Integration Guide](docs/integration.md) | Set up with Claude Code, Cursor, or custom MCP clients |
-| [Configuration](docs/configuration.md) | Environment variables and config files |
-| [Troubleshooting](docs/troubleshooting.md) | Common issues and error codes |
-| [Architecture](docs/architecture.md) | How Asteria works internally |
+| Goal | Flow |
+| ---- | ---- |
+| Deep research with citations | `comet_connect` -> `comet_mode(deep-research)` -> `comet_ask` -> `comet_wait` -> `comet_get_sources` |
+| Multi-perspective debate | `comet_mode(model-council)` -> `comet_ask` -> `comet_wait` |
+| Visual evidence capture | `comet_screenshot` -> pass image into your vision-capable model |
+| Resume old investigations | `comet_list_conversations` -> `comet_open_conversation` -> `comet_get_page_content` |
+
+---
+
+## CLI Power Ops
+
+Install globally:
+
+```bash
+npm install -g @onestepat4time/mcp-comet
+```
+
+Use directly:
+
+```bash
+# connectivity and diagnostics
+mcp-comet detect
+mcp-comet call comet_connect
+
+# ask + wait pattern
+mcp-comet call comet_ask '{"prompt":"What are the top AI safety papers this week?"}'
+mcp-comet call comet_wait
+
+# source extraction
+mcp-comet call comet_get_sources
+```
+
+No install option:
+
+```bash
+npx -y @onestepat4time/mcp-comet
+```
 
 ---
 
 ## Architecture
 
-```mermaid
-graph TD
-  subgraph MCP["MCP Protocol Layer"]
-    T1[comet_connect] & T2[comet_ask] & T3[comet_poll]
-    T4[comet_wait] & T5[comet_stop] & T6[comet_screenshot]
-    T7[comet_mode] & T8[comet_list_tabs] & T9[comet_switch_tab]
-    T10[comet_get_sources] & T11[comet_list_conversations]
-    T12[comet_open_conversation] & T13[comet_get_page_content]
-  end
-
-  subgraph UI["UI Automation"]
-    S[Selector Strategies]
-    I[Prompt Input]
-    ST[Status Detection]
-    EX[Content Extraction]
-  end
-
-  subgraph CDP["CDP Transport"]
-    BR[Browser Launcher]
-    CO[WebSocket Connection]
-    TA[Tab Management]
-    RC[Auto-Reconnect]
-  end
-
-  T2 --> I
-  T3 --> ST
-  T4 --> ST
-  T10 & T13 --> EX
-  T6 & T8 --> TA
-  I & ST & EX --> S
-  CO --> BR
-  TA & RC --> CO
-  CO --> Comet[Perplexity Comet]
+```text
+MCP Tools
+   -> UI Automation
+      -> CDP Transport
+         -> Perplexity Comet
 ```
+
+- Ordered selector strategies tolerate Comet UI changes.
+- Automatic version detection selects the correct selector set.
+- Auto-reconnect includes health checks with retry backoff.
+- Source extraction uses a second pass to expand collapsed citations.
+
+Deep dive: [docs/architecture.md](docs/architecture.md)
 
 ---
 
-## Roadmap
+## Configuration Essentials
 
-- [ ] **Streaming responses** — stream Comet responses token-by-token instead of polling
-- [ ] **MCP Resources** — expose Perplexity pages as MCP resources for direct reading
-- [ ] **Multi-Comet sessions** — control multiple Comet instances simultaneously
-- [ ] **HTTP/SSE transport** — support N8N and REST clients in addition to stdio
-- [ ] **Browser extension** — package as a browser extension for tighter integration
+Most teams only tune these three:
+
+| Variable                 | Default       | Change It When                           |
+| ------------------------ | ------------- | ---------------------------------------- |
+| `COMET_RESPONSE_TIMEOUT` | `180000`      | Queries are long and timing out          |
+| `COMET_PATH`             | auto-detect   | Comet is in a non-standard install path  |
+| `COMET_LOG_LEVEL`        | `info`        | You need debug logs                      |
+
+Config file (`mcp-comet.config.json`) example:
+
+```json
+{
+  "responseTimeout": 300000,
+  "logLevel": "debug"
+}
+```
+
+More options and full env var reference: [docs/configuration.md](docs/configuration.md)
+
+---
+
+## Compatibility
+
+| Chrome Version | Selector Set | Status    |
+| -------------- | ------------ | --------- |
+| 145            | v145         | Supported |
+
+Unknown versions fall back to the latest known selector set.
+
+Details and upgrade flow: [docs/comet-compatibility.md](docs/comet-compatibility.md)
 
 ---
 
 ## Contributing
 
-Contributions are welcome. Open an issue before submitting large PRs.
+PRs are welcome. Before opening one:
 
 ```bash
-git clone https://github.com/OneStepAt4time/asteria.git
-cd asteria
-npm install
-npm run build
-npm test
+npm run lint && npm test
 ```
 
-See [Contributing](docs/contributing.md) for code style, adding Comet versions, and commit conventions.
+Guide: [docs/contributing.md](docs/contributing.md)
 
----
+## Feedback
 
-## Support the Project
-
-If Asteria saves you time, consider sponsoring:
-
-<p align="center">
-  <a href="https://github.com/sponsors/OneStepAt4time"><img src="https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=for-the-badge&logo=github" alt="GitHub Sponsors"></a>
-  &nbsp;
-  <a href="https://ko-fi.com/onestepat4time"><img src="https://img.shields.io/badge/Support-Ko--fi-ff5e5b?style=for-the-badge&logo=ko-fi" alt="Ko-fi"></a>
-</p>
-
----
+- Issues: <https://github.com/OneStepAt4time/mcp-comet/issues>
 
 ## License
 
-MIT &copy; 2026 [OneStepAt4time](https://github.com/OneStepAt4time)
+[MIT](LICENSE)
+
+Built by [OneStepAt4time](https://github.com/OneStepAt4time)

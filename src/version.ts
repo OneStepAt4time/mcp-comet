@@ -13,7 +13,7 @@ export async function detectCometVersion(port: number): Promise<CometVersion> {
     })
     if (!resp.ok) {
       process.stderr.write(
-        '[asteria:warn] Comet version detection: non-OK response, using default selectors\n',
+        '[mcp-comet:warn] Comet version detection: non-OK response, using default selectors\n',
       )
       const { getSelectorsForVersion } = await import('./selectors/index.js')
       return { chromeMajor: 0, browser: 'Unknown', selectors: getSelectorsForVersion(0) }
@@ -25,7 +25,9 @@ export async function detectCometVersion(port: number): Promise<CometVersion> {
     const { getSelectorsForVersion } = await import('./selectors/index.js')
     return { chromeMajor, browser, selectors: getSelectorsForVersion(chromeMajor) }
   } catch {
-    process.stderr.write('[asteria:warn] Comet version detection failed, using default selectors\n')
+    process.stderr.write(
+      '[mcp-comet:warn] Comet version detection failed, using default selectors\n',
+    )
     const { getSelectorsForVersion } = await import('./selectors/index.js')
     return { chromeMajor: 0, browser: 'Unknown', selectors: getSelectorsForVersion(0) }
   }

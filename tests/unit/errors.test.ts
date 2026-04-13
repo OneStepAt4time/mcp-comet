@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   AgentError,
-  AsteriaError,
   CDPConnectionError,
+  CometError,
   CometLaunchError,
   CometNotFoundError,
   ConfigurationError,
@@ -13,9 +13,9 @@ import {
   toMcpError,
 } from '../../src/errors.js'
 
-describe('AsteriaError', () => {
+describe('CometError', () => {
   it('has code, message, context, and cause', () => {
-    const err = new AsteriaError('test', 'TEST_CODE', { key: 'val' })
+    const err = new CometError('test', 'TEST_CODE', { key: 'val' })
     expect(err.message).toBe('test')
     expect(err.code).toBe('TEST_CODE')
     expect(err.context).toEqual({ key: 'val' })
@@ -27,7 +27,7 @@ describe('Error subclasses', () => {
   it('CDPConnectionError', () => {
     const e = new CDPConnectionError('x')
     expect(e.code).toBe('CDP_CONNECTION_FAILED')
-    expect(e).toBeInstanceOf(AsteriaError)
+    expect(e).toBeInstanceOf(CometError)
   })
   it('CometNotFoundError', () => {
     const e = new CometNotFoundError('x')
@@ -65,7 +65,7 @@ describe('Error subclasses', () => {
 })
 
 describe('toMcpError', () => {
-  it('converts AsteriaError to MCP format', () => {
+  it('converts CometError to MCP format', () => {
     const r = toMcpError(new CDPConnectionError('conn fail'))
     expect(r.isError).toBe(true)
     expect(r.content[0].text).toContain('CDP_CONNECTION_FAILED')

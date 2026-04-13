@@ -23,12 +23,12 @@ function env(name: string): string | undefined {
 }
 
 /**
- * Load config from asteria.config.json in cwd if it exists.
+ * Load config from mcp-comet.config.json in cwd if it exists.
  * Returns empty object on file-not-found or parse error.
  */
 function loadConfigFile(): Partial<CometConfig> {
   try {
-    const configPath = resolve(process.cwd(), 'asteria.config.json')
+    const configPath = resolve(process.cwd(), 'mcp-comet.config.json')
     const raw = readFileSync(configPath, 'utf-8')
     const parsed = JSON.parse(raw) as Record<string, unknown>
     // Only pick keys that match CometConfig
@@ -46,7 +46,7 @@ function loadConfigFile(): Partial<CometConfig> {
     }
     // Invalid JSON or other read error — warn and continue with defaults
     process.stderr.write(
-      `[asteria:warn] Failed to load asteria.config.json: ${err instanceof Error ? err.message : err}\n`,
+      `[mcp-comet:warn] Failed to load mcp-comet.config.json: ${err instanceof Error ? err.message : err}\n`,
     )
     return {}
   }
@@ -96,51 +96,51 @@ export function loadConfig(overrides?: Partial<CometConfig>): CometConfig {
 
   // Only include env vars that are actually set (non-undefined)
   const envConfig: Partial<CometConfig> = {}
-  const portEnv = env('ASTERIA_PORT')
+  const portEnv = env('COMET_PORT')
   if (portEnv !== undefined) envConfig.port = Number(portEnv) || DEFAULTS.port
 
-  const timeoutEnv = env('ASTERIA_TIMEOUT')
+  const timeoutEnv = env('COMET_TIMEOUT')
   if (timeoutEnv !== undefined) envConfig.timeout = Number(timeoutEnv) || DEFAULTS.timeout
 
   const cometPathEnv = env('COMET_PATH')
   if (cometPathEnv !== undefined) envConfig.cometPath = cometPathEnv
 
-  const responseTimeoutEnv = env('ASTERIA_RESPONSE_TIMEOUT')
+  const responseTimeoutEnv = env('COMET_RESPONSE_TIMEOUT')
   if (responseTimeoutEnv !== undefined)
     envConfig.responseTimeout = Number(responseTimeoutEnv) || DEFAULTS.responseTimeout
 
-  const logLevelEnv = env('ASTERIA_LOG_LEVEL')
+  const logLevelEnv = env('COMET_LOG_LEVEL')
   if (logLevelEnv !== undefined) envConfig.logLevel = logLevelEnv as CometConfig['logLevel']
 
-  const screenshotFormatEnv = env('ASTERIA_SCREENSHOT_FORMAT')
+  const screenshotFormatEnv = env('COMET_SCREENSHOT_FORMAT')
   if (screenshotFormatEnv !== undefined)
     envConfig.screenshotFormat = screenshotFormatEnv as CometConfig['screenshotFormat']
 
-  const screenshotQualityEnv = env('ASTERIA_SCREENSHOT_QUALITY')
+  const screenshotQualityEnv = env('COMET_SCREENSHOT_QUALITY')
   if (screenshotQualityEnv !== undefined)
     envConfig.screenshotQuality = Number(screenshotQualityEnv) || DEFAULTS.screenshotQuality
 
-  const windowWidthEnv = env('ASTERIA_WINDOW_WIDTH')
+  const windowWidthEnv = env('COMET_WINDOW_WIDTH')
   if (windowWidthEnv !== undefined)
     envConfig.windowWidth = Number(windowWidthEnv) || DEFAULTS.windowWidth
 
-  const windowHeightEnv = env('ASTERIA_WINDOW_HEIGHT')
+  const windowHeightEnv = env('COMET_WINDOW_HEIGHT')
   if (windowHeightEnv !== undefined)
     envConfig.windowHeight = Number(windowHeightEnv) || DEFAULTS.windowHeight
 
-  const maxReconnectEnv = env('ASTERIA_MAX_RECONNECT')
+  const maxReconnectEnv = env('COMET_MAX_RECONNECT')
   if (maxReconnectEnv !== undefined)
     envConfig.maxReconnectAttempts = Number(maxReconnectEnv) || DEFAULTS.maxReconnectAttempts
 
-  const reconnectDelayEnv = env('ASTERIA_RECONNECT_DELAY')
+  const reconnectDelayEnv = env('COMET_RECONNECT_DELAY')
   if (reconnectDelayEnv !== undefined)
     envConfig.maxReconnectDelay = Number(reconnectDelayEnv) || DEFAULTS.maxReconnectDelay
 
-  const pollIntervalEnv = env('ASTERIA_POLL_INTERVAL')
+  const pollIntervalEnv = env('COMET_POLL_INTERVAL')
   if (pollIntervalEnv !== undefined)
     envConfig.pollInterval = Number(pollIntervalEnv) || DEFAULTS.pollInterval
 
-  const userDataDirEnv = env('ASTERIA_USER_DATA_DIR')
+  const userDataDirEnv = env('COMET_USER_DATA_DIR')
   if (userDataDirEnv !== undefined) envConfig.userDataDir = userDataDirEnv
 
   return validatedConfig({

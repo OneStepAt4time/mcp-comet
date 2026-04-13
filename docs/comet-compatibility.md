@@ -1,6 +1,6 @@
 # Comet Compatibility
 
-Asteria interacts with Comet through the Chrome DevTools Protocol, relying on CSS selectors to locate DOM elements such as the prompt input, submit button, and response container. When Comet updates its internal Chrome version, the DOM structure may change, breaking those selectors. Asteria handles this through a versioned selector system.
+MCP Comet interacts with Comet through the Chrome DevTools Protocol, relying on CSS selectors to locate DOM elements such as the prompt input, submit button, and response container. When Comet updates its internal Chrome version, the DOM structure may change, breaking those selectors. MCP Comet handles this through a versioned selector system.
 
 ## Supported Versions
 
@@ -12,7 +12,7 @@ Unknown or newer versions fall back to the latest known selector set (currently 
 
 ## How Version Detection Works
 
-When a client calls `comet_connect`, Asteria performs automatic version detection:
+When a client calls `comet_connect`, MCP Comet performs automatic version detection:
 
 1. Queries the CDP endpoint at `http://127.0.0.1:{port}/json/version`
 2. Extracts the Chrome major version from the `Browser` field in the response (for example, `145` from `Chrome/145.2.7632.4587`)
@@ -24,7 +24,7 @@ The detection is implemented in `src/version.ts` (`detectCometVersion`). On fail
 
 ## Selector Strategy Pattern
 
-Each selector set is a collection of ordered arrays of CSS selectors. For every DOM operation, Asteria tries selectors in array order and uses the first one that matches an element.
+Each selector set is a collection of ordered arrays of CSS selectors. For every DOM operation, MCP Comet tries selectors in array order and uses the first one that matches an element.
 
 ### Why ordered arrays matter
 
@@ -66,10 +66,10 @@ When a new Comet release changes the DOM, follow these steps to add support.
 
 ### 1. Detect the version
 
-Run Asteria's CLI to see the current Chrome/Comet version:
+Run MCP Comet's CLI to see the current Chrome/Comet version:
 
 ```bash
-asteria detect
+mcp-comet detect
 ```
 
 This queries the CDP endpoint and prints the detected version.
@@ -136,9 +136,10 @@ Also update the fallback in `getSelectorsForVersion` if the new version should b
 - Verify against a real Comet instance:
 
 ```bash
-asteria call comet_connect
+mcp-comet call comet_connect
 ```
 
 ### 6. Document
 
 Update the **Supported Versions** table at the top of this file with the new version entry.
+

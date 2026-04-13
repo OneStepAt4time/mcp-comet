@@ -1,12 +1,12 @@
 # Troubleshooting Guide
 
-This guide covers common issues, error codes, and debugging techniques for Asteria.
+This guide covers common issues, error codes, and debugging techniques for MCP Comet.
 
 ## 1. Connection Issues
 
 ### "Comet not found" / `COMET_NOT_FOUND`
 
-Asteria cannot locate the Comet executable on your system.
+MCP Comet cannot locate the Comet executable on your system.
 
 **Fix:** Set the `COMET_PATH` environment variable to the full path of the Comet binary.
 
@@ -19,7 +19,7 @@ Asteria cannot locate the Comet executable on your system.
 **Verify:**
 
 ```bash
-asteria detect
+mcp-comet detect
 ```
 
 ---
@@ -49,12 +49,12 @@ This should return a JSON object with browser version information.
 
 Comet is either not running or is using a different debug port than expected.
 
-**Fix:** Start Comet, or set `ASTERIA_PORT` to the correct port number.
+**Fix:** Start Comet, or set `COMET_PORT` to the correct port number.
 
 **Verify:**
 
 ```bash
-asteria detect
+mcp-comet detect
 ```
 
 The output should show "active" for the debug port status.
@@ -70,10 +70,10 @@ The output should show "active" for the debug port status.
 **Fix:** Call `comet_wait` to poll until the agent completes, or increase the timeout.
 
 ```bash
-asteria call comet_wait '{"timeout": 300000}'
+mcp-comet call comet_wait '{"timeout": 300000}'
 ```
 
-**Alternative:** Increase the default response timeout by setting the `ASTERIA_RESPONSE_TIMEOUT` environment variable (in milliseconds).
+**Alternative:** Increase the default response timeout by setting the `COMET_RESPONSE_TIMEOUT` environment variable (in milliseconds).
 
 ---
 
@@ -125,7 +125,7 @@ No agent is currently running in Comet. This is expected behavior when no query 
 
 ## 3. Error Codes Reference
 
-All error subclasses inherit from `AsteriaError` (defined in `src/errors.ts`).
+All error subclasses inherit from `MCP CometError` (defined in `src/errors.ts`).
 
 | Code | Class | Meaning |
 |------|-------|---------|
@@ -148,16 +148,16 @@ All error subclasses inherit from `AsteriaError` (defined in `src/errors.ts`).
 }
 ```
 
-Non-Asteria errors are wrapped as `Error: <message>` without a code prefix.
+Non-MCP Comet errors are wrapped as `Error: <message>` without a code prefix.
 
 ---
 
 ## 4. Debug Mode
 
-Set `ASTERIA_LOG_LEVEL=debug` for verbose logging:
+Set `COMET_LOG_LEVEL=debug` for verbose logging:
 
 ```bash
-ASTERIA_LOG_LEVEL=debug asteria start
+COMET_LOG_LEVEL=debug mcp-comet start
 ```
 
 **Key log messages:**
@@ -175,7 +175,7 @@ ASTERIA_LOG_LEVEL=debug asteria start
 Stderr contains server logs. Redirect it to a file for inspection:
 
 ```bash
-asteria call comet_ask '{"prompt": "test"}' 2>asteria.log
+mcp-comet call comet_ask '{"prompt": "test"}' 2>mcp-comet.log
 ```
 
 ---
@@ -185,7 +185,7 @@ asteria call comet_ask '{"prompt": "test"}' 2>asteria.log
 Run the detect command for a quick system diagnosis:
 
 ```bash
-asteria detect
+mcp-comet detect
 ```
 
 This prints:
@@ -197,8 +197,9 @@ This prints:
 
 **Quick diagnosis flow:**
 
-1. Run `asteria detect`.
+1. Run `mcp-comet detect`.
 2. If the output says Comet is **not running**, start the Comet application.
 3. If the executable shows **NOT FOUND**, set the `COMET_PATH` environment variable.
 4. If the debug port is **not reachable**, launch Comet with `--remote-debugging-port=9222`.
-5. If all checks are green, try `asteria call comet_connect` to establish a connection.
+5. If all checks are green, try `mcp-comet call comet_connect` to establish a connection.
+

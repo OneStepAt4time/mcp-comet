@@ -17,22 +17,22 @@ export function createLogger(level: CometConfig['logLevel']): Logger {
     debug:
       rank <= 0
         ? // biome-ignore lint/suspicious/noConsole: intentional debug output to stderr
-          (msg, ...args) => console.error('[asteria:debug]', msg, ...args)
+          (msg, ...args) => console.error('[mcp-comet:debug]', msg, ...args)
         : () => {},
     info:
       rank <= 1
         ? // biome-ignore lint/suspicious/noConsole: intentional info output to stderr
-          (msg, ...args) => console.error('[asteria:info]', msg, ...args)
+          (msg, ...args) => console.error('[mcp-comet:info]', msg, ...args)
         : () => {},
     warn:
       rank <= 2
         ? // biome-ignore lint/suspicious/noConsole: intentional warn output to stderr
-          (msg, ...args) => console.warn('[asteria:warn]', msg, ...args)
+          (msg, ...args) => console.warn('[mcp-comet:warn]', msg, ...args)
         : () => {},
     error:
       rank <= 3
         ? // biome-ignore lint/suspicious/noConsole: intentional error output to stderr
-          (msg, ...args) => console.error('[asteria:error]', msg, ...args)
+          (msg, ...args) => console.error('[mcp-comet:error]', msg, ...args)
         : () => {},
   }
 }

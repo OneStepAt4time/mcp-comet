@@ -1,20 +1,20 @@
-# Contributing to Asteria
+# Contributing to MCP Comet
 
-Thank you for your interest in contributing to Asteria. This guide covers everything you need to get started, from setting up your development environment to submitting a pull request.
+Thank you for your interest in contributing to MCP Comet. This guide covers everything you need to get started, from setting up your development environment to submitting a pull request.
 
 ## Setup
 
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/OneStepAt4time/asteria.git
-cd asteria
+git clone https://github.com/OneStepAt4time/mcp-comet.git
+cd mcp-comet
 npm install
 npm run build
 npm test
 ```
 
-Asteria requires Node.js 18 or later. The build step compiles TypeScript to `dist/`. Running the test suite confirms your environment is configured correctly.
+MCP Comet requires Node.js 18 or later. The build step compiles TypeScript to `dist/`. Running the test suite confirms your environment is configured correctly.
 
 ## Development Commands
 
@@ -73,7 +73,7 @@ tests/
 
 ## Testing Strategy
 
-Asteria uses Vitest as its test runner. The suite contains 314 tests across 30+ files, organized into two categories.
+MCP Comet uses Vitest as its test runner. The suite contains 314 tests across 30+ files, organized into two categories.
 
 **Unit tests** (`tests/unit/`) mock the CDP client and test components in isolation. This includes UI automation scripts, configuration validation, and error handling. When writing unit tests for UI scripts, verify the script output format against expected structures.
 
@@ -83,7 +83,7 @@ Asteria uses Vitest as its test runner. The suite contains 314 tests across 30+ 
 
 ## Code Style
 
-Asteria uses Biome for linting and formatting, configured in `biome.json` at the project root.
+MCP Comet uses Biome for linting and formatting, configured in `biome.json` at the project root.
 
 - TypeScript strict mode is enabled
 - Single quotes, trailing commas, no semicolons
@@ -96,7 +96,7 @@ Run `npm run lint` before every commit. If Biome reports formatting issues, run 
 
 When a new version of Comet (or its underlying Chrome version) is released, the CSS selectors used for UI automation may change. Follow these steps to add support:
 
-1. Run `asteria detect` to confirm the Comet/Chrome version number
+1. Run `mcp-comet detect` to confirm the Comet/Chrome version number
 2. Open Comet with DevTools (Ctrl+Shift+I) and inspect the DOM elements used by the UI scripts
 3. Create `src/selectors/v{version}.ts` implementing the `SelectorSet` interface
 4. Copy selectors from the latest version file and update as needed
@@ -127,3 +127,4 @@ Example: `feat: add support for Comet v147 selectors`
 - Keep PRs focused -- one feature or fix per PR
 
 Before opening a PR, verify locally that `npm run lint` and `npm test` both pass with no failures.
+

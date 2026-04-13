@@ -8,10 +8,10 @@ const { version } = JSON.parse(readFileSync(resolve(__dirname, '../package.json'
 
 function printUsage(): void {
   // biome-ignore lint/suspicious/noConsole: CLI output
-  console.error(`asteria v${version} — MCP server for Perplexity Comet browser
+  console.error(`mcp-comet v${version} — MCP server for Perplexity Comet browser
 
 USAGE:
-  asteria [command]
+  mcp-comet [command]
 
 COMMANDS:
   start       Start MCP stdio server (default)
@@ -21,28 +21,28 @@ COMMANDS:
   --help      Print this help message
 
 TOOL CALL:
-  asteria call <tool> [json_args]
-  asteria call comet_connect
-  asteria call comet_ask '{"prompt": "What is 2+2?"}'
-  asteria call comet_poll
-  asteria call comet_screenshot '{"format": "jpeg"}'
-  asteria call comet_list_tabs
-  asteria call comet_mode '{"mode": "deep-research"}'
-  asteria call comet_get_sources
-  asteria call comet_wait
-  asteria comet_stop`)
+  mcp-comet call <tool> [json_args]
+  mcp-comet call comet_connect
+  mcp-comet call comet_ask '{"prompt": "What is 2+2?"}'
+  mcp-comet call comet_poll
+  mcp-comet call comet_screenshot '{"format": "jpeg"}'
+  mcp-comet call comet_list_tabs
+  mcp-comet call comet_mode '{"mode": "deep-research"}'
+  mcp-comet call comet_get_sources
+  mcp-comet call comet_wait
+  mcp-comet comet_stop`)
 }
 
 function printVersion(): void {
   // biome-ignore lint/suspicious/noConsole: CLI output
-  console.error(`asteria v${version}`)
+  console.error(`mcp-comet v${version}`)
 }
 
 async function runDetect(): Promise<void> {
   const { getCometPath, isCometProcessRunning } = await import('./cdp/browser.js')
 
   // biome-ignore lint/suspicious/noConsole: CLI output
-  console.error('Asteria Detect — Comet Browser Status\n')
+  console.error('MCP Comet Detect — Comet Browser Status\n')
 
   const running = isCometProcessRunning()
   // biome-ignore lint/suspicious/noConsole: CLI output
@@ -107,7 +107,7 @@ async function runCall(args: string[]): Promise<void> {
 
   if (!toolName) {
     // biome-ignore lint/suspicious/noConsole: CLI output
-    console.error('Usage: asteria call <tool> [json_args]')
+    console.error('Usage: mcp-comet call <tool> [json_args]')
     // biome-ignore lint/suspicious/noConsole: CLI output
     console.error(`Available tools: ${TOOLS.join(', ')}`)
     process.exit(1)
@@ -139,7 +139,7 @@ async function runCall(args: string[]): Promise<void> {
     params: {
       protocolVersion: '2024-11-05',
       capabilities: {},
-      clientInfo: { name: 'asteria-cli', version: `v${version}` },
+      clientInfo: { name: 'mcp-comet-cli', version: `v${version}` },
     },
   })
 
@@ -196,7 +196,7 @@ async function runCall(args: string[]): Promise<void> {
                 console.log(content.text)
               } else if (content.type === 'image' && content.data) {
                 const ext = content.mimeType === 'image/jpeg' ? 'jpg' : 'png'
-                const filename = `asteria-screenshot-${Date.now()}.${ext}`
+                const filename = `mcp-comet-screenshot-${Date.now()}.${ext}`
                 writeFileSync(filename, Buffer.from(content.data, 'base64'))
                 // biome-ignore lint/suspicious/noConsole: CLI output
                 console.error(`Screenshot saved: ${filename}`)
@@ -213,7 +213,7 @@ async function runCall(args: string[]): Promise<void> {
 
   child.stderr.on('data', (chunk: Buffer) => {
     const msg = chunk.toString().trim()
-    if (msg) process.stderr.write(`[asteria] ${msg}\n`)
+    if (msg) process.stderr.write(`[mcp-comet] ${msg}\n`)
   })
 
   function shutdown(code: number): void {
@@ -264,7 +264,7 @@ async function main(): Promise<void> {
     // biome-ignore lint/suspicious/noConsole: CLI output
     console.error(`Unknown command: ${command}`)
     // biome-ignore lint/suspicious/noConsole: CLI output
-    console.error("Run 'asteria --help' for usage.")
+    console.error("Run 'mcp-comet --help' for usage.")
     process.exit(1)
   }
 

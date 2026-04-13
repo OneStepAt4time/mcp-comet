@@ -139,9 +139,9 @@ describe('Core tool handlers', () => {
 
   describe('comet_ask', () => {
     it('returns immediate submission message without polling', async () => {
-      let callCount = 0
+      let _callCount = 0
       mocks.safeEvaluate.mockImplementation(async () => {
-        callCount++
+        _callCount++
         return { result: { value: '{"proseCount":0,"lastProseText":""}' } }
       })
 
