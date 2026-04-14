@@ -135,7 +135,7 @@ function buildInputSchema(shape: Record<string, z.ZodTypeAny>): ToolDef['inputSc
 // Zod raw shapes for tool parameters
 const connectShape = { port: z.number().optional() }
 const askShape = {
-  prompt: z.string().describe('The question or instruction to send to Perplexity Comet'),
+  prompt: z.string().min(1).describe('The question or instruction to send to Perplexity Comet'),
   newChat: z.boolean().optional().describe('Start a fresh chat before sending the prompt'),
 }
 const screenshotShape = {
@@ -268,22 +268,39 @@ function extractValue(result: {
   return result.result?.value
 }
 
+const DEFAULT_STATUS: AgentStatus = {
+  status: 'idle',
+  steps: [],
+  currentStep: '',
+  response: '',
+  hasStopButton: false,
+  proseCount: 0,
+}
+
 function parseAgentStatus(raw: unknown): AgentStatus {
+  let parsed: unknown
   if (typeof raw === 'string') {
     try {
-      return JSON.parse(raw) as AgentStatus
+      parsed = JSON.parse(raw)
     } catch {
-      return {
-        status: 'idle',
-        steps: [],
-        currentStep: '',
-        response: '',
-        hasStopButton: false,
-        proseCount: 0,
-      }
+      return { ...DEFAULT_STATUS }
     }
+  } else {
+    parsed = raw
   }
-  return raw as AgentStatus
+  if (!parsed || typeof parsed !== 'object') return { ...DEFAULT_STATUS }
+  const obj = parsed as Record<string, unknown>
+  return {
+    status: (typeof obj.status === 'string' ? obj.status : 'idle') as AgentStatus['status'],
+    steps: Array.isArray(obj.steps) ? obj.steps as string[] : [],
+    currentStep: typeof obj.currentStep === 'string' ? obj.currentStep : '',
+    response: typeof obj.response === 'string' ? obj.response : '',
+    hasStopButton: typeof obj.hasStopButton === 'boolean' ? obj.hasStopButton : false,
+    hasLoadingSpinner: typeof obj.hasLoadingSpinner === 'boolean' ? obj.hasLoadingSpinner : undefined,
+    proseCount: typeof obj.proseCount === 'number' ? obj.proseCount : undefined,
+    actionPrompt: typeof obj.actionPrompt === 'string' ? obj.actionPrompt : undefined,
+    actionButtons: Array.isArray(obj.actionButtons) ? obj.actionButtons as string[] : undefined,
+  }
 }
 
 function sleep(ms: number): Promise<void> {
@@ -591,6 +608,9 @@ export async function startServer(): Promise<void> {
     switchTabShape,
     async ({ tabId, title }) => {
       try {
+        if (!tabId && !title) {
+          return textResult('Provide at least one of tabId or title.')
+        }
         await ensureConnected()
         const targets = await client.listTargets()
         let target: TabInfo | undefined
@@ -731,7 +751,7 @@ export async function startServer(): Promise<void> {
     async ({ maxLength }) => {
       try {
         await ensureConnected()
-        const len = maxLength ?? 10000
+        const len = (maxLength && maxLength > 0) ? maxLength : 10000
         const raw = await client.safeEvaluate(buildExtractPageContentScript(len))
         const parsed = JSON.parse(String(extractValue(raw))) as { title: string; text: string }
         return textResult(`Title: ${parsed.title}\n\n${parsed.text}`)
@@ -749,7 +769,7 @@ export async function startServer(): Promise<void> {
     async ({ timeout }) => {
       try {
         await ensureConnected()
-        const effectiveTimeout = timeout ?? 120000
+        const effectiveTimeout = (timeout && timeout > 0) ? timeout : 120000
         const startTime = Date.now()
         let lastResponse = ''
         let stallCount = 0

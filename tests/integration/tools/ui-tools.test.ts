@@ -237,15 +237,12 @@ describe('UI control tool handlers', () => {
       expect(result.content[0].text).toContain('Tab not found')
     })
 
-    it('returns tab not found when no criteria provided', async () => {
-      mocks.listTargets.mockResolvedValue([
-        { id: 'target-1', url: 'https://www.perplexity.ai', type: 'page', title: 'Perplexity' },
-      ])
+    it('returns early error when no criteria provided', async () => {
       const handler = getHandler('comet_switch_tab')
       const result = await handler({})
 
       expect(result.content[0].type).toBe('text')
-      expect(result.content[0].text).toContain('Tab not found')
+      expect(result.content[0].text).toContain('Provide at least one')
     })
 
     it('returns error response when connect fails', async () => {
