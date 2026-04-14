@@ -175,7 +175,7 @@ None.
 
 Poll until the current agent finishes responding and return the full response.
 
-Designed to be used after `comet_ask` times out. It continues polling the agent status until the response completes, another timeout is reached, or stall detection triggers.
+Designed to be used after `comet_ask` to wait for the full response. It continues polling the agent status until the response completes, a timeout is reached, or stall detection triggers.
 
 ### Parameters
 
@@ -230,7 +230,7 @@ Use comet_approve_action to approve or cancel the action.
 
 - **Stall detection:** Breaks out of the polling loop if the response length does not grow for 10 consecutive polls.
 - **Response stabilization:** After the agent transitions to `idle` or `completed`, performs up to 5 settle polls (1 second apart) to ensure the response has finished rendering.
-- Default timeout is 120 seconds (2 minutes), shorter than `comet_ask` default of 180 seconds.
+- Default timeout is 120 seconds (2 minutes).
 - Returns `"Agent completed with no visible response."` if the agent finishes but no response text was found.
 
 ---
@@ -713,7 +713,7 @@ Cancel the action:
 
 ### 1. Ask and Wait (Simple)
 
-Use `comet_ask` with the default timeout (180 seconds). This handles most queries in a single call.
+Use `comet_ask` to submit the prompt, then `comet_wait` to block until the response is ready. This handles most queries in two calls.
 
 ```json
 { "prompt": "What is the current state of fusion energy research?" }
@@ -721,28 +721,28 @@ Use `comet_ask` with the default timeout (180 seconds). This handles most querie
 
 ### 2. Ask + Poll (Custom Loop)
 
-Use `comet_ask` with a short timeout, then loop `comet_poll` in your agent to implement custom progress reporting or conditional logic.
+Use `comet_ask` to submit the prompt, then loop `comet_poll` in your agent to implement custom progress reporting or conditional logic.
 
 ```json
-{ "prompt": "Deep research on AI safety", "timeout": 30000 }
+{ "prompt": "Deep research on AI safety" }
 ```
 
 Then poll:
 ```json
 {}
 ```
-(call `comet_poll` repeatedly until `status` is `"completed"` or `"idle"`)
+(call `comet_poll` repeatedly until `status` is `"completed"`, `"idle"`, or `"awaiting_action"`)
 
 ### 3. Ask + Wait (Two-Phase)
 
-Use `comet_ask` (which may timeout for long-running queries), then `comet_wait` to collect the full result. This is useful when you want to start a query and check back later.
+Use `comet_ask` to submit the prompt, then `comet_wait` to collect the full result. This is useful when you want to start a query and check back later.
 
 Step 1:
 ```json
 { "prompt": "Write a comprehensive analysis of global semiconductor supply chains" }
 ```
 
-Step 2 (if Step 1 times out):
+Step 2:
 ```json
 { "timeout": 300000 }
 ```
