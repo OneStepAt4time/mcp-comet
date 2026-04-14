@@ -451,6 +451,11 @@ At least one of `tabId` or `title` must be provided. If both are given, `tabId` 
 
 ### Response
 
+**No criteria provided:**
+```
+Provide at least one of tabId or title.
+```
+
 **Success:**
 ```
 Switched to tab [{id}] {title} — {url}

@@ -22,10 +22,16 @@
 - **Prose filter over-trimming**: Short questions under 20 chars (previously 100) are no longer excluded from response text
 - **Submit verification**: `buildSubmitPromptScript` now focuses the input element before submitting and verifies the input was cleared
 - **Gitignore scope**: `tools/` pattern changed to `/tools/` (root-level only) to unblock staging test files in `tests/unit/tools/`
+- **Status parsing hardening**: `parseAgentStatus` now validates all fields with defaults instead of raw casting — prevents `TypeError` crashes when the browser returns incomplete status data
+- **Empty prompt rejection**: `comet_ask` now requires non-empty prompts via `z.string().min(1)` validation
+- **Switch tab validation**: `comet_switch_tab` returns a clear error when called with no `tabId` or `title` instead of showing "undefined"
+- **Boundary value guards**: `comet_wait` and `comet_get_page_content` now handle `timeout=0` and `maxLength=0` gracefully instead of producing confusing behavior
 
 ### Changed
 
 - 14 tools total (was 13)
+- Removed unused `AgentState` enum and dead `AgentStatus` interface — replaced with canonical `AgentStatus` type with `AgentStatusValue` union (`'idle' | 'working' | 'completed' | 'awaiting_action'`)
+- Removed dead `timeout` parameter from `comet_ask` schema (was accepted but never used)
 
 ## [1.1.2] - 2026-04-11
 
