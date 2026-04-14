@@ -21,6 +21,7 @@
 - **Mode read navigation**: `comet_mode` (read) no longer navigates away from the current page when already on the Perplexity home page
 - **Mode switch reliability**: `comet_mode` (switch) now invokes React's `onMouseDown` handler directly via fiber props instead of `item.click()`, which silently failed because Comet's typeahead menu items use `onMouseDown`, not `onClick`
 - **Editor clearing**: Mode switching now clears residual Lexical editor text (select-all + delete + backspace safety net) instead of relying on page reload, which did not clear Lexical state
+- **Mode read editor clearing**: `comet_mode` (read) now also clears existing editor text before typing `/` and presses Escape + Backspace between retries to prevent `/` character accumulation
 - **Prose filter over-trimming**: Short questions under 20 chars (previously 100) are no longer excluded from response text
 - **Submit verification**: `buildSubmitPromptScript` now focuses the input element before submitting and verifies the input was cleared
 - **Gitignore scope**: `tools/` pattern changed to `/tools/` (root-level only) to unblock staging test files in `tests/unit/tools/`
