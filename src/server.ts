@@ -525,6 +525,32 @@ export async function startServer(): Promise<void> {
             await sleep(2000)
           }
 
+          // Clear any existing text in the Lexical editor (state persists across navigations)
+          const readLenRaw = await client.safeEvaluate(`(function() {
+            var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
+            return input ? (input.textContent || input.innerText || '').length : 0;
+          })()`)
+          const readInputLen = Number(extractValue(readLenRaw)) || 0
+          if (readInputLen > 0) {
+            await client.safeEvaluate(`(function() {
+              var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
+              if (input) input.focus();
+            })()`)
+            await sleep(100)
+            await client.safeEvaluate(`(function() {
+              var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
+              if (!input) return;
+              var range = document.createRange();
+              range.selectNodeContents(input);
+              var sel = window.getSelection();
+              sel.removeAllRanges();
+              sel.addRange(range);
+            })()`)
+            await sleep(50)
+            await client.safeEvaluate(`document.execCommand('delete', false, null)`)
+            await sleep(200)
+          }
+
           let currentMode: unknown = 'standard'
           for (let attempt = 0; attempt < 5; attempt++) {
             // Focus input and type / via execCommand
@@ -544,6 +570,9 @@ export async function startServer(): Promise<void> {
               await client.pressKey('Escape')
               break
             }
+            // Close typeahead and clear the / character before retrying
+            await client.pressKey('Escape')
+            await client.pressKey('Backspace')
             await sleep(300)
           }
 

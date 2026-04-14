@@ -281,4 +281,68 @@ describe('UI control tool handlers', () => {
       expect(result.content[0].text).toContain('Main')
     })
   })
+
+  describe('comet_approve_action', () => {
+    it('approves primary action by default', async () => {
+      mocks.safeEvaluate.mockResolvedValue({
+        result: {
+          value: JSON.stringify({ clicked: true, buttonText: 'Create Issue', action: 'primary' }),
+        },
+      })
+      const handler = getHandler('comet_approve_action')
+      const result = await handler({})
+
+      expect(result.content[0].type).toBe('text')
+      expect(result.content[0].text).toContain('approved')
+      expect(result.content[0].text).toContain('Create Issue')
+    })
+
+    it('cancels when action is cancel', async () => {
+      mocks.safeEvaluate.mockResolvedValue({
+        result: {
+          value: JSON.stringify({ clicked: true, buttonText: 'Cancel', action: 'cancel' }),
+        },
+      })
+      const handler = getHandler('comet_approve_action')
+      const result = await handler({ action: 'cancel' })
+
+      expect(result.content[0].type).toBe('text')
+      expect(result.content[0].text).toContain('cancelled')
+      expect(result.content[0].text).toContain('Cancel')
+    })
+
+    it('reports fallback when bg-button-bg not found', async () => {
+      mocks.safeEvaluate.mockResolvedValue({
+        result: {
+          value: JSON.stringify({ clicked: true, buttonText: 'Confirm', action: 'primary', fallback: true }),
+        },
+      })
+      const handler = getHandler('comet_approve_action')
+      const result = await handler({})
+
+      expect(result.content[0].text).toContain('fallback')
+    })
+
+    it('reports no action banner when not found', async () => {
+      mocks.safeEvaluate.mockResolvedValue({
+        result: {
+          value: JSON.stringify({ clicked: false, error: 'No action banner found' }),
+        },
+      })
+      const handler = getHandler('comet_approve_action')
+      const result = await handler({})
+
+      expect(result.content[0].type).toBe('text')
+      expect(result.content[0].text).toContain('No action banner found')
+    })
+
+    it('returns error response when safeEvaluate fails', async () => {
+      mocks.safeEvaluate.mockRejectedValue(new Error('Evaluate failed'))
+      const handler = getHandler('comet_approve_action')
+      const result = await handler({})
+
+      expect(result.isError).toBe(true)
+      expect(result.content[0].text).toContain('Evaluate failed')
+    })
+  })
 })
