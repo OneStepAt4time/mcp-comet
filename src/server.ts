@@ -7,7 +7,7 @@ import { EvaluationError, toMcpError } from './errors.js'
 import { createLogger } from './logger.js'
 import { buildPreSendStateScript } from './prose-filter.js'
 import type { SelectorSet } from './selectors/types.js'
-import type { CategorizedTabs, TabInfo } from './types.js'
+import type { AgentStatus, CategorizedTabs, TabInfo } from './types.js'
 import { buildListConversationsScript } from './ui/conversations.js'
 import {
   buildExpandCollapsedCitationsScript,
@@ -137,7 +137,6 @@ const connectShape = { port: z.number().optional() }
 const askShape = {
   prompt: z.string().describe('The question or instruction to send to Perplexity Comet'),
   newChat: z.boolean().optional().describe('Start a fresh chat before sending the prompt'),
-  timeout: z.number().optional().describe('Maximum wait time in ms for the agent response'),
 }
 const screenshotShape = {
   format: z.enum(['png', 'jpeg']).optional().describe('Image format (default: png)'),
@@ -269,23 +268,10 @@ function extractValue(result: {
   return result.result?.value
 }
 
-/** Runtime shape returned by buildGetAgentStatusScript(). */
-interface RawAgentStatus {
-  status: string
-  steps: string[]
-  currentStep: string
-  response: string
-  hasStopButton: boolean
-  hasLoadingSpinner?: boolean
-  proseCount?: number
-  actionPrompt?: string
-  actionButtons?: string[]
-}
-
-function parseAgentStatus(raw: unknown): RawAgentStatus {
+function parseAgentStatus(raw: unknown): AgentStatus {
   if (typeof raw === 'string') {
     try {
-      return JSON.parse(raw) as RawAgentStatus
+      return JSON.parse(raw) as AgentStatus
     } catch {
       return {
         status: 'idle',
@@ -297,7 +283,7 @@ function parseAgentStatus(raw: unknown): RawAgentStatus {
       }
     }
   }
-  return raw as RawAgentStatus
+  return raw as AgentStatus
 }
 
 function sleep(ms: number): Promise<void> {

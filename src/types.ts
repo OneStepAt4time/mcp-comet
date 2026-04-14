@@ -1,11 +1,17 @@
-export enum AgentState {
-  Idle = 'idle',
-  Thinking = 'thinking',
-  Searching = 'searching',
-  Responding = 'responding',
-  Completed = 'completed',
-  Error = 'error',
-  AwaitingAction = 'awaiting_action',
+/** Agent status values produced by buildGetAgentStatusScript(). */
+export type AgentStatusValue = 'idle' | 'working' | 'completed' | 'awaiting_action'
+
+/** Canonical agent status returned by status detection scripts. */
+export interface AgentStatus {
+  status: AgentStatusValue
+  steps: string[]
+  currentStep: string
+  response: string
+  hasStopButton: boolean
+  hasLoadingSpinner?: boolean
+  proseCount?: number
+  actionPrompt?: string
+  actionButtons?: string[]
 }
 
 export enum TabCategory {
@@ -23,15 +29,6 @@ export interface TabInfo {
   url: string
   webSocketDebuggerUrl?: string
   category?: TabCategory
-}
-
-export interface AgentStatus {
-  state: AgentState
-  steps: string[]
-  currentStep: string
-  response: string
-  hasStopButton: boolean
-  agentBrowsingUrl: string
 }
 
 export interface EvaluateResult {

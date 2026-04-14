@@ -1,20 +1,45 @@
 import { describe, expect, it } from 'vitest'
 import {
-  AgentState,
   type AgentStatus,
+  type AgentStatusValue,
   type CometConfig,
   TabCategory,
   type TabInfo,
 } from '../../src/types.js'
 
-describe('AgentState', () => {
-  it('has all expected states', () => {
-    expect(AgentState.Idle).toBe('idle')
-    expect(AgentState.Thinking).toBe('thinking')
-    expect(AgentState.Searching).toBe('searching')
-    expect(AgentState.Responding).toBe('responding')
-    expect(AgentState.Completed).toBe('completed')
-    expect(AgentState.Error).toBe('error')
+describe('AgentStatusValue', () => {
+  it('accepts all valid status values', () => {
+    const values: AgentStatusValue[] = ['idle', 'working', 'completed', 'awaiting_action']
+    expect(values).toHaveLength(4)
+  })
+})
+
+describe('AgentStatus', () => {
+  it('accepts valid shape with required fields', () => {
+    const status: AgentStatus = {
+      status: 'working',
+      steps: ['step 1'],
+      currentStep: 'step 2',
+      response: 'text',
+      hasStopButton: true,
+    }
+    expect(status.status).toBe('working')
+  })
+
+  it('accepts optional fields', () => {
+    const status: AgentStatus = {
+      status: 'awaiting_action',
+      steps: [],
+      currentStep: '',
+      response: '',
+      hasStopButton: false,
+      hasLoadingSpinner: true,
+      proseCount: 3,
+      actionPrompt: 'Create issue?',
+      actionButtons: ['Create', 'Cancel'],
+    }
+    expect(status.actionPrompt).toBe('Create issue?')
+    expect(status.actionButtons).toEqual(['Create', 'Cancel'])
   })
 })
 
@@ -41,20 +66,6 @@ describe('TabInfo', () => {
   })
 })
 
-describe('AgentStatus', () => {
-  it('accepts valid shape', () => {
-    const status: AgentStatus = {
-      state: AgentState.Idle,
-      steps: [],
-      currentStep: '',
-      response: '',
-      hasStopButton: false,
-      agentBrowsingUrl: '',
-    }
-    expect(status.state).toBe('idle')
-  })
-})
-
 describe('CometConfig', () => {
   it('accepts valid shape', () => {
     const config: CometConfig = {
@@ -67,10 +78,13 @@ describe('CometConfig', () => {
       screenshotQuality: 80,
       windowWidth: 1440,
       windowHeight: 900,
+      overrideViewport: false,
       maxReconnectAttempts: 5,
       maxReconnectDelay: 5000,
       pollInterval: 1000,
+      userDataDir: null,
     }
     expect(config.port).toBe(9222)
+    expect(config.overrideViewport).toBe(false)
   })
 })
