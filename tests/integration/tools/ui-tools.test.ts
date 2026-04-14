@@ -73,28 +73,29 @@ describe('UI control tool handlers', () => {
       expect(result.content[0].type).toBe('text')
       expect(result.content[0].text).toContain('Mode switch result')
       expect(result.content[0].text).toContain('clicked:#pplx-icon-telescope')
-    })
+    }, 15000)
 
     it('retries mode switch when listbox not immediately available', async () => {
       mocks.safeEvaluate.mockReset()
       mocks.pressKey.mockClear()
-      // Each retry attempt calls safeEvaluate twice (focus + mode switch)
-      // Attempt 1: focus(default) + mode(no_listbox_found)
-      // Attempt 2: focus(default) + mode(no_listbox_found)
-      // Attempt 3: focus(default) + mode(clicked)
+      // Input length check (returns 0 → skip clearing) + 3 retry attempts × 3 calls each
       mocks.safeEvaluate
-        .mockResolvedValueOnce({ result: { value: undefined } })
-        .mockResolvedValueOnce({ result: { value: 'no_listbox_found' } })
-        .mockResolvedValueOnce({ result: { value: undefined } })
-        .mockResolvedValueOnce({ result: { value: 'no_listbox_found' } })
-        .mockResolvedValueOnce({ result: { value: undefined } })
-        .mockResolvedValueOnce({ result: { value: 'clicked:#pplx-icon-telescope' } })
+        .mockResolvedValueOnce({ result: { value: 0 } })                    // input length check
+        .mockResolvedValueOnce({ result: { value: undefined } })             // attempt 1: focus
+        .mockResolvedValueOnce({ result: { value: undefined } })             // attempt 1: insertText
+        .mockResolvedValueOnce({ result: { value: 'no_listbox_found' } })    // attempt 1: mode switch
+        .mockResolvedValueOnce({ result: { value: undefined } })             // attempt 2: focus
+        .mockResolvedValueOnce({ result: { value: undefined } })             // attempt 2: insertText
+        .mockResolvedValueOnce({ result: { value: 'no_listbox_found' } })    // attempt 2: mode switch
+        .mockResolvedValueOnce({ result: { value: undefined } })             // attempt 3: focus
+        .mockResolvedValueOnce({ result: { value: undefined } })             // attempt 3: insertText
+        .mockResolvedValueOnce({ result: { value: 'clicked:#pplx-icon-telescope' } }) // attempt 3: mode switch
       const handler = getHandler('comet_mode')
       const result = await handler({ mode: 'deep-research' })
 
       expect(result.content[0].text).toContain('clicked:#pplx-icon-telescope')
-      expect(mocks.safeEvaluate).toHaveBeenCalledTimes(6)
-    }, 10000)
+      expect(mocks.safeEvaluate).toHaveBeenCalledTimes(10)
+    }, 20000)
 
     it('returns failure after max retries when listbox never appears', async () => {
       mocks.safeEvaluate.mockReset()
@@ -103,9 +104,9 @@ describe('UI control tool handlers', () => {
       const result = await handler({ mode: 'deep-research' })
 
       expect(result.content[0].text).toContain('Mode switch failed')
-      // 10 retries × 2 safeEvaluate calls each = 20
-      expect(mocks.safeEvaluate).toHaveBeenCalledTimes(20)
-    }, 15000)
+      // 1 input length check + 10 retries × 3 safeEvaluate calls each (focus + insertText + mode switch) = 31
+      expect(mocks.safeEvaluate).toHaveBeenCalledTimes(31)
+    }, 30000)
 
     it('returns error response when safeEvaluate fails', async () => {
       mocks.safeEvaluate.mockRejectedValue(new Error('Evaluate failed'))

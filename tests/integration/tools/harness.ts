@@ -21,6 +21,7 @@ export const mocks = {
   disconnect: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
   connect: vi.fn<(id?: string) => Promise<string>>().mockResolvedValue('target-1'),
   navigate: vi.fn<(url: string) => Promise<void>>().mockResolvedValue(undefined),
+  reload: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
   screenshot: vi.fn<(fmt?: string) => Promise<string>>().mockResolvedValue('base64data'),
   safeEvaluate: vi
     .fn<(expr: string) => Promise<{ result?: { value?: unknown }; exceptionDetails?: unknown }>>()
@@ -72,6 +73,7 @@ export function resetHarness(): void {
   mocks.disconnect.mockResolvedValue(undefined)
   mocks.connect.mockResolvedValue('target-1')
   mocks.navigate.mockResolvedValue(undefined)
+  mocks.reload.mockResolvedValue(undefined)
   mocks.screenshot.mockResolvedValue('base64data')
   mocks.safeEvaluate.mockResolvedValue({ result: { value: '{}' } })
   mocks.listTargets.mockResolvedValue([

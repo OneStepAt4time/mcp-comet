@@ -161,6 +161,18 @@ export class CDPClient {
     })
   }
 
+  /** Hard-reload the current page (clears Lexical editor state). */
+  async reload(): Promise<void> {
+    return this.enqueue(async () => {
+      await this.withAutoReconnect(async () => {
+        if (!this.criClient) throw new CDPConnectionError('Not connected')
+        await this.criClient.Page.enable()
+        await this.criClient.Page.reload({ ignoreCache: true })
+        await this.criClient.Page.loadEventFired()
+      })
+    })
+  }
+
   async screenshot(format: 'png' | 'jpeg' = 'png'): Promise<string> {
     return this.enqueue(async () => {
       await this.ensureHealthyConnection()

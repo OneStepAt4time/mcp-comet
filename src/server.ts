@@ -527,16 +527,14 @@ export async function startServer(): Promise<void> {
 
           let currentMode: unknown = 'standard'
           for (let attempt = 0; attempt < 5; attempt++) {
-            // Focus input, clear, type /
+            // Focus input and type / via execCommand
             await client.safeEvaluate(`(function() {
               var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
               if (input) input.focus();
             })()`)
-            await client.pressKeyWithModifier('a', 4)
-            await client.pressKey('Backspace')
-            await sleep(100)
-            await client.typeChar('/')
-            await sleep(500)
+            await sleep(200)
+            await client.safeEvaluate(`document.execCommand("insertText", false, "/")`)
+            await sleep(800)
 
             const raw = await client.safeEvaluate(buildReadActiveModeScript())
             const result = extractValue(raw)
@@ -556,26 +554,60 @@ export async function startServer(): Promise<void> {
         // Navigate to home page for clean input (mode typeahead only works on new chat page)
         await client.navigate('https://www.perplexity.ai')
         await sleep(2000)
-        const MAX_MODE_RETRIES = 10
-        for (let attempt = 0; attempt < MAX_MODE_RETRIES; attempt++) {
-          // Focus input, clear via Cmd+A+Backspace, then type / via CDP
+
+        // Clear any existing text in the Lexical editor (state persists across navigations)
+        const inputLenRaw = await client.safeEvaluate(`(function() {
+          var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
+          return input ? (input.textContent || input.innerText || '').length : 0;
+        })()`)
+        const inputLen = Number(extractValue(inputLenRaw)) || 0
+        if (inputLen > 0) {
+          // Focus editor
           await client.safeEvaluate(`(function() {
             var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
             if (input) input.focus();
           })()`)
-          // Select all (Meta/Cmd = modifier 4) and delete
-          await client.pressKeyWithModifier('a', 4)
-          await client.pressKey('Backspace')
           await sleep(100)
-          // Type / via char event (inserts into Lexical editor)
-          await client.typeChar('/')
-          await sleep(500)
+          // Select all content and delete via execCommand
+          await client.safeEvaluate(`(function() {
+            var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
+            if (!input) return;
+            var range = document.createRange();
+            range.selectNodeContents(input);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          })()`)
+          await sleep(50)
+          await client.safeEvaluate(`document.execCommand('delete', false, null)`)
+          await sleep(200)
+          // Safety: press Backspace a few times in case selectAll missed something
+          for (let i = 0; i < 5; i++) {
+            await client.pressKey('Backspace')
+            await sleep(20)
+          }
+        }
+
+        const MAX_MODE_RETRIES = 10
+        for (let attempt = 0; attempt < MAX_MODE_RETRIES; attempt++) {
+          // Focus input and type / via execCommand (most reliable for Lexical)
+          await client.safeEvaluate(`(function() {
+            var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
+            if (input) input.focus();
+          })()`)
+          await sleep(200)
+          await client.safeEvaluate(`document.execCommand("insertText", false, "/")`)
+          await sleep(800)
 
           const raw = await client.safeEvaluate(buildModeSwitchScript(mode))
           const result = extractValue(raw)
           if (result !== 'no_listbox_found' && result !== 'no_input_found') {
+            // Close typeahead if still open
+            await client.pressKey('Escape')
             return textResult(`Mode switch result: ${result}`)
           }
+          // Close typeahead and retry
+          await client.pressKey('Escape')
           await sleep(300)
         }
         return textResult('Mode switch failed: typeahead menu did not appear after retries')

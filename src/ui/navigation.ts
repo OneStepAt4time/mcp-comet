@@ -31,6 +31,9 @@ const MODE_ICONS: Record<string, string> = {
  * Build script to click a mode item in the typeahead menu.
  * The caller MUST inject '/' via CDP Input API before running this script.
  * Matching is done by SVG icon href — locale-independent.
+ *
+ * IMPORTANT: Comet uses React's onMouseDown (not onClick) for mode selection.
+ * We invoke the React prop directly for reliability.
  */
 export function buildModeSwitchScript(mode: string): string {
   const iconHref = MODE_ICONS[mode] ?? (mode ? `#pplx-icon-${mode}` : '')
@@ -52,8 +55,15 @@ export function buildModeSwitchScript(mode: string): string {
       for (var u = 0; u < useEls.length; u++) {
         var href = useEls[u].getAttribute('xlink:href') || useEls[u].getAttribute('href') || '';
         if (href === iconHref) {
-          item.click();
-          return 'clicked:' + iconHref;
+          // React uses onMouseDown, not onClick — invoke it directly
+          var propsKey = Object.keys(item).find(function(k) { return k.startsWith('__reactProps'); });
+          if (propsKey && item[propsKey] && typeof item[propsKey].onMouseDown === 'function') {
+            item[propsKey].onMouseDown({ preventDefault: function() {} });
+            return 'clicked:' + iconHref;
+          }
+          // Fallback: dispatch mousedown event
+          item.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+          return 'clicked_fallback:' + iconHref;
         }
       }
     }

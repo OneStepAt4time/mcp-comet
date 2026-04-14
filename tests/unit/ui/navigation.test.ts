@@ -63,6 +63,19 @@ describe('buildModeSwitchScript', () => {
     expect(s).toMatch(/^\(function\(\)\s*\{[\s\S]*\}\)\(\)$/)
   })
 
+  it('uses React onMouseDown prop instead of click()', () => {
+    const s = buildModeSwitchScript('deep-research')
+    expect(s).toContain('__reactProps')
+    expect(s).toContain('onMouseDown')
+    expect(s).not.toContain('item.click()')
+  })
+
+  it('dispatches mousedown as fallback', () => {
+    const s = buildModeSwitchScript('deep-research')
+    expect(s).toContain('MouseEvent')
+    expect(s).toContain('mousedown')
+  })
+
   it('does not use setTimeout', () => {
     const s = buildModeSwitchScript('deep-research')
     expect(s).not.toContain('setTimeout')
