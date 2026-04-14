@@ -5,6 +5,7 @@ export enum AgentState {
   Responding = 'responding',
   Completed = 'completed',
   Error = 'error',
+  AwaitingAction = 'awaiting_action',
 }
 
 export enum TabCategory {
@@ -56,6 +57,7 @@ export interface CometConfig {
   screenshotQuality: number
   windowWidth: number
   windowHeight: number
+  overrideViewport: boolean
   maxReconnectAttempts: number
   maxReconnectDelay: number
   pollInterval: number

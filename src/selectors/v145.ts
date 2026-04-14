@@ -19,4 +19,5 @@ export const v145Selectors: SelectorSet = {
   LOADING: ['[class*="animate-spin"]', '[class*="animate-pulse"]'],
   TYPEAHEAD_MENU: ['[role="listbox"][aria-label="Typeahead menu"]', '[role="listbox"]'],
   MENU_ITEM: ['[role="menuitem"].group\\/item', '[role="menuitem"]'],
+  ACTION_BANNER: ['[class*="@container/banner"]'],
 }

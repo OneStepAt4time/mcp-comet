@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { toolDefinitions } from '../../../src/server.js'
 
 describe('toolDefinitions', () => {
-  it('has 13 tools', () => {
-    expect(toolDefinitions).toHaveLength(13)
+  it('has 14 tools', () => {
+    expect(toolDefinitions).toHaveLength(14)
   })
 
   it('has all expected names', () => {
@@ -21,6 +21,7 @@ describe('toolDefinitions', () => {
     expect(names).toContain('comet_open_conversation')
     expect(names).toContain('comet_get_page_content')
     expect(names).toContain('comet_wait')
+    expect(names).toContain('comet_approve_action')
   })
 
   it('each tool has name, description, inputSchema', () => {

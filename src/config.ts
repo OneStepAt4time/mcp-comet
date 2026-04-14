@@ -12,6 +12,7 @@ const DEFAULTS: CometConfig = {
   screenshotQuality: 80,
   windowWidth: 1440,
   windowHeight: 900,
+  overrideViewport: false,
   maxReconnectAttempts: 5,
   maxReconnectDelay: 5000,
   pollInterval: 1000,
@@ -142,6 +143,10 @@ export function loadConfig(overrides?: Partial<CometConfig>): CometConfig {
 
   const userDataDirEnv = env('COMET_USER_DATA_DIR')
   if (userDataDirEnv !== undefined) envConfig.userDataDir = userDataDirEnv
+
+  const overrideViewportEnv = env('COMET_OVERRIDE_VIEWPORT')
+  if (overrideViewportEnv !== undefined)
+    envConfig.overrideViewport = overrideViewportEnv === 'true' || overrideViewportEnv === '1'
 
   return validatedConfig({
     ...DEFAULTS,

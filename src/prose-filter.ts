@@ -47,7 +47,7 @@ export function buildFindProseJS(): string {
       var isUI = false;
       for (var u = 0; u < uiTexts.length; u++) { if (text.indexOf(uiTexts[u]) === 0) { isUI = true; break; } }
       if (isUI) continue;
-      if (text.length < 100 && text.indexOf('?') === text.length - 1) continue;
+      if (text.length < 20 && text.indexOf('?') === text.length - 1) continue;
       results.push(text);
     }
     results`

@@ -62,4 +62,55 @@ describe('buildGetAgentStatusScript', () => {
     expect(s).toContain('Searching')
     expect(s).toContain('Navigating to')
   })
+
+  // Action/permission prompt detection
+  describe('action prompt detection', () => {
+    it('includes action banner selectors', () => {
+      const s = buildGetAgentStatusScript()
+      expect(s).toContain('bannerSelectors')
+      expect(s).toContain('@container/banner')
+    })
+
+    it('returns actionPrompt field', () => {
+      const s = buildGetAgentStatusScript()
+      expect(s).toContain('actionPrompt')
+    })
+
+    it('returns actionButtons field', () => {
+      const s = buildGetAgentStatusScript()
+      expect(s).toContain('actionButtons')
+    })
+
+    it('sets status to awaiting_action when banner found', () => {
+      const s = buildGetAgentStatusScript()
+      expect(s).toContain('awaiting_action')
+    })
+
+    it('extracts prompt text from bg-subtle banner card', () => {
+      const s = buildGetAgentStatusScript()
+      expect(s).toContain('bg-subtle')
+    })
+
+    it('skips Show more buttons when collecting action buttons', () => {
+      const s = buildGetAgentStatusScript()
+      // The script should filter out 'Show more' from action buttons
+      expect(s).toContain('Show more')
+    })
+
+    it('includes actionPrompt and actionButtons in JSON output', () => {
+      const s = buildGetAgentStatusScript()
+      expect(s).toContain('actionPrompt: actionPrompt')
+      expect(s).toContain('actionButtons: actionButtons')
+    })
+
+    it('accepts custom ACTION_BANNER selectors', () => {
+      const customSelectors = {
+        ...SELECTORS,
+        ACTION_BANNER: ['.custom-banner', '[data-action-prompt]'],
+      }
+      const s = buildGetAgentStatusScript(customSelectors)
+      expect(s).toContain('.custom-banner')
+      expect(s).toContain('[data-action-prompt]')
+    })
+  })
 })

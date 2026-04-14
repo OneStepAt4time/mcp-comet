@@ -10,6 +10,7 @@ describe('v145Selectors', () => {
     expect(v145Selectors.LOADING).toBeDefined()
     expect(v145Selectors.TYPEAHEAD_MENU).toBeDefined()
     expect(v145Selectors.MENU_ITEM).toBeDefined()
+    expect(v145Selectors.ACTION_BANNER).toBeDefined()
   })
 
   it('each category is a non-empty array', async () => {
@@ -22,6 +23,7 @@ describe('v145Selectors', () => {
       'LOADING',
       'TYPEAHEAD_MENU',
       'MENU_ITEM',
+      'ACTION_BANNER',
     ] as const
 
     for (const category of categories) {
@@ -40,6 +42,7 @@ describe('v145Selectors', () => {
       'LOADING',
       'TYPEAHEAD_MENU',
       'MENU_ITEM',
+      'ACTION_BANNER',
     ] as const
 
     for (const category of categories) {

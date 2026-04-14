@@ -89,16 +89,18 @@ export class CDPClient {
       await this.criClient.Page.enable()
       await this.criClient.Runtime.enable()
 
-      // Set fixed viewport for consistent selectors and screenshots
-      try {
-        await this.criClient.Emulation.setDeviceMetricsOverride({
-          width: this.config.windowWidth,
-          height: this.config.windowHeight,
-          deviceScaleFactor: 1,
-          mobile: false,
-        })
-      } catch {
-        this.logger.debug('Could not set viewport metrics')
+      // Only override viewport when explicitly enabled (resizes the browser window)
+      if (this.config.overrideViewport) {
+        try {
+          await this.criClient.Emulation.setDeviceMetricsOverride({
+            width: this.config.windowWidth,
+            height: this.config.windowHeight,
+            deviceScaleFactor: 1,
+            mobile: false,
+          })
+        } catch {
+          this.logger.debug('Could not set viewport metrics')
+        }
       }
 
       this.state.connected = true
@@ -165,14 +167,10 @@ export class CDPClient {
       return await this.withAutoReconnect(async () => {
         if (!this.criClient) throw new CDPConnectionError('Not connected')
         await this.criClient.Page.enable()
-        // Use explicit clip to avoid 0-width viewport issues (Chrome 145+)
-        const clip = {
-          x: 0,
-          y: 0,
-          width: this.config.windowWidth,
-          height: this.config.windowHeight,
-          scale: 1,
-        }
+
+        // Get actual viewport dimensions instead of assuming config values
+        const clip = await this.getViewportClip()
+
         const { data } = await Promise.race([
           this.criClient.Page.captureScreenshot({ format, clip }),
           new Promise<never>((_, reject) =>
@@ -182,6 +180,22 @@ export class CDPClient {
         return data
       })
     })
+  }
+
+  /** Get viewport clip dimensions from the actual page layout. */
+  private async getViewportClip(): Promise<{ x: number; y: number; width: number; height: number; scale: number }> {
+    if (!this.criClient) return { x: 0, y: 0, width: this.config.windowWidth, height: this.config.windowHeight, scale: 1 }
+    try {
+      const metrics = await this.criClient.Page.getLayoutMetrics()
+      // cssLayoutViewport has the actual viewport size
+      const viewport = (metrics as unknown as Record<string, Record<string, number>>).cssLayoutViewport
+      if (viewport && viewport.clientWidth > 0 && viewport.clientHeight > 0) {
+        return { x: 0, y: 0, width: viewport.clientWidth, height: viewport.clientHeight, scale: 1 }
+      }
+    } catch {
+      this.logger.debug('Could not get layout metrics, using config dimensions')
+    }
+    return { x: 0, y: 0, width: this.config.windowWidth, height: this.config.windowHeight, scale: 1 }
   }
 
   async evaluate(expression: string): Promise<EvaluateResult> {

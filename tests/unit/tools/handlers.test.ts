@@ -17,9 +17,9 @@ vi.mock('../../../src/logger.js', () => ({
 }))
 
 describe('toolDefinitions', () => {
-  it('has 13 tools with correct names', async () => {
+  it('has 14 tools with correct names', async () => {
     const { toolDefinitions } = await import('../../../src/server.js')
-    expect(toolDefinitions).toHaveLength(13)
+    expect(toolDefinitions).toHaveLength(14)
     const names = toolDefinitions.map((t) => t.name)
     expect(names).toContain('comet_connect')
     expect(names).toContain('comet_ask')

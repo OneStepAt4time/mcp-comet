@@ -22,6 +22,7 @@ import {
 } from './ui/navigation.js'
 import { SELECTORS } from './ui/selectors.js'
 import { buildGetAgentStatusScript } from './ui/status.js'
+import { buildClickActionButtonScript } from './ui/action.js'
 import { buildStopAgentScript } from './ui/stop.js'
 import { isPerplexityDomain } from './utils.js'
 import { detectCometVersion } from './version.js'
@@ -37,20 +38,34 @@ const client = CDPClient.getInstance(config)
 /** Active selector set — updated after each comet_connect to match Comet's Chrome version. */
 let activeSelectors: SelectorSet = SELECTORS
 
+/** Guard: deduplicate concurrent ensureConnected calls. */
+let connectPromise: Promise<void> | null = null
+
 /** Ensure the client is connected before using tools. Auto-connects if needed. */
 async function ensureConnected(): Promise<void> {
   if (client.state.targetId) return
+  if (connectPromise) return connectPromise
   logger.info('Auto-connecting to Comet...')
-  await client.launchOrConnect()
-  await client.closeExtraTabs()
-  try {
-    const { chromeMajor, selectors } = await detectCometVersion(config.port)
-    activeSelectors = selectors
-    logger.info(`Auto-connected to Comet Chrome/${chromeMajor}`)
-  } catch {
-    // Version detection failure is non-fatal
-  }
+  connectPromise = (async () => {
+    try {
+      await client.launchOrConnect()
+      await client.closeExtraTabs()
+      try {
+        const { chromeMajor, selectors } = await detectCometVersion(config.port)
+        activeSelectors = selectors
+        logger.info(`Auto-connected to Comet Chrome/${chromeMajor}`)
+      } catch {
+        // Version detection failure is non-fatal
+      }
+    } finally {
+      connectPromise = null
+    }
+  })()
+  return connectPromise
 }
+
+/** Guard: prevent concurrent comet_ask calls from corrupting each other. */
+let askInProgress = false
 
 // ---------------------------------------------------------------------------
 // Tool definitions (exported for testing)
@@ -147,6 +162,14 @@ const getPageContentShape = {
 const waitShape = {
   timeout: z.number().optional().describe('Maximum wait time in ms (default: 120000)'),
 }
+const approveActionShape = {
+  action: z
+    .enum(['primary', 'cancel'])
+    .optional()
+    .describe(
+      'Which button to click: "primary" (approve/confirm the action, default) or "cancel" (dismiss the prompt).',
+    ),
+}
 
 export const toolDefinitions: ToolDef[] = [
   {
@@ -219,6 +242,12 @@ export const toolDefinitions: ToolDef[] = [
       'Poll until the current agent finishes responding and return the full response. Use after comet_ask times out.',
     inputSchema: buildInputSchema(waitShape),
   },
+  {
+    name: 'comet_approve_action',
+    description:
+      'Click an action button on a Comet permission/confirmation prompt. Use after comet_wait or comet_poll returns status "awaiting_action".',
+    inputSchema: buildInputSchema(approveActionShape),
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -249,6 +278,8 @@ interface RawAgentStatus {
   hasStopButton: boolean
   hasLoadingSpinner?: boolean
   proseCount?: number
+  actionPrompt?: string
+  actionButtons?: string[]
 }
 
 function parseAgentStatus(raw: unknown): RawAgentStatus {
@@ -354,6 +385,9 @@ export async function startServer(): Promise<void> {
     askShape,
     async ({ prompt, newChat }) => {
       try {
+        if (askInProgress) return textResult('Another prompt is currently being submitted. Please wait and try again.')
+        askInProgress = true
+        try {
         await ensureConnected()
         const normalizedPrompt = client.normalizePrompt(prompt)
         // Handle newChat or tab management
@@ -394,6 +428,9 @@ export async function startServer(): Promise<void> {
         return textResult(
           'Prompt submitted successfully. Use comet_poll to track status or comet_wait to block until completion.',
         )
+        } finally {
+          askInProgress = false
+        }
       } catch (err) {
         return toMcpError(err)
       }
@@ -477,8 +514,13 @@ export async function startServer(): Promise<void> {
           }
 
           // 2. Open typeahead to read active mode from menu
-          await client.navigate('https://www.perplexity.ai')
-          await sleep(2000)
+          // Only navigate if not already on the home page (avoid losing active conversation)
+          const urlCheck = await client.safeEvaluate(`window.location.pathname`)
+          const currentPath = extractValue(urlCheck)
+          if (currentPath && currentPath !== '/') {
+            await client.navigate('https://www.perplexity.ai')
+            await sleep(2000)
+          }
 
           let currentMode: unknown = 'standard'
           for (let attempt = 0; attempt < 5; attempt++) {
@@ -746,6 +788,20 @@ export async function startServer(): Promise<void> {
 
           if (stallCount >= MAX_STALL_POLLS && lastResponse) break
 
+          // Handle permission/action prompts — break and report
+          if (status.status === 'awaiting_action') {
+            const parts: string[] = ['⚠️ Comet is awaiting your permission.']
+            if (status.actionPrompt) parts.push(`\nPrompt: ${status.actionPrompt}`)
+            if (status.actionButtons && status.actionButtons.length > 0) {
+              parts.push(`\nAvailable actions: ${status.actionButtons.join(', ')}`)
+            }
+            parts.push('\nUse comet_approve_action to approve or cancel the action.')
+            if (collectedSteps.length > 0) {
+              parts.push(`\n\nSteps:\n${collectedSteps.map((s) => `  - ${s}`).join('\n')}`)
+            }
+            return textResult(parts.join(''))
+          }
+
           if ((status.status === 'completed' || status.status === 'idle') && lastResponse) {
             // Wait for response to stabilize
             let settledResponse = lastResponse
@@ -755,6 +811,21 @@ export async function startServer(): Promise<void> {
                 buildGetAgentStatusScript(activeSelectors),
               )
               const settledStatus = parseAgentStatus(extractValue(settledRaw))
+
+              // Re-check for awaiting_action after stabilization
+              if (settledStatus.status === 'awaiting_action') {
+                const parts: string[] = ['⚠️ Comet is awaiting your permission.']
+                if (settledStatus.actionPrompt) parts.push(`\nPrompt: ${settledStatus.actionPrompt}`)
+                if (settledStatus.actionButtons && settledStatus.actionButtons.length > 0) {
+                  parts.push(`\nAvailable actions: ${settledStatus.actionButtons.join(', ')}`)
+                }
+                parts.push('\nUse comet_approve_action to approve or cancel the action.')
+                if (collectedSteps.length > 0) {
+                  parts.push(`\n\nSteps:\n${collectedSteps.map((s) => `  - ${s}`).join('\n')}`)
+                }
+                return textResult(parts.join(''))
+              }
+
               const candidate = settledStatus.response || settledResponse
               if (candidate.length <= settledResponse.length) break
               settledResponse = candidate
@@ -776,6 +847,38 @@ export async function startServer(): Promise<void> {
         }
         if (lastResponse) timeoutParts.push(`\nPartial response:\n${lastResponse}`)
         return textResult(timeoutParts.join('\n'))
+      } catch (err) {
+        return toMcpError(err)
+      }
+    },
+  )
+
+  // 14. comet_approve_action
+  server.tool(
+    'comet_approve_action',
+    'Click an action button on a Comet permission/confirmation prompt. Use after comet_wait or comet_poll returns status "awaiting_action".',
+    approveActionShape,
+    async ({ action }) => {
+      try {
+        await ensureConnected()
+        const effectiveAction = action ?? 'primary'
+        const raw = await client.safeEvaluate(buildClickActionButtonScript(effectiveAction))
+        const result = JSON.parse(String(extractValue(raw))) as {
+          clicked: boolean
+          buttonText?: string
+          action?: string
+          error?: string
+          fallback?: boolean
+        }
+
+        if (result.clicked) {
+          return textResult(
+            `Action ${effectiveAction === 'primary' ? 'approved' : 'cancelled'}: clicked "${result.buttonText}" button.${result.fallback ? ' (fallback: no bg-button-bg found, clicked first non-cancel button)' : ''}`,
+          )
+        }
+        return textResult(
+          `No action banner found. ${result.error || 'The agent may not be awaiting an action.'}`,
+        )
       } catch (err) {
         return toMcpError(err)
       }

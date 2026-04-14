@@ -4,6 +4,7 @@ import { SELECTORS } from './selectors.js'
 
 export function buildGetAgentStatusScript(selectors?: SelectorSet): string {
   const loadingSelectors = selectors?.LOADING ?? SELECTORS.LOADING
+  const actionBannerSelectors = selectors?.ACTION_BANNER ?? SELECTORS.ACTION_BANNER
   const findProseBody = buildFindProseJS()
   return `(function() {
     var status = "idle";
@@ -12,6 +13,8 @@ export function buildGetAgentStatusScript(selectors?: SelectorSet): string {
     var response = "";
     var hasStopButton = false;
     var hasLoadingSpinner = false;
+    var actionPrompt = "";
+    var actionButtons = [];
 
     var buttons = document.querySelectorAll('button');
     for (var i = 0; i < buttons.length; i++) {
@@ -45,13 +48,39 @@ export function buildGetAgentStatusScript(selectors?: SelectorSet): string {
     if (results.length > 0) {
       response = results[results.length - 1];
       response = response.replace(/View All/g, '').replace(/Show more/g, '').replace(/Ask a follow-up/g, '').replace(/\\d+ sources/g, '');
-      if (response.length > 8000) response = response.substring(0, 8000);
+      if (response.length > 8000) response = response.substring(0, 8000) + '\\n\\n[Response truncated. Use comet_get_page_content for the full text.]';
     }
 
     if (hasStopButton || hasLoadingSpinner) status = "working";
     else if (hasWorkingText) status = "working";
     else if (results.length > 0) status = "completed";
 
-    return JSON.stringify({ status: status, steps: steps, currentStep: currentStep, response: response, hasStopButton: hasStopButton, hasLoadingSpinner: hasLoadingSpinner, proseCount: results.length });
+    // Detect action/permission prompts (Comet asks user to confirm before executing actions)
+    var bannerSelectors = ${JSON.stringify([...actionBannerSelectors])};
+    for (var bs = 0; bs < bannerSelectors.length; bs++) {
+      var banner = document.querySelector(bannerSelectors[bs]);
+      if (banner) {
+        // Extract the prompt text (text inside the banner card, excluding button text)
+        var bannerCard = banner.querySelector('[class*="bg-subtle"]');
+        if (bannerCard) {
+          var bannerText = (bannerCard.textContent || '').trim();
+          // Collect action buttons (buttons with visible text, not UI buttons)
+          var bannerBtns = banner.querySelectorAll('button');
+          for (var bb = 0; bb < bannerBtns.length; bb++) {
+            var btnText = (bannerBtns[bb].textContent || '').trim();
+            if (btnText && btnText.length > 1 && btnText !== 'Show more') {
+              actionButtons.push(btnText);
+              // Remove button text from prompt text
+              bannerText = bannerText.replace(btnText, '');
+            }
+          }
+          actionPrompt = bannerText.replace(/\\s+/g, ' ').trim();
+        }
+        status = "awaiting_action";
+        break;
+      }
+    }
+
+    return JSON.stringify({ status: status, steps: steps, currentStep: currentStep, response: response, hasStopButton: hasStopButton, hasLoadingSpinner: hasLoadingSpinner, proseCount: results.length, actionPrompt: actionPrompt, actionButtons: actionButtons });
   })()`
 }

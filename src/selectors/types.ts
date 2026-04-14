@@ -6,4 +6,5 @@ export interface SelectorSet {
   LOADING: readonly string[]
   TYPEAHEAD_MENU: readonly string[]
   MENU_ITEM: readonly string[]
+  ACTION_BANNER: readonly string[]
 }

@@ -24,4 +24,8 @@ describe('SELECTORS', () => {
     expect(SELECTORS.MENU_ITEM[0]).toBe('[role="menuitem"].group\\/item')
     expect(SELECTORS.MENU_ITEM.length).toBeGreaterThanOrEqual(1)
   })
+  it('ACTION_BANNER targets the permission prompt container', () => {
+    expect(SELECTORS.ACTION_BANNER.length).toBeGreaterThanOrEqual(1)
+    expect(SELECTORS.ACTION_BANNER[0]).toContain('banner')
+  })
 })

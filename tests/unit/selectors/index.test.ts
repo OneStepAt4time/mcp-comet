@@ -28,6 +28,7 @@ describe('getSelectorsForVersion', () => {
     expect(selectors.LOADING).toBeDefined()
     expect(selectors.TYPEAHEAD_MENU).toBeDefined()
     expect(selectors.MENU_ITEM).toBeDefined()
+    expect(selectors.ACTION_BANNER).toBeDefined()
   })
 
   it('returns fallback (v145) selectors for unknown version 999', async () => {

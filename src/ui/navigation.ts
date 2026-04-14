@@ -1,11 +1,18 @@
 export function buildSubmitPromptScript(): string {
   return `(function() {
+    // Find the input element directly instead of relying on focus
+    var input = document.querySelector('#ask-input') || document.querySelector('[contenteditable="true"]');
+    if (input) input.focus();
     var active = document.activeElement;
     if (active) {
       active.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', code: 'Enter', bubbles: true}));
       active.dispatchEvent(new KeyboardEvent('keyup', {key: 'Enter', code: 'Enter', bubbles: true}));
     }
-    return 'submitted';
+    // Verify: check if input was cleared (successful submit clears the field)
+    var afterText = '';
+    if (input && input.innerText) afterText = input.innerText.trim();
+    if (afterText.length === 0) return 'submitted';
+    return 'submitted_input_not_cleared';
   })()`
 }
 

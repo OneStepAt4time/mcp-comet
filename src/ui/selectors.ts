@@ -19,4 +19,6 @@ export const SELECTORS = {
   TYPEAHEAD_MENU: ['[role="listbox"][aria-label="Typeahead menu"]', '[role="listbox"]'] as const,
   MENU_ITEM: ['[role="menuitem"].group\\/item', '[role="menuitem"]'] as const,
   LOADING: ['[class*="animate-spin"]', '[class*="animate-pulse"]'] as const,
+  // Action/permission prompt banner (Comet shows these before executing actions)
+  ACTION_BANNER: ['[class*="@container/banner"]'] as const,
 } as const

@@ -4,7 +4,7 @@ mcp-comet.config.json
 .claude/settings.local.json
 .claude/plans
 
-tools/
+/tools/
 # Internal Documentation & Plans (local only)
 docs/claude-code-guide/
 docs/plans/
@@ -29,3 +29,4 @@ video/
 .playwright-mcp/
 # worktrees
 .worktrees/*
+.claude/worktrees/
