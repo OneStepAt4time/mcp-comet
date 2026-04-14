@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.2.0] - 2026-04-14
+
+### Added
+
+- `comet_approve_action` tool: click primary or cancel buttons on Comet permission/confirmation prompts (14th tool)
+- `awaiting_action` agent status: detects when Comet is waiting for user confirmation before executing an action
+- `actionPrompt` and `actionButtons` fields in poll/wait responses when a permission prompt is active
+- `COMET_OVERRIDE_VIEWPORT` configuration option (default: `false`) to control whether the browser viewport is overridden on connect
+- Dynamic viewport detection via `Page.getLayoutMetrics()` for accurate screenshots regardless of window size
+- Response truncation marker at 8000 chars guiding users to `comet_get_page_content` for full text
+- `ACTION_BANNER` selector for detecting Comet's `@container/banner` permission prompt containers
+
+### Fixed
+
+- **Permission prompt detection**: `comet_wait` and `comet_poll` now correctly report `awaiting_action` status instead of `completed` when Comet shows a permission prompt
+- **Browser window resize**: `Emulation.setDeviceMetricsOverride` no longer resizes the browser window by default — viewport override is now opt-in via `COMET_OVERRIDE_VIEWPORT=true`
+- **Race condition — concurrent connects**: Multiple simultaneous `ensureConnected()` calls are now deduplicated via a shared promise guard
+- **Race condition — concurrent asks**: `comet_ask` now uses a mutex to prevent concurrent prompt submissions from corrupting each other
+- **Mode read navigation**: `comet_mode` (read) no longer navigates away from the current page when already on the Perplexity home page
+- **Prose filter over-trimming**: Short questions under 20 chars (previously 100) are no longer excluded from response text
+- **Submit verification**: `buildSubmitPromptScript` now focuses the input element before submitting and verifies the input was cleared
+- **Gitignore scope**: `tools/` pattern changed to `/tools/` (root-level only) to unblock staging test files in `tests/unit/tools/`
+
+### Changed
+
+- 14 tools total (was 13)
+
 ## [1.1.2] - 2026-04-11
 
 ### Fixed

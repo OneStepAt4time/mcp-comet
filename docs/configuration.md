@@ -27,6 +27,7 @@ The three most commonly used variables:
 | `COMET_USER_DATA_DIR` | null | Path to a custom Chrome user data directory. Use this to persist cookies, local storage, and other browser profile data across sessions (for example, `~/.config/mcp-comet/chrome-profile`). When unset, Comet uses a temporary profile each launch. |
 | `COMET_WINDOW_WIDTH` | 1440 | Browser window width in pixels at launch. Controls the initial viewport dimensions of the Comet browser window. |
 | `COMET_WINDOW_HEIGHT` | 900 | Browser window height in pixels at launch. Controls the initial viewport dimensions of the Comet browser window. |
+| `COMET_OVERRIDE_VIEWPORT` | false | Override the browser viewport via CDP `setDeviceMetricsOverride` on connect. **Warning:** enabling this physically resizes the browser window. When disabled (default), screenshots use the actual viewport dimensions. |
 
 ## Priority
 
@@ -65,6 +66,9 @@ Create `mcp-comet.config.json` in your project root. Keys use camelCase (not the
   // Browser window dimensions at launch (pixels)
   "windowWidth": 1440,
   "windowHeight": 900,
+
+  // Override browser viewport via CDP on connect (resizes the window)
+  "overrideViewport": false,
 
   // Reconnection behavior
   "maxReconnectAttempts": 5,

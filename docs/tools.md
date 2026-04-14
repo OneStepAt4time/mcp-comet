@@ -1,6 +1,6 @@
 # Tool Reference
 
-This document provides a complete reference for all 13 MCP tools exposed by the MCP Comet server. Each tool entry includes a description, parameter table, response format, CLI example, and implementation notes.
+This document provides a complete reference for all 14 MCP tools exposed by the MCP Comet server. Each tool entry includes a description, parameter table, response format, CLI example, and implementation notes.
 
 Tools are consumed via the Model Context Protocol (MCP) stdio transport. All tools automatically connect to or launch the Comet browser if no active session exists (see [Connection Lifecycle](#connection-lifecycle)).
 
@@ -21,7 +21,8 @@ Tools are consumed via the Model Context Protocol (MCP) stdio transport. All too
 11. [comet_list_conversations](#11-comet_list_conversations)
 12. [comet_open_conversation](#12-comet_open_conversation)
 13. [comet_get_page_content](#13-comet_get_page_content)
-14. [Common Patterns](#common-patterns)
+14. [comet_approve_action](#14-comet_approve_action)
+15. [Common Patterns](#common-patterns)
 15. [Error Responses](#error-responses)
 16. [Connection Lifecycle](#connection-lifecycle)
 
@@ -145,25 +146,29 @@ None.
 **Success:**
 ```json
 {
-  "status": "working" | "idle" | "completed",
+  "status": "working" | "idle" | "completed" | "awaiting_action",
   "steps": ["step 1", "step 2"],
   "currentStep": "current step text",
   "response": "agent response text so far",
   "hasStopButton": true,
   "hasLoadingSpinner": true,
-  "proseCount": 3
+  "proseCount": 3,
+  "actionPrompt": "Create a new issue on GitHub?",
+  "actionButtons": ["Create Issue", "Cancel"]
 }
 ```
 
 | Field               | Type     | Description                                                |
 |---------------------|----------|------------------------------------------------------------|
-| `status`            | string   | Agent status: `"working"`, `"idle"`, or `"completed"`     |
+| `status`            | string   | Agent status: `"working"`, `"idle"`, `"completed"`, or `"awaiting_action"` |
 | `steps`             | string[] | List of completed step descriptions                        |
 | `currentStep`       | string   | Currently executing step (may be empty)                    |
 | `response`          | string   | Response text extracted so far (may be partial)            |
 | `hasStopButton`     | boolean  | Whether the stop/cancel button is visible                  |
 | `hasLoadingSpinner` | boolean  | Whether a loading spinner is visible                       |
 | `proseCount`        | number   | Number of prose elements detected on the page              |
+| `actionPrompt`      | string   | Permission prompt text (only when `status` is `"awaiting_action"`) |
+| `actionButtons`     | string[] | Available action button labels (only when `status` is `"awaiting_action"`) |
 
 ### CLI Example
 
@@ -211,6 +216,17 @@ Steps so far:
 
 Partial response:
 {partial text}
+```
+
+**Awaiting action (permission prompt):**
+```
+⚠️ Comet is awaiting your permission.
+
+Prompt: Create a new issue on GitHub?
+
+Available actions: Create Issue, Cancel
+
+Use comet_approve_action to approve or cancel the action.
 ```
 
 ### CLI Example
@@ -645,6 +661,66 @@ Title: {page title}
 
 ---
 
+## 14. comet_approve_action
+
+Click an action button on a Comet permission/confirmation prompt.
+
+When Comet asks for permission to execute an action (e.g., creating a GitHub issue, sending an email), the agent enters the `awaiting_action` state. Use this tool to approve or cancel the pending action.
+
+### Parameters
+
+| Parameter | Type   | Required | Default    | Description                                                                                    |
+|-----------|--------|----------|------------|------------------------------------------------------------------------------------------------|
+| `action`  | enum   | No       | `"primary"` | Which button to click: `"primary"` (approve/confirm) or `"cancel"` (dismiss the prompt).    |
+
+### Response
+
+**Approved:**
+```
+Action approved: clicked "Create Issue" button.
+```
+
+**Cancelled:**
+```
+Action cancelled: clicked "Cancel" button.
+```
+
+**No banner found:**
+```
+No action banner found. The agent may not be awaiting an action.
+```
+
+**Fallback (no bg-button-bg found):**
+```
+Action approved: clicked "Create Issue" button. (fallback: no bg-button-bg found, clicked first non-cancel button)
+```
+
+### CLI Example
+
+Approve the action:
+```json
+{}
+```
+
+```json
+{ "action": "primary" }
+```
+
+Cancel the action:
+```json
+{ "action": "cancel" }
+```
+
+### Notes
+
+- This tool should be called after `comet_wait` or `comet_poll` returns `status: "awaiting_action"`.
+- The tool detects action banners via the `@container/banner` CSS selector used by Comet's UI.
+- Primary buttons are identified by the `bg-button-bg` CSS class (filled/action style).
+- Cancel buttons are identified by the `border-subtle` CSS class or the text "Cancel".
+- If no primary button with `bg-button-bg` is found, the tool falls back to clicking the first non-cancel button.
+
+---
+
 ## Common Patterns
 
 ### 1. Ask and Wait (Simple)
@@ -705,6 +781,27 @@ Use `comet_ask` to get a response, then `comet_get_sources` to extract the cited
 
 ```json
 {}
+```
+
+### 6. Action Approval (Permission Prompts)
+
+When Comet asks for permission to perform an action (e.g., "Create a new issue on GitHub"), use the approval flow:
+
+Step 1 — ask a task that triggers a permission prompt:
+```json
+{ "prompt": "Create a new issue on GitHub about the build failure" }
+```
+
+Step 2 — `comet_wait` returns `awaiting_action` status with prompt text and available buttons.
+
+Step 3 — approve or cancel:
+```json
+{ "action": "primary" }
+```
+
+Or cancel:
+```json
+{ "action": "cancel" }
 ```
 
 ---

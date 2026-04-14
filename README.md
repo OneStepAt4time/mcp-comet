@@ -10,7 +10,7 @@
     <a href="https://github.com/OneStepAt4time/mcp-comet/actions"><img src="https://img.shields.io/github/actions/workflow/status/OneStepAt4time/mcp-comet/ci.yml?style=flat-square" alt="build" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/OneStepAt4time/mcp-comet?style=flat-square" alt="license" /></a>
   </p>
-  <p><strong>7 modes</strong> · <strong>13 tools</strong> · zero-friction setup · full browser control</p>
+  <p><strong>7 modes</strong> · <strong>14 tools</strong> · zero-friction setup · full browser control</p>
   <p>
     <a href="#quick-start">Quick Start</a> ·
     <a href="docs/tools.md">Tool Reference</a> ·
@@ -145,6 +145,7 @@ mcp-comet call comet_get_sources
 - `comet_poll`: returns live status and partial progress.
 - `comet_wait`: waits for completion and returns the full response.
 - `comet_stop`: stops a running task.
+- `comet_approve_action`: approves or cancels Comet permission prompts.
 
 ### Query
 
@@ -182,6 +183,7 @@ Full reference: [docs/tools.md](docs/tools.md)
 | Multi-perspective debate | `comet_mode(model-council)` -> `comet_ask` -> `comet_wait` |
 | Visual evidence capture | `comet_screenshot` -> pass image into your vision-capable model |
 | Resume old investigations | `comet_list_conversations` -> `comet_open_conversation` -> `comet_get_page_content` |
+| Action with permission prompt | `comet_ask` -> `comet_wait` -> `comet_approve_action` |
 
 ---
 
