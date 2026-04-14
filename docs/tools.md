@@ -23,8 +23,8 @@ Tools are consumed via the Model Context Protocol (MCP) stdio transport. All too
 13. [comet_get_page_content](#13-comet_get_page_content)
 14. [comet_approve_action](#14-comet_approve_action)
 15. [Common Patterns](#common-patterns)
-15. [Error Responses](#error-responses)
-16. [Connection Lifecycle](#connection-lifecycle)
+16. [Error Responses](#error-responses)
+17. [Connection Lifecycle](#connection-lifecycle)
 
 ---
 
@@ -71,41 +71,30 @@ Connected to Comet on port {port} (Chrome/{version}), target {targetId}
 
 ## 2. comet_ask
 
-Send a prompt to Perplexity Comet and poll until the agent responds or times out.
+Send a prompt to Perplexity Comet and return immediately.
 
-This is the primary interaction tool. It types the prompt into the Comet input field, submits it, and polls for the response using a non-blocking loop with stall detection. The response includes any agent steps and the final answer text.
+This is the primary interaction tool. It types the prompt into the Comet input field, submits it, and returns immediately. Use `comet_poll` or `comet_wait` to retrieve the response.
 
 ### Parameters
 
-| Parameter | Type    | Required | Default                          | Description                                      |
-|-----------|---------|----------|----------------------------------|--------------------------------------------------|
-| `prompt`  | string  | Yes      |                                  | The question or instruction to send              |
-| `newChat` | boolean | No       | `false`                          | Start a fresh chat before sending the prompt     |
-| `timeout` | number  | No       | `180000` (`COMET_RESPONSE_TIMEOUT`) | Maximum wait time in ms for the agent response |
+| Parameter | Type    | Required | Default | Description                                  |
+|-----------|---------|----------|---------|----------------------------------------------|
+| `prompt`  | string  | Yes      |         | The question or instruction to send          |
+| `newChat` | boolean | No       | `false` | Start a fresh chat before sending the prompt |
 
 ### Response
 
-**Completed (within timeout):**
+**Success:**
 ```
-{response text}
-
-Steps:
-  - {step 1}
-  - {step 2}
+Prompt submitted successfully. Use comet_poll to track status or comet_wait to block until completion.
 ```
 
-**Timeout (agent still working):**
+**Concurrent ask blocked:**
 ```
-Agent is still working. Use comet_poll to check status.
-
-Steps so far:
-  - {step 1}
-
-Partial response:
-{partial text}
+Another prompt is currently being submitted. Please wait and try again.
 ```
 
-**Error codes:** `CDP_CONNECTION_FAILED`, `EVALUATION_FAILED`, `TIMEOUT`
+**Error codes:** `CDP_CONNECTION_FAILED`, `EVALUATION_FAILED`
 
 ### CLI Example
 
@@ -116,16 +105,14 @@ Partial response:
 ```json
 {
   "prompt": "Compare GPT-4 and Claude 3.5 on reasoning benchmarks",
-  "newChat": true,
-  "timeout": 300000
+  "newChat": true
 }
 ```
 
 ### Notes
 
-- **Stall detection:** If the response length does not grow for 10 consecutive polls, the tool breaks out of the polling loop and returns whatever has been collected so far.
-- **Response stabilization:** After the agent transitions to `idle` or `completed`, the tool performs up to 5 additional settle polls (1 second apart) to ensure the response text has finished rendering.
-- **Pre-send state capture:** Before typing, the tool captures the current prose count and last prose text to accurately detect new responses versus pre-existing content.
+- **Immediate return:** The tool submits the prompt and returns right away — it does not wait for the response. Use `comet_poll` to check progress or `comet_wait` to block until completion.
+- **Concurrency guard:** Only one `comet_ask` can run at a time. If a second call is made while the first is still submitting, it returns immediately with a "try again" message.
 - **newChat behavior:** When `true`, closes all extra tabs, disconnects, reconnects, and navigates to the Perplexity home page before sending the prompt.
 - If `newChat` is `false` and the main tab differs from the current target, the tool automatically switches to the main tab.
 
@@ -135,7 +122,7 @@ Partial response:
 
 Poll the current agent status, steps, and response content.
 
-Returns a snapshot of the Comet agent state. Use this to check progress after `comet_ask` times out, or to implement custom polling logic in your own agent loop.
+Returns a snapshot of the Comet agent state. Use this to check progress after `comet_ask`, or to implement custom polling logic in your own agent loop.
 
 ### Parameters
 
@@ -394,6 +381,7 @@ Switch to computer use:
 - **Mode switching** only works on the home page or a new chat. The tool automatically navigates to `https://www.perplexity.ai` before attempting a switch.
 - The tool opens the slash-command typeahead menu by typing `/` in the input field, then selects the desired mode from the dropdown.
 - Up to 10 retry attempts for mode switching in case the typeahead menu does not appear immediately.
+- When querying the current mode, the tool uses up to 5 attempts (separate from the 10 used for switching).
 - When querying, the tool first checks the URL for the `computer` mode indicator, then falls back to opening the typeahead menu to read the active mode.
 
 ---
@@ -870,12 +858,16 @@ All tools call `ensureConnected()` before executing, which auto-connects if no a
 
 Connection behavior is controlled by these configuration values (see [Configuration](configuration.md)):
 
-| Setting                  | Default  | Description                                  |
-|--------------------------|----------|----------------------------------------------|
-| `COMET_PORT`           | `9222`   | CDP debug port                               |
-| `COMET_PATH`             | auto     | Path to Comet executable                     |
-| `COMET_TIMEOUT`        | `30000`  | Comet launch timeout in ms                   |
-| `COMET_POLL_INTERVAL`  | `1000`   | Status poll interval in ms                   |
-| `COMET_MAX_RECONNECT`  | `5`      | Maximum reconnection attempts                |
-| `COMET_RECONNECT_DELAY`| `5000`   | Maximum reconnection backoff delay in ms     |
+| Setting                    | Default  | Description                                  |
+|----------------------------|----------|----------------------------------------------|
+| `COMET_PORT`               | `9222`   | CDP debug port                               |
+| `COMET_PATH`               | auto     | Path to Comet executable                     |
+| `COMET_TIMEOUT`            | `30000`  | Comet launch timeout in ms                   |
+| `COMET_POLL_INTERVAL`      | `1000`   | Status poll interval in ms                   |
+| `COMET_MAX_RECONNECT`      | `5`      | Maximum reconnection attempts                |
+| `COMET_RECONNECT_DELAY`    | `5000`   | Maximum reconnection backoff delay in ms     |
+| `COMET_WINDOW_WIDTH`       | `1440`   | Browser window width in pixels               |
+| `COMET_WINDOW_HEIGHT`      | `900`    | Browser window height in pixels              |
+| `COMET_OVERRIDE_VIEWPORT`  | `false`  | Override viewport via CDP (resizes window)   |
+| `COMET_USER_DATA_DIR`      | null     | Custom Chrome user data directory            |
 
