@@ -35,7 +35,7 @@ Run `npm run lint` before committing to catch style issues early.
 ```
 src/
   cli.ts              -- CLI entry point (start, call, detect commands)
-  server.ts           -- MCP server with 13 tool handlers
+  server.ts           -- MCP server with 14 tool handlers
   config.ts           -- Configuration loading + validation
   errors.ts           -- 9 error subclasses with codes
   index.ts            -- Library entry point (exports startServer)

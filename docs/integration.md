@@ -51,7 +51,7 @@ Claude Code reads MCP server configuration from `~/.claude/claude_desktop_config
 }
 ```
 
-After updating the configuration file, restart Claude Code. MCP Comet will appear as an MCP server exposing 13 tools.
+After updating the configuration file, restart Claude Code. MCP Comet will appear as an MCP server exposing 14 tools.
 
 **Verify:** Ask Claude "What MCP tools do you have available?" The list should include `comet_connect`, `comet_ask`, `comet_wait`, and the other tools documented in [tools.md](tools.md).
 

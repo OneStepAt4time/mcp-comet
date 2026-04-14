@@ -1,6 +1,6 @@
 # AGENTS.md — MCP Comet
 
-MCP Comet is a TypeScript MCP (Model Context Protocol) server that automates the Perplexity Comet browser via Chrome DevTools Protocol (CDP). It exposes 13 tools over stdio for prompting, polling, screenshots, tab management, source extraction, and mode switching.
+MCP Comet is a TypeScript MCP (Model Context Protocol) server that automates the Perplexity Comet browser via Chrome DevTools Protocol (CDP). It exposes 14 tools over stdio for prompting, polling, screenshots, tab management, source extraction, and mode switching.
 
 ## Commands
 
@@ -27,7 +27,7 @@ Four layers, top to bottom:
 MCP Tools (server.ts) → UI Automation (src/ui/) → CDP Transport (src/cdp/) → Comet Browser
 ```
 
-- **server.ts** — Single file defining all 13 tools via `McpServer.tool()`. Contains `startServer()`, tool definitions, Zod schemas, and all handler logic. This is the main file to edit when adding/modifying tools.
+- **server.ts** — Single file defining all 14 tools via `McpServer.tool()`. Contains `startServer()`, tool definitions, Zod schemas, and all handler logic. This is the main file to edit when adding/modifying tools.
 - **src/ui/** — Functions that return JavaScript strings (evaluated in the browser via `Runtime.evaluate`). Each `build*Script()` function returns a self-contained IIFE string. **Do not** pass complex objects — everything must serialize to a JS expression.
 - **src/cdp/client.ts** — `CDPClient` singleton (`CDPClient.getInstance()`) managing WebSocket connections, auto-reconnect with exponential backoff, and an operation queue (`enqueue()`) to serialize concurrent CDP calls.
 - **src/selectors/** — Version-keyed CSS selector sets (`SelectorSet`). `v145.ts` is the current set. New Comet/Chrome versions get a new `v{version}.ts` file registered in `index.ts`. Unknown versions fall back to the latest known set.

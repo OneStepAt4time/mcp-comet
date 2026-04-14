@@ -3,7 +3,7 @@
 MCP Comet uses a four-layer architecture:
 
 ```
-MCP Tools (13 tools)
+MCP Tools (14 tools)
     |
 UI Automation (selectors, input, status, extraction, navigation)
     |
@@ -14,7 +14,7 @@ Perplexity Comet Browser (Chromium)
 
 ## MCP Layer
 
-MCP Comet exposes 13 MCP tools grouped by function:
+MCP Comet exposes 14 MCP tools grouped by function:
 
 **Session**
 
@@ -31,6 +31,7 @@ MCP Comet exposes 13 MCP tools grouped by function:
 |------|---------|
 | `comet_ask` | Send a prompt and wait for the response |
 | `comet_mode` | Switch Comet focus mode |
+| `comet_approve_action` | Approve or cancel permission prompts |
 
 **Content**
 
@@ -57,7 +58,7 @@ Selectors are ordered arrays of CSS selectors. Each strategy tries selectors in 
 
 ### Typeahead Mode Detection
 
-When switching modes via `comet_mode`, MCP Comet reads the SVG icon `href` from typeahead menu items with the `.bg-subtle` class. Icon IDs map to mode names:
+When switching modes via `comet_mode`, MCP Comet opens the typeahead menu by typing `/` into the Lexical editor via `document.execCommand('insertText')`. It then reads the SVG icon `href` from typeahead menu items with the `.bg-subtle` class to detect the active mode. Icon IDs map to mode names:
 
 | Icon ID | Mode |
 |---------|------|
@@ -69,6 +70,8 @@ When switching modes via `comet_mode`, MCP Comet reads the SVG icon `href` from 
 | `#pplx-icon-custom-computer` | computer |
 
 If icon detection fails, the system falls back to URL-based mode detection.
+
+For mode switching, the target menu item's React `onMouseDown` prop is invoked directly via fiber props (`__reactProps$`). This is necessary because Comet's typeahead items use React's `onMouseDown` handler, not the standard DOM `click()` method. Before opening the typeahead, the editor is cleared of any existing text using select-all + delete + backspace, since Lexical editor state persists across page navigations.
 
 ### Collapsed Citation Expansion
 
