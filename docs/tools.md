@@ -150,7 +150,7 @@ None.
 | `status`            | string   | Agent status: `"working"`, `"idle"`, `"completed"`, or `"awaiting_action"` |
 | `steps`             | string[] | List of completed step descriptions                        |
 | `currentStep`       | string   | Currently executing step (may be empty)                    |
-| `response`          | string   | Response text extracted so far (may be partial)            |
+| `response`          | string   | Response text extracted so far (may be partial). Truncated at 8000 chars with a marker to use `comet_get_page_content` for full text. |
 | `hasStopButton`     | boolean  | Whether the stop/cancel button is visible                  |
 | `hasLoadingSpinner` | boolean  | Whether a loading spinner is visible                       |
 | `proseCount`        | number   | Number of prose elements detected on the page              |
@@ -232,6 +232,7 @@ Use comet_approve_action to approve or cancel the action.
 - **Response stabilization:** After the agent transitions to `idle` or `completed`, performs up to 5 settle polls (1 second apart) to ensure the response has finished rendering.
 - Default timeout is 120 seconds (2 minutes).
 - Returns `"Agent completed with no visible response."` if the agent finishes but no response text was found.
+- Response text is truncated at 8000 characters. If the response is truncated, a marker will indicate this — use `comet_get_page_content` to retrieve the full text.
 
 ---
 
