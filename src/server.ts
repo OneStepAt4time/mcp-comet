@@ -301,7 +301,7 @@ export async function startServer(): Promise<void> {
 
   const server = new McpServer({
     name: 'mcp-comet',
-    version: '0.1.0',
+    version: '1.1.5',
   })
 
   // 1. comet_connect
