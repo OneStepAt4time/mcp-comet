@@ -36,9 +36,10 @@
     "test:ci": "vitest run --coverage",
     "test:watch": "vitest",
     "lint": "biome check .",
-    "format": "biome write .",
-    "format:check": "biome check --formatter-enabled .",
+    "format": "biome format --write .",
+    "format:check": "biome check --formatter-enabled=true .",
     "typecheck": "tsc --noEmit",
+    "precommit": "node scripts/pre-commit-gates.mjs",
     "prepublishOnly": "npm run build && npm test"
   },
   "engines": {

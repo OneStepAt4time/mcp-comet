@@ -220,20 +220,21 @@ async function runCall(args: string[]): Promise<void> {
     try {
       child.stdin.end()
     } catch {}
-    setTimeout(() => process.exit(code), 300)
+    process.exit(code)
   }
 
   // Start handshake
   child.stdin.write(`${initMsg}\n`)
 
   // Timeout after 3 minutes
-  setTimeout(() => {
+  const responseTimeout = setTimeout(() => {
     if (!responded) {
       // biome-ignore lint/suspicious/noConsole: CLI output
       console.error('Timeout: no response from server (180s)')
       shutdown(1)
     }
   }, 180000)
+  responseTimeout.unref?.()
 }
 
 async function main(): Promise<void> {
