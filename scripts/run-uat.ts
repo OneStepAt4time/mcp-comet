@@ -1,10 +1,18 @@
-import { writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 
 const REPORT_FILE = 'docs/uat/uat-report.md'
 
 type ToolCallResult = Awaited<ReturnType<Client['callTool']>>
+
+function getTextContent(result: ToolCallResult): string {
+  return result.content
+    .filter((item): item is { type: 'text'; text: string } => item.type === 'text')
+    .map((item) => item.text)
+    .join('\n')
+}
 
 async function logResult(
   uatId: string,
@@ -40,11 +48,14 @@ async function runUAT(): Promise<void> {
       name: 'comet_ask',
       arguments: { prompt: 'What is 10+10?', newChat: true },
     })
+    const askSimpleText = getTextContent(res)
     reportMd += await logResult(
       'UAT-002',
       'Ask Simple Query',
-      res.content[0].text.includes('20') ? 'Pass' : 'Fail',
-      'Got 20',
+      !res.isError && askSimpleText.includes('Prompt submitted successfully') ? 'Pass' : 'Fail',
+      !res.isError
+        ? 'Prompt accepted (fire-and-forget behavior)'
+        : askSimpleText || 'Tool returned error',
     )
 
     res = await client.callTool({ name: 'comet_poll', arguments: {} })
@@ -123,18 +134,26 @@ async function runUAT(): Promise<void> {
       'Content parsed',
     )
 
-    res = await client.callTool({
+    await client.callTool({
       name: 'comet_ask',
-      arguments: { prompt: 'Write a complete 100 page essay on AI', timeout: 2000 },
+      arguments: { prompt: 'Write a complete 100 page essay on AI' },
     })
+    res = await client.callTool({
+      name: 'comet_wait',
+      arguments: { timeout: 2000 },
+    })
+    const waitTimeoutText = getTextContent(res)
     reportMd += await logResult(
       'UAT-020',
       'Timeout returns partial',
-      res.content[0].text.includes('still working') ||
-        res.content[0].text.includes('Partial response')
+      waitTimeoutText.includes('still working after timeout') ||
+        waitTimeoutText.includes('Partial response')
         ? 'Pass'
         : 'Fail',
-      'Handled timeout gracefully',
+      waitTimeoutText.includes('still working after timeout') ||
+        waitTimeoutText.includes('Partial response')
+        ? 'Handled timeout gracefully'
+        : waitTimeoutText || 'Unexpected wait output',
     )
 
     res = await client.callTool({ name: 'comet_mode', arguments: { mode: 'learn' } })
@@ -157,6 +176,7 @@ async function runUAT(): Promise<void> {
     console.error('Test execution aborted due to error:', err)
   } finally {
     await client.close()
+    mkdirSync(dirname(REPORT_FILE), { recursive: true })
     writeFileSync(REPORT_FILE, reportMd, 'utf8')
     // biome-ignore lint/suspicious/noConsole: UAT script intentionally prints report path
     console.log(`\nReport written to ${REPORT_FILE}`)
