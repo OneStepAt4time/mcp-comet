@@ -1,6 +1,6 @@
 {
   "name": "@onestepat4time/mcp-comet",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "The definitive MCP server for Perplexity Comet browser management",
   "type": "module",
   "main": "dist/index.js",
