@@ -275,7 +275,7 @@ Most teams only tune these three:
 
 | Variable                 | Default       | Change It When                           |
 | ------------------------ | ------------- | ---------------------------------------- |
-| `COMET_RESPONSE_TIMEOUT` | `180000`      | Queries are long and timing out          |
+| `COMET_RESPONSE_TIMEOUT` | `180000`      | `comet_wait` calls are timing out        |
 | `COMET_PATH`             | auto-detect   | Comet is in a non-standard install path  |
 | `COMET_LOG_LEVEL`        | `info`        | You need debug logs                      |
 

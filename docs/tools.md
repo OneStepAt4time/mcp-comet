@@ -70,9 +70,9 @@ Connected to Comet on port {port} (Chrome/{version}), target {targetId}
 
 ## 2. comet_ask
 
-Send a prompt to Perplexity Comet and poll until the agent responds or times out.
+Send a prompt to Perplexity Comet and return immediately.
 
-This is the primary interaction tool. It types the prompt into the Comet input field, submits it, and polls for the response using a non-blocking loop with stall detection. The response includes any agent steps and the final answer text.
+This tool submits the prompt and does not block for the final answer. Use `comet_poll` for status snapshots or `comet_wait` to block until completion.
 
 ### Parameters
 
@@ -80,31 +80,15 @@ This is the primary interaction tool. It types the prompt into the Comet input f
 |-----------|---------|----------|----------------------------------|--------------------------------------------------|
 | `prompt`  | string  | Yes      |                                  | The question or instruction to send              |
 | `newChat` | boolean | No       | `false`                          | Start a fresh chat before sending the prompt     |
-| `timeout` | number  | No       | `180000` (`COMET_RESPONSE_TIMEOUT`) | Maximum wait time in ms for the agent response |
 
 ### Response
 
-**Completed (within timeout):**
+**Success:**
 ```
-{response text}
-
-Steps:
-  - {step 1}
-  - {step 2}
+Prompt submitted successfully. Use comet_poll to track status or comet_wait to block until completion.
 ```
 
-**Timeout (agent still working):**
-```
-Agent is still working. Use comet_poll to check status.
-
-Steps so far:
-  - {step 1}
-
-Partial response:
-{partial text}
-```
-
-**Error codes:** `CDP_CONNECTION_FAILED`, `EVALUATION_FAILED`, `TIMEOUT`
+**Error codes:** `CDP_CONNECTION_FAILED`, `EVALUATION_FAILED`
 
 ### CLI Example
 
@@ -115,18 +99,16 @@ Partial response:
 ```json
 {
   "prompt": "Compare GPT-4 and Claude 3.5 on reasoning benchmarks",
-  "newChat": true,
-  "timeout": 300000
+  "newChat": true
 }
 ```
 
 ### Notes
 
-- **Stall detection:** If the response length does not grow for 10 consecutive polls, the tool breaks out of the polling loop and returns whatever has been collected so far.
-- **Response stabilization:** After the agent transitions to `idle` or `completed`, the tool performs up to 5 additional settle polls (1 second apart) to ensure the response text has finished rendering.
 - **Pre-send state capture:** Before typing, the tool captures the current prose count and last prose text to accurately detect new responses versus pre-existing content.
 - **newChat behavior:** When `true`, closes all extra tabs, disconnects, reconnects, and navigates to the Perplexity home page before sending the prompt.
 - If `newChat` is `false` and the main tab differs from the current target, the tool automatically switches to the main tab.
+- This tool is intentionally non-blocking. Pair it with `comet_poll` or `comet_wait` to collect progress and final output.
 
 ---
 
@@ -134,7 +116,7 @@ Partial response:
 
 Poll the current agent status, steps, and response content.
 
-Returns a snapshot of the Comet agent state. Use this to check progress after `comet_ask` times out, or to implement custom polling logic in your own agent loop.
+Returns a snapshot of the Comet agent state. Use this after `comet_ask` to check progress, or in a custom polling loop.
 
 ### Parameters
 
@@ -183,7 +165,7 @@ None.
 
 Poll until the current agent finishes responding and return the full response.
 
-Designed to be used after `comet_ask` times out. It continues polling the agent status until the response completes, another timeout is reached, or stall detection triggers.
+Designed to be used after `comet_ask` submission when you want a blocking wait. It continues polling the agent status until the response completes, another timeout is reached, or stall detection triggers.
 
 ### Parameters
 
@@ -227,7 +209,7 @@ Partial response:
 
 - **Stall detection:** Breaks out of the polling loop if the response length does not grow for 10 consecutive polls.
 - **Response stabilization:** After the agent transitions to `idle` or `completed`, performs up to 5 settle polls (1 second apart) to ensure the response has finished rendering.
-- Default timeout is 120 seconds (2 minutes), shorter than `comet_ask` default of 180 seconds.
+- Default timeout is 120 seconds (2 minutes).
 - Returns `"Agent completed with no visible response."` if the agent finishes but no response text was found.
 
 ---
@@ -649,18 +631,24 @@ Title: {page title}
 
 ### 1. Ask and Wait (Simple)
 
-Use `comet_ask` with the default timeout (180 seconds). This handles most queries in a single call.
+Submit with `comet_ask`, then call `comet_wait` to block until completion.
 
+Step 1:
 ```json
 { "prompt": "What is the current state of fusion energy research?" }
 ```
 
+Step 2:
+```json
+{}
+```
+
 ### 2. Ask + Poll (Custom Loop)
 
-Use `comet_ask` with a short timeout, then loop `comet_poll` in your agent to implement custom progress reporting or conditional logic.
+Submit with `comet_ask`, then loop `comet_poll` in your agent to implement custom progress reporting or conditional logic.
 
 ```json
-{ "prompt": "Deep research on AI safety", "timeout": 30000 }
+{ "prompt": "Deep research on AI safety" }
 ```
 
 Then poll:
@@ -671,14 +659,14 @@ Then poll:
 
 ### 3. Ask + Wait (Two-Phase)
 
-Use `comet_ask` (which may timeout for long-running queries), then `comet_wait` to collect the full result. This is useful when you want to start a query and check back later.
+Use `comet_ask`, continue with other work, then call `comet_wait` later to collect the full result.
 
 Step 1:
 ```json
 { "prompt": "Write a comprehensive analysis of global semiconductor supply chains" }
 ```
 
-Step 2 (if Step 1 times out):
+Step 2 (when ready to block for completion):
 ```json
 { "timeout": 300000 }
 ```
