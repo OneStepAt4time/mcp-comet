@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.1.5] - 2026-04-15
+
+### Fixed
+
+- **UAT Reliability:** Updated smoke checks to validate current comet_ask fire-and-forget behavior and timeout handling through comet_wait, resolving previously failing UAT scenarios.
+- **UAT Reporting:** Ensured UAT report output directory is created automatically before writing docs/uat/uat-report.md.
+
+### Changed
+
+- **Release Metadata:** Bumped package version metadata to 1.1.5.
+- **QA Workflow:** Stabilized release-gate execution and quality checks used during certification.
+
+### Documentation
+
+- Refreshed README presentation and supporting docs for clearer onboarding and release readiness guidance.
+
+## [1.1.4] - 2026-04-13
+
+### Documentation
+
+- **Product Documentation:** Refreshed README with improved product messaging and updated documentation files with clearer examples and consistent naming conventions.
+- **Cleanup:** Removed obsolete UAT planning artifacts.
+
+### Changed
+
+- **Project Naming:** Standardized mcp-comet naming conventions across core server, CLI, logging, and test suite for consistency.
+- **Configuration:** Aligned configuration file naming and maintenance scripts with project standards.
+
+### Maintenance
+
+- **Agent Workspace Integration:** Added shared agent workspace metadata and IDE configuration files for enhanced development experience.
+
 ## [1.1.2] - 2026-04-11
 
 ### Fixed
@@ -79,3 +111,6 @@ TypeScript, Vitest, Chrome DevTools Protocol, Biome. 295 tests, 30 files.
 - Tab management with categorization
 - CLI with --help, --version, detect, snapshot commands
 - Comet version auto-detection and selector registry
+
+
+

@@ -108,10 +108,10 @@ MCP Comet provides a `call` subcommand for invoking tools directly from the term
 # Connect to Comet
 mcp-comet call comet_connect
 
-# Ask a question
+# Submit a question
 mcp-comet call comet_ask '{"prompt": "What is 2+2?"}'
 
-# Wait for completion after a timeout
+# Wait for completion
 mcp-comet call comet_wait
 
 # Check the current status
@@ -206,8 +206,23 @@ child.stdout.on('data', (chunk) => {
       )
     }
 
-    // Handle tool response
+    // comet_ask is fire-and-forget; then block with comet_wait
     if (msg.id === 1 && msg.result) {
+      child.stdin.write(
+        JSON.stringify({
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/call',
+          params: {
+            name: 'comet_wait',
+            arguments: {},
+          },
+        }) + '\n',
+      )
+    }
+
+    // Handle final response
+    if (msg.id === 2 && msg.result) {
       console.log(msg.result.content[0].text)
     }
   }
